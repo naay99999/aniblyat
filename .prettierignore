@@ -7,3 +7,11 @@ bun.lockb
 
 # Miscellaneous
 /static/
+/src/lib/gql/
+/src/lib/paraglide/
+/.agents/
+/.claude/
+/.superpowers/
+/.taste-skill/
+/project.inlang/
+skills-lock.json

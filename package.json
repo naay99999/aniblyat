@@ -13,10 +13,13 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run"
+		"test": "npm run test:unit -- --run",
+		"codegen": "graphql-codegen"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
+		"@graphql-codegen/cli": "^7.4.6",
+		"@graphql-codegen/client-preset": "^6.2.3",
 		"@inlang/paraglide-js": "^2.18.2",
 		"@sveltejs/adapter-auto": "^8.0.0",
 		"@sveltejs/kit": "^3.0.0",
@@ -46,5 +49,9 @@
 	"imports": {
 		"#lib": "./src/lib/index.js",
 		"#lib/*": "./src/lib/*"
+	},
+	"dependencies": {
+		"@tanstack/svelte-query": "^6.3.6",
+		"graphql": "^17.0.2"
 	}
 }
