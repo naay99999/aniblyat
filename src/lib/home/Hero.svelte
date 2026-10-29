@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '#lib/paraglide/messages.js';
 	import type { MediaCard } from '../anilist/queries';
+	import { barTint } from '../actions/bar-tint';
 	import { pinProgressAction } from '../actions/pin-progress';
 	import { airingStatus, formatAirTime } from '../airing';
 	import AiringBadge from '../components/AiringBadge.svelte';
@@ -25,15 +26,6 @@
 	const status = $derived(active ? airingStatus(active, clock.now) : null);
 
 	let section: HTMLElement;
-	let underBar = $state(true);
-	$effect(() => {
-		// the root shrinks to the top edge: true while the hero is behind the site bar
-		const io = new IntersectionObserver(([e]) => (underBar = e.isIntersecting), {
-			rootMargin: '0px 0px -100% 0px'
-		});
-		io.observe(section);
-		return () => io.disconnect();
-	});
 
 	// jump the pinned stage to one title; the scroll position stays the single source of truth
 	function jump(i: number) {
@@ -45,18 +37,6 @@
 			behavior: reduce ? 'auto' : 'smooth'
 		});
 	}
-
-	// the site bar takes the hero's field and ink while it sits over the hero
-	$effect(() => {
-		const root = document.documentElement.style;
-		if (!underBar) return;
-		root.setProperty('--bar-bg', ground ?? 'var(--color-bg)');
-		root.setProperty('--bar-ink', ink);
-		return () => {
-			root.removeProperty('--bar-bg');
-			root.removeProperty('--bar-ink');
-		};
-	});
 </script>
 
 <section
@@ -64,6 +44,7 @@
 	bind:this={section}
 	style:--panels={Math.max(panels.length, 1)}
 	use:pinProgressAction={(p) => (progress = p)}
+	use:barTint={{ bg: ground ?? 'var(--color-bg)', ink }}
 	aria-labelledby="hero-title"
 >
 	<div class="stage" style:background-color={ground ?? 'var(--color-bg)'} style:color={ink}>

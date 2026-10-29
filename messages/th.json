@@ -107,5 +107,13 @@
 	"home_hero_airs": "EP {episode} ฉาย {time}",
 	"home_hero_open": "ดูเรื่องนี้",
 	"home_count_more": "ดูทั้ง {count} เรื่อง",
-	"home_top_open": "ดูรายละเอียด"
+	"home_top_open": "ดูรายละเอียด",
+	"detail_episode_count": "{count} ตอน",
+	"detail_watch_trailer": "ดูตัวอย่าง",
+	"detail_score_note": "คะแนนเฉลี่ยบน AniList",
+	"rel_CHARACTER": "ตัวละครร่วม",
+	"rel_SUMMARY": "สรุปเรื่อง",
+	"rel_COMPILATION": "รวมตอน",
+	"rel_CONTAINS": "รวมอยู่ในเรื่องนี้",
+	"rel_OTHER": "อื่น ๆ"
 }

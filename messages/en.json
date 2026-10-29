@@ -107,5 +107,13 @@
 	"home_hero_airs": "EP {episode} airs {time}",
 	"home_hero_open": "See this show",
 	"home_count_more": "See all {count}",
-	"home_top_open": "Details"
+	"home_top_open": "Details",
+	"detail_episode_count": "{count} episodes",
+	"detail_watch_trailer": "Watch the trailer",
+	"detail_score_note": "Average score on AniList",
+	"rel_CHARACTER": "Shared characters",
+	"rel_SUMMARY": "Summary",
+	"rel_COMPILATION": "Compilation",
+	"rel_CONTAINS": "Contains",
+	"rel_OTHER": "Other"
 }
