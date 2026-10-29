@@ -30,7 +30,7 @@
 {:else if view === 'error'}
 	<div class="state" class:page={inset} role="alert">
 		<p class="title">{m.error_title()}</p>
-		<p>{rateLimited ? m.error_rate() : String((query.error as Error)?.message ?? '')}</p>
+		<p>{rateLimited ? m.error_rate() : m.error_generic()}</p>
 		<button type="button" class="btn btn-ink" onclick={() => query.refetch()}>{m.retry()}</button>
 	</div>
 {:else}

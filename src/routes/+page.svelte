@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { browser } from '$app/env';
-	import { createQuery } from '@tanstack/svelte-query';
+	import { createQuery, keepPreviousData } from '@tanstack/svelte-query';
 	import { getAiringWindow, getHome, getSeason } from '#lib/anilist/queries.js';
 	import { useAiringInvalidation } from '#lib/anilist/query-client.svelte.js';
 	import { clock } from '#lib/clock.svelte.js';
@@ -15,8 +15,9 @@
 
 	let { data }: PageProps = $props();
 
-	const season = currentSeason(new Date());
-	const next = shiftSeason(season, 1);
+	// follows the shared clock, so a tab left open across a season boundary moves on
+	const season = $derived(currentSeason(new Date(clock.now * 1000)));
+	const next = $derived(shiftSeason(season, 1));
 	const hour = $derived(Math.floor(clock.now / 3600));
 
 	const home = createQuery(() => ({
@@ -30,6 +31,8 @@
 		queryKey: ['airing', hour],
 		queryFn: () => getAiringWindow(hour * 3600, hour * 3600 + 86400 + 3600),
 		initialData: data.initial?.hour === hour ? data.initial.airing : undefined,
+		// the hour's key changes every hour: keep the last lineup on screen while the next loads
+		placeholderData: keepPreviousData,
 		enabled: browser,
 		initialDataUpdatedAt: data.initial?.fetchedAt
 	}));

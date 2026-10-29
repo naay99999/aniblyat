@@ -115,5 +115,6 @@
 	"rel_SUMMARY": "สรุปเรื่อง",
 	"rel_COMPILATION": "รวมตอน",
 	"rel_CONTAINS": "รวมอยู่ในเรื่องนี้",
-	"rel_OTHER": "อื่น ๆ"
+	"rel_OTHER": "อื่น ๆ",
+	"error_generic": "AniList ไม่ตอบกลับในตอนนี้ ลองใหม่อีกครั้ง"
 }

@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { m } from '#lib/paraglide/messages.js';
 	import { homePath, listPath, seasonHref, seasonsPath } from '../paths';
+	import { clock } from '../clock.svelte';
 	import { currentSeason } from '../season';
 
-	const links = [
+	const links = $derived([
 		{ href: homePath(), label: m.nav_home() },
-		{ href: seasonHref(currentSeason(new Date())), label: m.nav_season() },
+		{ href: seasonHref(currentSeason(new Date(clock.now * 1000))), label: m.nav_season() },
 		{ href: seasonsPath(), label: m.nav_seasons() },
 		{ href: listPath(), label: m.nav_list() }
-	];
+	]);
 </script>
 
 <footer class="footer page">

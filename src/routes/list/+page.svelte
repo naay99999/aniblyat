@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
-	import { createQuery } from '@tanstack/svelte-query';
+	import { createQueries } from '@tanstack/svelte-query';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getMediaByIds, type MediaCard } from '#lib/anilist/queries.js';
 	import { useAiringInvalidation } from '#lib/anilist/query-client.svelte.js';
@@ -11,22 +11,30 @@
 	import { sortMedia } from '#lib/rank.js';
 	import { currentSeason } from '#lib/season.js';
 	import { displayTitle } from '#lib/text.js';
-	import { watchlist, type WatchItem } from '#lib/watchlist.svelte.js';
+	import { bucketIds, watchlist, type WatchItem } from '#lib/watchlist.svelte.js';
 
-	const ids = $derived(watchlist.items.map((i) => i.id).sort((a, b) => a - b));
-	const query = createQuery(() => ({
-		queryKey: ['byIds', ...ids],
-		queryFn: () => getMediaByIds(ids),
-		enabled: ids.length > 0
+	// one query per bucket: saving a title refetches its bucket, not the whole list
+	const buckets = $derived(bucketIds(watchlist.items.map((i) => i.id)));
+	const queries = createQueries(() => ({
+		queries: buckets.map((ids) => ({
+			queryKey: ['byIds', ...ids],
+			queryFn: () => getMediaByIds(ids)
+		}))
 	}));
+	const query = $derived({
+		data: queries.flatMap((q) => q.data ?? []),
+		isError: queries.some((q) => q.isError),
+		isPending: queries.some((q) => q.isPending),
+		refetch: () => queries.forEach((q) => q.isError && q.refetch())
+	});
 	useAiringInvalidation(
-		() => ['byIds', ...ids],
+		() => ['byIds'],
 		() => query.data
 	);
 
 	type Row = { item: WatchItem; media: MediaCard | null };
 	const rows = $derived.by<Row[]>(() => {
-		const byId = new Map((query.data ?? []).map((md) => [md.id, md]));
+		const byId = new Map(query.data.map((md) => [md.id, md]));
 		const known = sortMedia(
 			watchlist.items.flatMap((i) => byId.get(i.id) ?? []),
 			'airing',
@@ -54,7 +62,9 @@
 	{#if watchlist.items.length === 0}
 		<div class="empty">
 			<p>{m.list_empty()}</p>
-			<a href={seasonHref(currentSeason(new Date()))} class="btn">{m.list_empty_action()}</a>
+			<a href={seasonHref(currentSeason(new Date(clock.now * 1000)))} class="btn"
+				>{m.list_empty_action()}</a
+			>
 		</div>
 	{:else}
 		{#if query.isError}

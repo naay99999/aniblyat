@@ -76,3 +76,16 @@ if (typeof window !== 'undefined') {
 		if (e.key === LIST_KEY) watchlist.reload();
 	});
 }
+
+/**
+ * Split ids into request-sized buckets by `id % buckets`, so saving or removing one title
+ * changes one bucket's query instead of every chunk after it. The bucket count only moves when
+ * the list crosses a multiple of `per`.
+ */
+export function bucketIds(ids: number[], per = 40): number[][] {
+	if (ids.length === 0) return [];
+	const count = Math.ceil(ids.length / per);
+	const buckets: number[][] = Array.from({ length: count }, () => []);
+	for (const id of ids) buckets[id % count].push(id);
+	return buckets.filter((b) => b.length > 0).map((b) => b.sort((x, y) => x - y));
+}

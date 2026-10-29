@@ -13,6 +13,7 @@
 	} from '#lib/anilist/query-client.svelte.js';
 	import { browser, version } from '$app/env';
 	import { QueryClient } from '@tanstack/svelte-query';
+	import { clock } from '#lib/clock.svelte.js';
 	import { currentSeason } from '#lib/season.js';
 	import SearchBox from '#lib/components/SearchBox.svelte';
 	import SiteFooter from '#lib/components/SiteFooter.svelte';
@@ -25,7 +26,8 @@
 	// a server render gets its own client so no request sees another's cache
 	const client = browser ? queryClient : new QueryClient();
 
-	const thisSeason = seasonHref(currentSeason(new Date()));
+	// follows the shared clock, so a tab left open across a season boundary moves on
+	const thisSeason = $derived(seasonHref(currentSeason(new Date(clock.now * 1000))));
 	const links = $derived([
 		{ href: homePath(), label: m.nav_home(), active: page.url.pathname === '/' },
 		{ href: thisSeason, label: m.nav_season(), active: page.url.pathname === thisSeason },

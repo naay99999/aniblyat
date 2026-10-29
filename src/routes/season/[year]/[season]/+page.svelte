@@ -15,7 +15,7 @@
 	let { data }: PageProps = $props();
 
 	const season = $derived(data.season);
-	const isCurrent = $derived(sameSeason(season, currentSeason(new Date())));
+	const isCurrent = $derived(sameSeason(season, currentSeason(new Date(clock.now * 1000))));
 	const SORTS: SortKey[] = ['airing', 'popularity', 'score', 'title'];
 	const sortLabels: Record<SortKey, () => string> = {
 		airing: m.sort_airing,

@@ -115,5 +115,6 @@
 	"rel_SUMMARY": "Summary",
 	"rel_COMPILATION": "Compilation",
 	"rel_CONTAINS": "Contains",
-	"rel_OTHER": "Other"
+	"rel_OTHER": "Other",
+	"error_generic": "AniList didn't answer this time. Try again."
 }

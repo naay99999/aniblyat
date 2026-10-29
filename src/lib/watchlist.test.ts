@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { LIST_KEY, Watchlist, loadList, saveList } from './watchlist.svelte';
+import { LIST_KEY, Watchlist, bucketIds, loadList, saveList } from './watchlist.svelte';
 
 function memoryStorage(initial: Record<string, string> = {}) {
 	const data = { ...initial };
@@ -89,5 +89,25 @@ describe('Watchlist', () => {
 		const list = new Watchlist(throwing);
 		expect(() => list.add({ id: 1, title: 'A', cover: null })).not.toThrow();
 		expect(list.has(1)).toBe(true);
+	});
+});
+
+describe('bucketIds', () => {
+	test('one bucket for a short list', () => {
+		expect(bucketIds([5, 1, 3])).toEqual([[1, 3, 5]]);
+	});
+
+	test('an added id changes only its own bucket', () => {
+		const ids = Array.from({ length: 100 }, (_, i) => i * 7 + 1);
+		const before = bucketIds(ids);
+		const after = bucketIds([...ids, 9999]);
+		const changed = after.filter((b) => !before.some((o) => o.join() === b.join()));
+		expect(before.length).toBe(after.length);
+		expect(changed).toHaveLength(1);
+		expect(changed[0]).toContain(9999);
+	});
+
+	test('nothing in, nothing out', () => {
+		expect(bucketIds([])).toEqual([]);
 	});
 });
