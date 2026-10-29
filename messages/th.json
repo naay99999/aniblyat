@@ -116,5 +116,10 @@
 	"rel_COMPILATION": "รวมตอน",
 	"rel_CONTAINS": "รวมอยู่ในเรื่องนี้",
 	"rel_OTHER": "อื่น ๆ",
-	"error_generic": "AniList ไม่ตอบกลับในตอนนี้ ลองใหม่อีกครั้ง"
+	"error_generic": "AniList ไม่ตอบกลับในตอนนี้ ลองใหม่อีกครั้ง",
+	"season_lead": "อนิเมะ {count} เรื่องที่ AniList จัดไว้ใน {season}",
+	"season_lead_pending": "อนิเมะทุกเรื่องที่ AniList จัดไว้ใน {season}",
+	"seasons_now": "ซีซันนี้",
+	"list_next_title": "ตอนต่อไปในลิสต์ของคุณ",
+	"list_empty_trending": "เริ่มจากเรื่องที่มาแรงตอนนี้"
 }

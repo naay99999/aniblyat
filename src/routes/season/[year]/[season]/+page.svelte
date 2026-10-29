@@ -7,7 +7,8 @@
 	import { clock } from '#lib/clock.svelte.js';
 	import MediaGrid from '#lib/components/MediaGrid.svelte';
 	import QueryState from '#lib/components/QueryState.svelte';
-	import { seasonHref } from '#lib/paths.js';
+	import { reveal } from '#lib/actions/reveal.js';
+	import { animePath, seasonHref } from '#lib/paths.js';
 	import { groupByFormat, sortMedia, type SortKey } from '#lib/rank.js';
 	import { currentSeason, sameSeason, seasonLabel, shiftSeason } from '#lib/season.js';
 	import type { PageProps } from './$types';
@@ -30,7 +31,9 @@
 
 	const query = createQuery(() => ({
 		queryKey: ['season', season.year, season.season],
-		queryFn: () => getSeason(season)
+		queryFn: () => getSeason(season),
+		initialData: data.initial?.media,
+		initialDataUpdatedAt: data.initial?.fetchedAt
 	}));
 	useAiringInvalidation(
 		() => ['season', season.year, season.season],
@@ -38,24 +41,52 @@
 	);
 
 	const groups = $derived(groupByFormat(sortMedia(query.data ?? [], sort, clock.now)));
+	// the season's face: its most followed titles, whatever the list below is sorted by
+	const faces = $derived(
+		sortMedia(query.data ?? [], 'popularity', clock.now)
+			.filter((md) => md.coverImage?.large)
+			.slice(0, 8)
+	);
 </script>
 
 <svelte:head><title>{seasonLabel(season)} · aniblyat</title></svelte:head>
 
+{#snippet cards()}
+	<!-- the grid's own shape while AniList answers -->
+	<ul class="ghosts" role="status" aria-label={m.loading()}>
+		{#each { length: 12 }, i (i)}<li></li>{/each}
+	</ul>
+{/snippet}
+
 <div class="page screen">
-	<header class="title-row">
-		<div>
-			<h1>{seasonLabel(season)}</h1>
-			{#if query.data}<p class="sub">{m.season_count({ count: String(query.data.length) })}</p>{/if}
+	<header class="head">
+		<div class="words">
+			<h1 class="display">{seasonLabel(season)}</h1>
+			<p class="lead">
+				{query.data
+					? m.season_lead({ count: String(query.data.length), season: seasonLabel(season) })
+					: m.season_lead_pending({ season: seasonLabel(season) })}
+			</p>
+			<nav class="step" aria-label={seasonLabel(season)}>
+				<a href={seasonHref(shiftSeason(season, -1))} class="link"
+					>← {seasonLabel(shiftSeason(season, -1))}<span class="sr-only">{m.season_prev()}</span></a
+				>
+				<a href={seasonHref(shiftSeason(season, 1))} class="link"
+					>{seasonLabel(shiftSeason(season, 1))} →<span class="sr-only">{m.season_next()}</span></a
+				>
+			</nav>
 		</div>
-		<nav class="step" aria-label={seasonLabel(season)}>
-			<a href={seasonHref(shiftSeason(season, -1))} class="link"
-				>← {seasonLabel(shiftSeason(season, -1))}<span class="sr-only">{m.season_prev()}</span></a
-			>
-			<a href={seasonHref(shiftSeason(season, 1))} class="link"
-				>{seasonLabel(shiftSeason(season, 1))} →<span class="sr-only">{m.season_next()}</span></a
-			>
-		</nav>
+		<ul class="faces" aria-hidden="true">
+			{#each faces as media, i (media.id)}
+				<li use:reveal={i}>
+					<a href={animePath(media.id)} tabindex="-1">
+						<img src={media.coverImage?.large} alt="" width="230" height="345" />
+					</a>
+				</li>
+			{:else}
+				{#each { length: 8 }, i (i)}<li class="blank"></li>{/each}
+			{/each}
+		</ul>
 	</header>
 
 	<div class="toolbar">
@@ -89,7 +120,7 @@
 		</form>
 	</div>
 
-	<QueryState {query}>
+	<QueryState {query} pending={cards}>
 		{#if groups.length === 0}
 			<p class="empty">{m.season_empty()}</p>
 		{:else}
@@ -109,27 +140,101 @@
 	.screen {
 		padding-block: 32px 120px;
 	}
-	.title-row {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: space-between;
+	.head {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		column-gap: var(--gutter);
 		align-items: end;
-		gap: 16px 32px;
+		padding-top: 24px;
+	}
+	.words {
+		grid-column: 1 / 7;
+		display: grid;
+		gap: 24px;
+		align-content: end;
+		padding-bottom: 8px;
 	}
 	h1 {
-		font-size: var(--text-title);
-		font-weight: 800;
-		letter-spacing: -0.04em;
-		line-height: 1;
+		font-size: clamp(4rem, 2rem + 6vw, 9rem);
+		text-transform: uppercase;
+		white-space: nowrap;
 	}
-	.sub {
-		margin-top: 8px;
-		color: var(--color-muted);
+	.lead {
+		max-width: 30ch;
+		font-size: var(--text-lead);
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		line-height: 1.25;
 	}
 	.step {
 		display: flex;
-		gap: 24px;
+		flex-wrap: wrap;
+		gap: 12px 24px;
 		font-weight: 600;
+	}
+	.step a {
+		text-decoration-color: currentColor;
+	}
+	.faces {
+		grid-column: 7 / -1;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 6px;
+		list-style: none;
+	}
+	.faces a,
+	.faces .blank {
+		display: block;
+		aspect-ratio: 2 / 3;
+		overflow: hidden;
+		background: var(--color-surface);
+	}
+	.faces img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 500ms var(--ease-out);
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.faces a:hover img {
+			transform: scale(1.05);
+		}
+	}
+	.ghosts {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+		gap: 32px 20px;
+		list-style: none;
+	}
+	.ghosts li {
+		aspect-ratio: 2 / 3;
+		background: var(--color-surface);
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.ghosts li {
+			animation: wait 1.4s ease-in-out infinite alternate;
+		}
+	}
+	@keyframes wait {
+		to {
+			opacity: 0.5;
+		}
+	}
+	@media (max-width: 900px) {
+		.head {
+			grid-template-columns: minmax(0, 1fr);
+			row-gap: 32px;
+		}
+		.words,
+		.faces {
+			grid-column: 1;
+		}
+		h1 {
+			font-size: 15vw;
+		}
+		.ghosts {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
 	}
 	.toolbar {
 		position: sticky;
@@ -156,7 +261,6 @@
 		gap: 6px;
 		min-height: 36px;
 		padding: 0 14px;
-		border-radius: 999px;
 		background: var(--color-accent-50);
 		color: #134452;
 		font-size: var(--text-small);
@@ -181,6 +285,12 @@
 		border: 0;
 		background-color: var(--color-raised);
 		font-size: var(--text-small);
+	}
+	/* on a phone the chips wrap to two rows: too much to keep pinned over the grid */
+	@media (max-width: 720px) {
+		.toolbar {
+			position: static;
+		}
 	}
 	.group {
 		scroll-margin-top: 80px;

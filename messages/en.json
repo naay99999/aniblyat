@@ -116,5 +116,10 @@
 	"rel_COMPILATION": "Compilation",
 	"rel_CONTAINS": "Contains",
 	"rel_OTHER": "Other",
-	"error_generic": "AniList didn't answer this time. Try again."
+	"error_generic": "AniList didn't answer this time. Try again.",
+	"season_lead": "{count} titles AniList lists for {season}",
+	"season_lead_pending": "Every title AniList lists for {season}",
+	"seasons_now": "This season",
+	"list_next_title": "Next up on your list",
+	"list_empty_trending": "Start with what's trending"
 }

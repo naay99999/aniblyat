@@ -1,9 +1,13 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
-	import { createQueries } from '@tanstack/svelte-query';
+	import { createQueries, createQuery } from '@tanstack/svelte-query';
 	import { m } from '#lib/paraglide/messages.js';
-	import { getMediaByIds, type MediaCard } from '#lib/anilist/queries.js';
+	import { getHome, getMediaByIds, type MediaCard } from '#lib/anilist/queries.js';
+	import { airingStatus, formatAirTime } from '#lib/airing.js';
+	import { inkOn } from '#lib/color.js';
+	import Countdown from '#lib/components/Countdown.svelte';
+	import MediaGrid from '#lib/components/MediaGrid.svelte';
 	import { useAiringInvalidation } from '#lib/anilist/query-client.svelte.js';
 	import { clock } from '#lib/clock.svelte.js';
 	import AiringBadge from '#lib/components/AiringBadge.svelte';
@@ -45,14 +49,35 @@
 			.map((item) => ({ item, media: byId.get(item.id) ?? null }))
 			.sort((a, b) => (order.get(a.item.id) ?? 1e9) - (order.get(b.item.id) ?? 1e9));
 	});
+
+	// the soonest episode among saved titles: the one thing worth counting down to
+	const nextUp = $derived.by(() => {
+		let best: { media: MediaCard; episode: number; airingAt: number } | null = null;
+		for (const { media } of rows) {
+			if (!media) continue;
+			const status = airingStatus(media, clock.now);
+			if (status.kind === 'next' && (!best || status.airingAt < best.airingAt)) {
+				best = { media, episode: status.episode, airingAt: status.airingAt };
+			}
+		}
+		return best;
+	});
+
+	// an empty list starts from what is trending; the home query is usually cached already
+	const home = createQuery(() => ({
+		queryKey: ['home'],
+		queryFn: () => getHome(new Date()),
+		enabled: watchlist.items.length === 0
+	}));
+	const trending = $derived((home.data?.trending ?? []).slice(0, 12));
 </script>
 
 <svelte:head><title>{m.list_title()} · aniblyat</title></svelte:head>
 
 <div class="page screen">
-	<header class="title-row">
-		<h1>{m.list_title()}</h1>
-		<p class="sub">
+	<header class="head">
+		<h1 class="display">{m.list_title()}</h1>
+		<p class="lead">
 			{watchlist.items.length
 				? `${m.season_count({ count: String(watchlist.items.length) })} · ${m.list_lead()}`
 				: m.list_lead()}
@@ -61,12 +86,53 @@
 
 	{#if watchlist.items.length === 0}
 		<div class="empty">
-			<p>{m.list_empty()}</p>
+			<p class="statement">{m.list_empty()}</p>
 			<a href={seasonHref(currentSeason(new Date(clock.now * 1000)))} class="btn"
 				>{m.list_empty_action()}</a
 			>
 		</div>
+		{#if trending.length}
+			<section class="start" aria-labelledby="start-title">
+				<h2 id="start-title">{m.list_empty_trending()}</h2>
+				<MediaGrid items={trending} />
+			</section>
+		{/if}
 	{:else}
+		{#if nextUp}
+			{@const ground = nextUp.media.coverImage?.color ?? null}
+			<section
+				class="next"
+				style:background-color={ground ?? 'var(--color-ink)'}
+				style:color={ground ? inkOn(ground) : 'var(--color-bg)'}
+				aria-labelledby="next-title"
+			>
+				{#if nextUp.media.coverImage?.extraLarge ?? nextUp.media.coverImage?.large}
+					<a href={animePath(nextUp.media.id)} class="next-cover" tabindex="-1" aria-hidden="true">
+						<img
+							src={nextUp.media.coverImage?.extraLarge ?? nextUp.media.coverImage?.large}
+							alt=""
+							width="460"
+							height="690"
+						/>
+					</a>
+				{/if}
+				<div class="next-words">
+					<h2 id="next-title">{m.list_next_title()}</h2>
+					<p class="next-name">
+						<a href={animePath(nextUp.media.id)} class="link"
+							>{displayTitle(nextUp.media.title ?? {})}</a
+						>
+					</p>
+					<p class="next-airs">
+						{m.home_hero_airs({
+							episode: String(nextUp.episode),
+							time: formatAirTime(nextUp.airingAt)
+						})}
+					</p>
+					<Countdown airingAt={nextUp.airingAt} />
+				</div>
+			</section>
+		{/if}
 		{#if query.isError}
 			<p class="error" role="alert">
 				{m.error_title()}
@@ -107,22 +173,73 @@
 		padding-block: 32px 120px;
 		min-height: 70svh;
 	}
+	.head {
+		display: grid;
+		gap: 24px;
+		padding-top: 24px;
+	}
 	h1 {
+		font-size: clamp(4rem, 2rem + 6vw, 9rem);
+	}
+	.lead {
+		font-size: var(--text-lead);
+		font-weight: 600;
+		letter-spacing: -0.02em;
+	}
+	.empty {
+		display: grid;
+		gap: 24px;
+		justify-items: start;
+		margin-top: 72px;
+	}
+	.statement {
 		font-size: var(--text-title);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+		line-height: 1.05;
+	}
+	.start {
+		margin-top: 120px;
+	}
+	h2 {
+		margin-bottom: 32px;
+		font-size: var(--text-head);
 		font-weight: 800;
 		letter-spacing: -0.04em;
 		line-height: 1;
 	}
-	.sub {
-		margin-top: 8px;
-		color: var(--color-muted);
-	}
-	.empty {
+	/* the next episode, in its own cover colour, as the list's headline */
+	.next {
 		display: grid;
-		gap: 20px;
-		justify-items: start;
+		grid-template-columns: minmax(160px, 240px) minmax(0, 1fr);
+		gap: calc(var(--gutter) * 1.5);
+		align-items: end;
 		margin-top: 64px;
+		padding: var(--gutter);
+	}
+	.next-cover img {
+		width: 100%;
+		aspect-ratio: 2 / 3;
+		object-fit: cover;
+	}
+	.next-words {
+		display: grid;
+		gap: 16px;
+		max-width: 720px;
+	}
+	.next h2 {
+		margin: 0;
 		font-size: var(--text-lead);
+		letter-spacing: -0.02em;
+	}
+	.next-name {
+		font-size: var(--text-title);
+		font-weight: 800;
+		letter-spacing: -0.03em;
+		line-height: 1.1;
+	}
+	.next-airs {
+		font-weight: 600;
 	}
 	.error {
 		margin-top: 24px;
@@ -194,6 +311,28 @@
 		height: 1px;
 		overflow: hidden;
 		clip-path: inset(50%);
+	}
+	@media (max-width: 900px) {
+		h1 {
+			font-size: 13vw;
+		}
+		.next {
+			grid-template-columns: 96px 1fr;
+			align-items: start;
+			--countdown-size: clamp(1.75rem, 8vw, 2.75rem);
+		}
+		.next-words {
+			gap: 10px;
+		}
+		.next-name {
+			font-size: var(--text-lead);
+		}
+		.next .next-words :global(.countdown) {
+			grid-column: 1 / -1;
+		}
+		.start {
+			margin-top: 96px;
+		}
 	}
 	@media (max-width: 720px) {
 		li {
