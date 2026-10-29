@@ -11,7 +11,8 @@
 		queryClient,
 		shouldPersist
 	} from '#lib/anilist/query-client.svelte.js';
-	import { version } from '$app/env';
+	import { browser, version } from '$app/env';
+	import { QueryClient } from '@tanstack/svelte-query';
 	import { currentSeason } from '#lib/season.js';
 	import SiteFooter from '#lib/components/SiteFooter.svelte';
 	import { homePath, listPath, seasonHref, seasonsPath } from '#lib/paths.js';
@@ -19,6 +20,9 @@
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
+
+	// a server render gets its own client so no request sees another's cache
+	const client = browser ? queryClient : new QueryClient();
 
 	const thisSeason = seasonHref(currentSeason(new Date()));
 	const links = $derived([
@@ -51,7 +55,7 @@
 </svelte:head>
 
 <PersistQueryClientProvider
-	client={queryClient}
+	{client}
 	persistOptions={{
 		persister,
 		maxAge: CACHE_MAX_AGE,

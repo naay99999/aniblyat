@@ -2,7 +2,6 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import type { MediaCard } from '../anilist/queries';
 	import { pinProgressAction } from '../actions/pin-progress';
-	import { reveal } from '../actions/reveal';
 	import MediaGrid from '../components/MediaGrid.svelte';
 	import { animePath, seasonHref } from '../paths';
 	import { seasonLabel, type Season } from '../season';
@@ -51,7 +50,7 @@
 
 	<div class="more page">
 		{#if rest.length}<MediaGrid items={rest} />{/if}
-		<p class="action" use:reveal>
+		<p class="action">
 			<a href={seasonHref(season)} class="btn"
 				>{m.home_next_action({ season: seasonLabel(season) })}</a
 			>
@@ -128,6 +127,11 @@
 		}
 		.pic {
 			transform: none !important;
+		}
+	}
+	@media (max-width: 720px) {
+		.more {
+			padding-block: 64px 72px;
 		}
 	}
 	@media (max-width: 720px) {

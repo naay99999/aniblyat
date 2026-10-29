@@ -57,4 +57,10 @@
 		margin-inline: -0.04em;
 		white-space: nowrap;
 	}
+	@media (max-width: 720px) {
+		.footer {
+			padding-top: 72px;
+			gap: 48px;
+		}
+	}
 </style>

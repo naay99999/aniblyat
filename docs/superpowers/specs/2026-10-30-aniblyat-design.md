@@ -155,3 +155,10 @@ _(การตัดสินใจของผู้ออกแบบ)_ ปี
 
 - โฟลเดอร์โปรเจกต์ตอนนี้ว่าง และยังไม่ใช่ git repo — ต้อง `git init` ก่อนเริ่ม
 - เวอร์ชันก่อน (React) เคยมีปัญหาที่บันทึกไว้: cache ไม่หมดอายุทำให้ countdown ค้าง, `perPage: 50` ตัดข้อมูลโดยไม่ paginate, stripHtml ไม่ครอบคลุม entity — เอกสารนี้กำหนดไว้แล้วว่าต้องไม่เกิดซ้ำ
+
+## แก้ไขหลังส่งมอบ (2026-10-30, รอบ design gate)
+
+- **หน้าแรก render ฝั่ง server (SSR)** เฉพาะ `/` (`src/routes/+page.ts`, `ssr = true`): ดึง Home + ตารางฉาย 24 ชม. ตอน render แล้วส่งเป็น `initialData` ให้ TanStack Query — จอแรกมีปกและตารางทันทีโดยไม่ต้องรอ JS; ตอน hydrate SvelteKit ตอบ fetch จาก response ที่ฝังในหน้า จึงไม่ยิง AniList ซ้ำ หน้าอื่นยังเป็น SPA (`ssr = false` ที่ layout)
+- ถ้า AniList ล่ม/โดน rate limit ตอน render (ไม่ retry ฝั่ง server) หน้าแรกจะกลับไปโหลดฝั่ง client ตามเดิม
+- ฝั่ง server ใช้ QueryClient ใหม่ต่อ request และปิด query (`enabled: browser`) เพื่อไม่ให้ข้อมูลรั่วข้าม request
+- ผลข้างเคียง: การ deploy ในอนาคตต้องเป็นแบบมี server (หรือ adapter ที่รองรับ SSR) ไม่ใช่ static ล้วน

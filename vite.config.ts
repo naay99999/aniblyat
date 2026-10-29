@@ -6,6 +6,10 @@ import adapter from '@sveltejs/adapter-auto';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
+	ssr: {
+		// these ship .svelte files that must be compiled for server rendering of the home page
+		noExternal: ['@tanstack/svelte-query', '@tanstack/svelte-query-persist-client']
+	},
 	plugins: [
 		tailwindcss(),
 		sveltekit({

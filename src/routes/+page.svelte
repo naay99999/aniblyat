@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/env';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { getAiringWindow, getHome, getSeason } from '#lib/anilist/queries.js';
 	import { useAiringInvalidation } from '#lib/anilist/query-client.svelte.js';
@@ -10,19 +11,32 @@
 	import SeasonCount from '#lib/home/SeasonCount.svelte';
 	import TopShowcase from '#lib/home/TopShowcase.svelte';
 	import { currentSeason, shiftSeason } from '#lib/season.js';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 
 	const season = currentSeason(new Date());
 	const next = shiftSeason(season, 1);
 	const hour = $derived(Math.floor(clock.now / 3600));
 
-	const home = createQuery(() => ({ queryKey: ['home'], queryFn: () => getHome(new Date()) }));
+	const home = createQuery(() => ({
+		queryKey: ['home'],
+		queryFn: () => getHome(new Date()),
+		initialData: data.initial?.home,
+		enabled: browser,
+		initialDataUpdatedAt: data.initial?.fetchedAt
+	}));
 	const airing = createQuery(() => ({
 		queryKey: ['airing', hour],
-		queryFn: () => getAiringWindow(hour * 3600, hour * 3600 + 86400 + 3600)
+		queryFn: () => getAiringWindow(hour * 3600, hour * 3600 + 86400 + 3600),
+		initialData: data.initial?.hour === hour ? data.initial.airing : undefined,
+		enabled: browser,
+		initialDataUpdatedAt: data.initial?.fetchedAt
 	}));
 	const seasonList = createQuery(() => ({
 		queryKey: ['season', season.year, season.season],
-		queryFn: () => getSeason(season)
+		queryFn: () => getSeason(season),
+		enabled: browser
 	}));
 
 	useAiringInvalidation(
