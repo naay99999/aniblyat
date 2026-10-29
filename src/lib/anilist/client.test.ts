@@ -10,6 +10,15 @@ function json(body: unknown, status = 200, headers: Record<string, string> = {})
 
 const QUERY = 'query { Viewer { id } }';
 
+async function failure(p: Promise<unknown>): Promise<AniListError> {
+	try {
+		await p;
+	} catch (e) {
+		return e as AniListError;
+	}
+	throw new Error('expected rejection');
+}
+
 describe('anilistFetch', () => {
 	test('returns data on 200', async () => {
 		const fetch = vi.fn(async () => json({ data: { Media: { id: 1 } } }));
@@ -35,9 +44,7 @@ describe('anilistFetch', () => {
 	test('gives up after maxRetries', async () => {
 		const fetch = vi.fn(async () => json({ errors: [] }, 429, { 'Retry-After': '1' }));
 		const sleep = vi.fn(async () => {});
-		const err = await anilistFetch(QUERY, undefined, { fetch, sleep, maxRetries: 2 }).catch(
-			(e: AniListError) => e
-		);
+		const err = await failure(anilistFetch(QUERY, undefined, { fetch, sleep, maxRetries: 2 }));
 		expect(err).toBeInstanceOf(AniListError);
 		expect(err.status).toBe(429);
 		expect(err.retryable).toBe(true);
@@ -48,7 +55,7 @@ describe('anilistFetch', () => {
 		const fetch = vi.fn(async () =>
 			json({ errors: [{ message: 'Not Found.', status: 404 }], data: { Media: null } }, 404)
 		);
-		const err = await anilistFetch(QUERY, undefined, { fetch }).catch((e: AniListError) => e);
+		const err = await failure(anilistFetch(QUERY, undefined, { fetch }));
 		expect(err).toBeInstanceOf(AniListError);
 		expect(err.status).toBe(404);
 		expect(err.retryable).toBe(false);
