@@ -121,8 +121,16 @@
 				>
 					{#key current.id}
 						<div class="feature-body">
-							{#if current.bannerImage}
-								<img class="banner" src={current.bannerImage} alt="" width="1900" height="400" />
+							<!-- every title keeps the same band, so the card holds its height between picks -->
+							{#if current.bannerImage ?? current.coverImage?.extraLarge}
+								<img
+									class="banner"
+									class:from-cover={!current.bannerImage}
+									src={current.bannerImage ?? current.coverImage?.extraLarge}
+									alt=""
+									width="1900"
+									height="400"
+								/>
 							{/if}
 							<div class="detail">
 								{#if current.coverImage?.extraLarge ?? current.coverImage?.large}
@@ -245,6 +253,9 @@
 		width: 100%;
 		aspect-ratio: 4 / 1;
 		object-fit: cover;
+	}
+	.from-cover {
+		object-position: center 22%;
 	}
 	.detail {
 		display: grid;

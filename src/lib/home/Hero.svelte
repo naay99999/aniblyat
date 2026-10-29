@@ -35,6 +35,17 @@
 		return () => io.disconnect();
 	});
 
+	// jump the pinned stage to one title; the scroll position stays the single source of truth
+	function jump(i: number) {
+		const rect = section.getBoundingClientRect();
+		const travel = rect.height - window.innerHeight;
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		window.scrollTo({
+			top: window.scrollY + rect.top + (travel * (i + 0.5)) / panels.length,
+			behavior: reduce ? 'auto' : 'smooth'
+		});
+	}
+
 	// the site bar takes the hero's field and ink while it sits over the hero
 	$effect(() => {
 		const root = document.documentElement.style;
@@ -59,6 +70,24 @@
 		<div class="words">
 			<h1 id="hero-title" class="title display">{seasonLabel(season)}</h1>
 			<p class="lead">{m.home_title({ season: seasonLabel(season) })}</p>
+			{#if panels.length > 1}
+				<ul class="steps" aria-label={m.home_trending_caption()}>
+					{#each panels as media, i (media.id)}
+						<li>
+							<button
+								type="button"
+								class="step"
+								class:on={i === index}
+								aria-current={i === index ? 'true' : undefined}
+								onclick={() => jump(i)}
+							>
+								<img src={media.coverImage?.large} alt="" width="36" height="54" />
+								<span>{displayTitle(media.title ?? {})}</span>
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
 		</div>
 
 		<div class="now">
@@ -160,6 +189,51 @@
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		line-height: 1.25;
+	}
+	.steps {
+		display: grid;
+		gap: 4px;
+		margin-top: 40px;
+		max-width: 420px;
+		list-style: none;
+	}
+	.step {
+		display: grid;
+		grid-template-columns: 36px 1fr;
+		align-items: center;
+		gap: 14px;
+		width: 100%;
+		padding: 6px;
+		text-align: left;
+		font-size: var(--text-small);
+		font-weight: 600;
+		opacity: 0.62;
+		transition:
+			opacity var(--t-ui) ease,
+			background-color var(--t-ui) ease,
+			transform var(--t-press) var(--ease-out);
+	}
+	.step.on {
+		opacity: 1;
+		background: color-mix(in srgb, currentColor 10%, transparent);
+	}
+	.step:active {
+		transform: scale(0.98);
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.step:hover {
+			opacity: 1;
+		}
+	}
+	.step img {
+		width: 36px;
+		height: 54px;
+		object-fit: cover;
+	}
+	.step span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	.now {
 		grid-column: 1 / 8;
@@ -279,6 +353,9 @@
 		}
 		.title {
 			font-size: 15vw;
+		}
+		.steps {
+			display: none;
 		}
 		.lead {
 			margin-top: 12px;

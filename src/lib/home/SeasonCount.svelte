@@ -17,9 +17,11 @@
 	<div class="words">
 		<h2 id="count-title" class="claim" use:reveal>{m.home_count_title()}</h2>
 		<p class="figure display tabular" use:reveal={1}>
-			<a href={seasonHref(season)} class:pending={count == null}>{count ?? '…'}</a><sup
-				>{m.home_count_unit()}</sup
-			>
+			{#if count == null}
+				<span class="pending" aria-hidden="true"></span>
+			{:else}
+				<a href={seasonHref(season)}>{count}</a><sup>{m.home_count_unit()}</sup>
+			{/if}
 		</p>
 		<p class="caption" use:reveal={2}>
 			{m.home_count_caption({ season: seasonLabel(season) })}
@@ -56,8 +58,10 @@
 		background: var(--color-ink);
 		color: var(--color-bg);
 	}
+	/* mirrored against the Top 10 split that follows: pictures left, figure right */
 	.words {
-		grid-column: 1 / 6;
+		grid-column: 9 / -1;
+		grid-row: 1;
 		display: grid;
 		gap: 24px;
 		justify-items: start;
@@ -69,14 +73,28 @@
 		line-height: 1;
 	}
 	.figure {
+		font-size: clamp(140px, 13vw, 220px);
 		/* the glyph box spills ~0.2em above a 0.8 line box; keep it off the heading */
 		margin-top: 0.12em;
-		font-size: clamp(160px, 18vw, 300px);
 		line-height: 0.8;
 		min-height: 0.8em;
 	}
+	/* while the season loads: a block the size of the figure, in the wall's blank tone */
 	.pending {
-		color: #5c5852;
+		display: block;
+		width: 1.8em;
+		height: 0.72em;
+		background: #1f1f1f;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.pending {
+			animation: wait 1.4s ease-in-out infinite alternate;
+		}
+	}
+	@keyframes wait {
+		to {
+			opacity: 0.5;
+		}
 	}
 	.figure a {
 		transition: color var(--t-hover) ease;
@@ -99,7 +117,8 @@
 		font-size: var(--text-body);
 	}
 	.wall {
-		grid-column: 6 / -1;
+		grid-column: 1 / 9;
+		grid-row: 1;
 		display: grid;
 		grid-template-columns: repeat(8, minmax(0, 1fr));
 		gap: 6px;
@@ -138,6 +157,7 @@
 		.words,
 		.wall {
 			grid-column: 1;
+			grid-row: auto;
 		}
 		.figure {
 			font-size: 40vw;

@@ -128,6 +128,7 @@
 	}
 	td:nth-child(2) {
 		width: 18%;
+		white-space: nowrap;
 	}
 	td:nth-child(3) {
 		width: 14%;
