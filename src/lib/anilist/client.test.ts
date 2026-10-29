@@ -82,3 +82,16 @@ describe('fetchAllPages', () => {
 		expect(fetchPage).toHaveBeenCalledTimes(4);
 	});
 });
+
+describe('retry delay in the browser', () => {
+	test('falls back to X-RateLimit-Reset when Retry-After is not exposed by CORS', async () => {
+		const responses = [
+			json({ errors: [] }, 429, { 'X-RateLimit-Reset': '1005' }),
+			json({ data: { ok: true } })
+		];
+		const fetch = vi.fn(async () => responses.shift()!);
+		const sleep = vi.fn(async () => {});
+		await anilistFetch(QUERY, undefined, { fetch, sleep, now: () => 1000_000 });
+		expect(sleep).toHaveBeenCalledWith(5000);
+	});
+});

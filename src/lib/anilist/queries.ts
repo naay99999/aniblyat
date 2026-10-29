@@ -89,7 +89,7 @@ const AiringWindowQuery = graphql(`
 			pageInfo {
 				hasNextPage
 			}
-			airingSchedules(airingAt_greater: $from, airingAt_lesser: $to, sort: TIME) {
+			airingSchedules(airingAt_greater: $from, airingAt_lesser: $to, sort: [TIME, ID]) {
 				episode
 				airingAt
 				media {
@@ -111,7 +111,7 @@ const SeasonQuery = graphql(`
 				season: $season
 				seasonYear: $year
 				isAdult: false
-				sort: POPULARITY_DESC
+				sort: [POPULARITY_DESC, ID]
 			) {
 				...MediaCard
 			}
@@ -184,6 +184,17 @@ function compact<T>(list: (T | null | undefined)[] | null | undefined): T[] {
 	return (list ?? []).filter((x): x is T => x != null);
 }
 
+/** Offset pages can repeat a row on a boundary; keyed lists must not see it twice. */
+function uniqueBy<T>(list: T[], key: (item: T) => string | number): T[] {
+	const seen = new Set<string | number>();
+	return list.filter((item) => {
+		const k = key(item);
+		if (seen.has(k)) return false;
+		seen.add(k);
+		return true;
+	});
+}
+
 export async function getHome(
 	now: Date,
 	opts?: FetchOptions
@@ -214,21 +225,23 @@ export async function getAiringWindow(
 			hasNextPage: data.Page?.pageInfo?.hasNextPage ?? false
 		};
 	});
-	return all.flatMap((s) =>
+	const entries = all.flatMap((s) =>
 		s.media && !s.media.isAdult
 			? [{ episode: s.episode, airingAt: s.airingAt, media: s.media }]
 			: []
 	);
+	return uniqueBy(entries, (e) => `${e.media.id}:${e.episode}`);
 }
 
 export async function getSeason(s: Season, opts?: FetchOptions): Promise<MediaCard[]> {
-	return fetchAllPages(async (page) => {
+	const all = await fetchAllPages(async (page) => {
 		const data = await anilistFetch(SeasonQuery, { season: s.season, year: s.year, page }, opts);
 		return {
 			items: compact(data.Page?.media),
 			hasNextPage: data.Page?.pageInfo?.hasNextPage ?? false
 		};
 	});
+	return uniqueBy(all, (m) => m.id);
 }
 
 export async function getMedia(id: number, opts?: FetchOptions): Promise<MediaDetail | null> {

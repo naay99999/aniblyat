@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { getAiringWindow, getMedia, getMediaByIds } from './queries';
+import { getAiringWindow, getMedia, getMediaByIds, getSeason } from './queries';
 
 function json(body: unknown, status = 200) {
 	return new Response(JSON.stringify(body), {
@@ -93,4 +93,25 @@ test('getMedia returns null on AniList 404', async () => {
 test('getMedia rethrows other errors', async () => {
 	const fetch = vi.fn(async () => json({ errors: [{ message: 'boom', status: 500 }] }, 500));
 	await expect(getMedia(1, { fetch })).rejects.toThrow('boom');
+});
+
+test('getSeason drops a title repeated across a page boundary', async () => {
+	const pages = [
+		{ pageInfo: { hasNextPage: true }, media: [cardJson(1), cardJson(2)] },
+		{ pageInfo: { hasNextPage: false }, media: [cardJson(2), cardJson(3)] }
+	];
+	const fetch = vi.fn(async () => json({ data: { Page: pages.shift() } }));
+	const result = await getSeason({ season: 'FALL', year: 2026 }, { fetch });
+	expect(result.map((m) => m.id)).toEqual([1, 2, 3]);
+});
+
+test('getAiringWindow drops a repeated episode across a page boundary', async () => {
+	const entry = { episode: 1, airingAt: 10, media: cardJson(1) };
+	const pages = [
+		{ pageInfo: { hasNextPage: true }, airingSchedules: [entry] },
+		{ pageInfo: { hasNextPage: false }, airingSchedules: [entry, { ...entry, episode: 2 }] }
+	];
+	const fetch = vi.fn(async () => json({ data: { Page: pages.shift() } }));
+	const result = await getAiringWindow(0, 100, { fetch });
+	expect(result.map((r) => `${r.media.id}:${r.episode}`)).toEqual(['1:1', '1:2']);
 });

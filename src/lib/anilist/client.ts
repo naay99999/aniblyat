@@ -19,9 +19,19 @@ export type FetchOptions = {
 	fetch?: typeof fetch;
 	sleep?: (ms: number) => Promise<void>;
 	maxRetries?: number;
+	now?: () => number;
 };
 
 const defaultSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/** Retry-After when readable; in browsers CORS hides it, so use the exposed X-RateLimit-Reset (unix seconds). */
+function retryDelayMs(headers: Headers, nowMs: number): number {
+	const retryAfter = Number(headers.get('Retry-After'));
+	if (Number.isFinite(retryAfter) && retryAfter > 0) return retryAfter * 1000;
+	const reset = Number(headers.get('X-RateLimit-Reset'));
+	if (Number.isFinite(reset) && reset * 1000 > nowMs) return Math.min(reset * 1000 - nowMs, 60_000);
+	return 60_000;
+}
 
 type GraphQLResponse<T> = {
 	data?: T | null;
@@ -50,8 +60,7 @@ export async function anilistFetch<TData, TVars>(
 			if (attempt >= maxRetries) {
 				throw new AniListError('AniList rate limit reached', 429, true);
 			}
-			const retryAfter = Number(res.headers.get('Retry-After'));
-			await sleep((Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 60) * 1000);
+			await sleep(retryDelayMs(res.headers, (opts.now ?? Date.now)()));
 			continue;
 		}
 

@@ -5,7 +5,13 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale, setLocale } from '#lib/paraglide/runtime.js';
 	import favicon from '#lib/assets/favicon.svg';
-	import { CACHE_MAX_AGE, persister, queryClient } from '#lib/anilist/query-client.svelte.js';
+	import {
+		CACHE_MAX_AGE,
+		persister,
+		queryClient,
+		shouldPersist
+	} from '#lib/anilist/query-client.svelte.js';
+	import { version } from '$app/env';
 	import { currentSeason } from '#lib/season.js';
 	import SiteFooter from '#lib/components/SiteFooter.svelte';
 	import { homePath, listPath, seasonHref, seasonsPath } from '#lib/paths.js';
@@ -46,7 +52,15 @@
 
 <PersistQueryClientProvider
 	client={queryClient}
-	persistOptions={{ persister, maxAge: CACHE_MAX_AGE, buster: 'v1' }}
+	persistOptions={{
+		persister,
+		maxAge: CACHE_MAX_AGE,
+		buster: version,
+		dehydrateOptions: {
+			shouldDehydrateQuery: (q) =>
+				q.state.status === 'success' && shouldPersist(q.queryKey, new Date())
+		}
+	}}
 >
 	<a class="skip" href="#main">{m.nav_skip()}</a>
 	<header class="bar page" class:over={page.url.pathname === '/'}>
