@@ -56,3 +56,113 @@
 		scroll-behavior: auto !important;
 	}
 }
+
+/* motion tokens */
+:root {
+	--ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+	--ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
+	--ease-exit: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+	--t-press: 140ms;
+	--t-hover: 180ms;
+	--t-ui: 240ms;
+	--gutter: clamp(16px, 2.2vw, 32px);
+}
+
+@layer components {
+	.page {
+		padding-inline: var(--gutter);
+	}
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5em;
+		min-height: 44px;
+		padding: 0 1.25em;
+		border-radius: 0;
+		background: var(--color-accent);
+		color: var(--color-accent-ink);
+		font-weight: 600;
+		transition:
+			transform var(--t-press) var(--ease-out),
+			background-color var(--t-hover) ease;
+	}
+	.btn:active {
+		transform: scale(0.97);
+	}
+	.btn-ink {
+		background: var(--color-ink);
+		color: var(--color-bg);
+	}
+	.link {
+		text-decoration: underline;
+		text-decoration-color: transparent;
+		text-underline-offset: 0.2em;
+		text-decoration-thickness: 0.07em;
+		transition: text-decoration-color var(--t-hover) ease;
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.btn:hover {
+			background: #1b5666;
+		}
+		.btn-ink:hover {
+			background: #2a2a2a;
+		}
+		.link:hover {
+			text-decoration-color: currentColor;
+		}
+	}
+	.display {
+		font-weight: 800;
+		letter-spacing: -0.05em;
+		line-height: 0.88;
+	}
+	.tabular {
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+/* entrance: set by the reveal action; finished state is the default without motion */
+@media (prefers-reduced-motion: no-preference) {
+	[data-reveal] {
+		opacity: 0;
+		transform: translateY(24px);
+		transition:
+			opacity 700ms var(--ease-out),
+			transform 900ms var(--ease-expo);
+		transition-delay: calc(var(--i, 0) * 80ms);
+	}
+	[data-reveal].is-in {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* page to page */
+@view-transition {
+	navigation: auto;
+}
+@media (prefers-reduced-motion: no-preference) {
+	::view-transition-old(root) {
+		animation: vt-leave 200ms var(--ease-exit) both;
+	}
+	::view-transition-new(root) {
+		animation: vt-arrive 380ms var(--ease-out) 60ms both;
+	}
+	::view-transition-group(*) {
+		animation-duration: 480ms;
+		animation-timing-function: var(--ease-in-out);
+	}
+}
+@keyframes vt-leave {
+	to {
+		opacity: 0;
+	}
+}
+@keyframes vt-arrive {
+	from {
+		opacity: 0;
+		transform: translateY(16px);
+	}
+}
