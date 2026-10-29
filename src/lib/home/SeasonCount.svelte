@@ -1,15 +1,21 @@
 <script lang="ts">
 	import { m } from '#lib/paraglide/messages.js';
+	import type { MediaCard } from '../anilist/queries';
 	import { reveal } from '../actions/reveal';
-	import { seasonHref } from '../paths';
+	import { animePath, seasonHref } from '../paths';
 	import { seasonLabel, type Season } from '../season';
+	import { displayTitle } from '../text';
 
-	let { season, count }: { season: Season; count: number | undefined } = $props();
+	let { season, items }: { season: Season; items: MediaCard[] | undefined } = $props();
+
+	const count = $derived(items?.length);
+	// the wall shows the season's most followed titles; the link carries the rest
+	const wall = $derived((items ?? []).filter((i) => i.coverImage?.large).slice(0, 40));
 </script>
 
 <section class="count page" aria-labelledby="count-title">
-	<h2 id="count-title" class="claim" use:reveal>{m.home_count_title()}</h2>
-	<div class="figure-block">
+	<div class="words">
+		<h2 id="count-title" class="claim" use:reveal>{m.home_count_title()}</h2>
 		<p class="figure display tabular" use:reveal={1}>
 			<a href={seasonHref(season)} class:pending={count == null}>{count ?? '…'}</a><sup
 				>{m.home_count_unit()}</sup
@@ -18,30 +24,54 @@
 		<p class="caption" use:reveal={2}>
 			{m.home_count_caption({ season: seasonLabel(season) })}
 		</p>
+		{#if count}
+			<p use:reveal={3}>
+				<a href={seasonHref(season)} class="btn">{m.home_count_more({ count: String(count) })}</a>
+			</p>
+		{/if}
 	</div>
+
+	<ul class="wall" aria-hidden="true">
+		{#each wall as media, i (media.id)}
+			<li use:reveal={i % 8}>
+				<a href={animePath(media.id)} tabindex="-1" title={displayTitle(media.title ?? {})}>
+					<img src={media.coverImage?.large} alt="" width="230" height="345" loading="lazy" />
+				</a>
+			</li>
+		{:else}
+			{#each { length: 24 }, i (i)}
+				<li class="blank"></li>
+			{/each}
+		{/each}
+	</ul>
 </section>
 
 <style>
 	.count {
 		display: grid;
-		grid-template-rows: auto 1fr;
-		min-height: 90svh;
-		padding-block: 120px 96px;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		column-gap: var(--gutter);
+		align-items: end;
+		padding-block: 160px;
 		background: var(--color-ink);
 		color: var(--color-bg);
 	}
-	.claim {
-		font-size: var(--text-lead);
-		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.05;
+	.words {
+		grid-column: 1 / 6;
+		display: grid;
+		gap: 24px;
+		justify-items: start;
 	}
-	.figure-block {
-		align-self: end;
-		padding-top: 12vh;
+	.claim {
+		font-size: var(--text-head);
+		font-weight: 800;
+		letter-spacing: -0.04em;
+		line-height: 1;
 	}
 	.figure {
-		font-size: clamp(180px, 23vw, 380px);
+		/* the glyph box spills ~0.2em above a 0.8 line box; keep it off the heading */
+		margin-top: 0.12em;
+		font-size: clamp(160px, 18vw, 300px);
 		line-height: 0.8;
 		min-height: 0.8em;
 	}
@@ -65,16 +95,59 @@
 		top: 0.15em;
 	}
 	.caption {
-		margin-top: 32px;
-		max-width: 34ch;
+		max-width: 36ch;
 		font-size: var(--text-body);
 	}
-	@media (max-width: 720px) {
+	.wall {
+		grid-column: 6 / -1;
+		display: grid;
+		grid-template-columns: repeat(8, minmax(0, 1fr));
+		gap: 6px;
+		list-style: none;
+	}
+	.wall a,
+	.blank {
+		display: block;
+		aspect-ratio: 2 / 3;
+		overflow: hidden;
+		background: #1f1f1f;
+	}
+	.wall img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition:
+			transform 500ms var(--ease-out),
+			opacity var(--t-hover) ease;
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.wall:hover img {
+			opacity: 0.55;
+		}
+		.wall a:hover img {
+			opacity: 1;
+			transform: scale(1.06);
+		}
+	}
+	@media (max-width: 900px) {
 		.count {
-			min-height: 80svh;
+			grid-template-columns: minmax(0, 1fr);
+			row-gap: 48px;
+			padding-block: 96px;
+		}
+		.words,
+		.wall {
+			grid-column: 1;
 		}
 		.figure {
 			font-size: 40vw;
+		}
+		.wall {
+			grid-template-columns: repeat(6, minmax(0, 1fr));
+			gap: 4px;
+		}
+		.wall li:nth-child(n + 25) {
+			display: none;
 		}
 	}
 </style>

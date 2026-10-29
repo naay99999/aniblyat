@@ -14,6 +14,7 @@
 	import { browser, version } from '$app/env';
 	import { QueryClient } from '@tanstack/svelte-query';
 	import { currentSeason } from '#lib/season.js';
+	import SearchBox from '#lib/components/SearchBox.svelte';
 	import SiteFooter from '#lib/components/SiteFooter.svelte';
 	import { homePath, listPath, seasonHref, seasonsPath } from '#lib/paths.js';
 	import './layout.css';
@@ -37,6 +38,35 @@
 		},
 		{ href: listPath(), label: m.nav_list(), active: page.url.pathname === '/list' }
 	]);
+
+	// the bar steps out of the way while reading down and comes back on the way up
+	let hidden = $state(false);
+	let searching = $state(false);
+	$effect(() => {
+		let last = window.scrollY;
+		let frame = 0;
+		const update = () => {
+			frame = 0;
+			const y = window.scrollY;
+			if (Math.abs(y - last) < 8) return;
+			hidden = y > last && y > 160;
+			last = y;
+		};
+		const onScroll = () => {
+			if (!frame) frame = requestAnimationFrame(update);
+		};
+		window.addEventListener('scroll', onScroll, { passive: true });
+		return () => {
+			window.removeEventListener('scroll', onScroll);
+			cancelAnimationFrame(frame);
+		};
+	});
+	$effect(() => {
+		document.documentElement.style.setProperty(
+			'--bar-shown',
+			hidden && !searching ? '0px' : 'var(--nav-h)'
+		);
+	});
 
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
@@ -67,7 +97,7 @@
 	}}
 >
 	<a class="skip" href="#main">{m.nav_skip()}</a>
-	<header class="bar page" class:over={page.url.pathname === '/'}>
+	<header class="bar page" class:hidden={hidden && !searching}>
 		<a href={homePath()} class="wordmark">aniblyat</a>
 		<nav aria-label="main">
 			<ul>
@@ -80,6 +110,7 @@
 				{/each}
 			</ul>
 		</nav>
+		<SearchBox onopenchange={(open) => (searching = open)} />
 		<button
 			type="button"
 			class="lang link"
@@ -108,19 +139,25 @@
 		top: 8px;
 	}
 	.bar {
-		position: relative;
+		position: sticky;
+		top: 0;
 		z-index: 20;
 		display: grid;
-		grid-template-columns: auto 1fr auto;
+		grid-template-columns: auto 1fr auto auto;
 		align-items: center;
 		gap: 24px;
 		min-height: var(--nav-h);
+		background: var(--bar-bg, var(--color-bg));
+		color: var(--bar-ink, var(--color-ink));
 		font-weight: 600;
 		font-size: var(--text-small);
+		transition:
+			transform 360ms var(--ease-out),
+			background-color 700ms var(--ease-in-out),
+			color 400ms ease;
 	}
-	.over {
-		color: var(--hero-ink, var(--color-ink));
-		transition: color 400ms ease;
+	.hidden {
+		transform: translateY(-100%);
 	}
 	.wordmark {
 		font-weight: 800;
@@ -140,9 +177,10 @@
 	}
 	@media (max-width: 720px) {
 		.bar {
-			grid-template-columns: 1fr auto;
+			grid-template-columns: 1fr auto auto;
+			column-gap: 8px;
 			row-gap: 0;
-			padding-block: 12px;
+			padding-block: 6px 4px;
 		}
 		nav {
 			grid-column: 1 / -1;

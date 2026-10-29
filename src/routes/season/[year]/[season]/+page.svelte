@@ -133,7 +133,8 @@
 	}
 	.toolbar {
 		position: sticky;
-		top: 0;
+		top: var(--bar-shown, 0px);
+		transition: top 360ms var(--ease-out);
 		z-index: 5;
 		display: flex;
 		flex-wrap: wrap;

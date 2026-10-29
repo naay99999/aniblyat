@@ -51,7 +51,7 @@
 	<AiringLineup entries={airing.data ?? []} />
 </QueryState>
 
-<SeasonCount {season} count={seasonList.data?.length} />
+<SeasonCount {season} items={seasonList.data} />
 
 <QueryState query={home} inset>
 	<TopShowcase items={home.data?.top10 ?? []} />

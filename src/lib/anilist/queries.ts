@@ -119,6 +119,16 @@ const SeasonQuery = graphql(`
 	}
 `);
 
+const SearchQuery = graphql(`
+	query Search($search: String!) {
+		Page(perPage: 8) {
+			media(search: $search, type: ANIME, isAdult: false, sort: [SEARCH_MATCH, POPULARITY_DESC]) {
+				...MediaCard
+			}
+		}
+	}
+`);
+
 const MediaByIdsQuery = graphql(`
 	query MediaByIds($ids: [Int]!) {
 		Page(perPage: 50) {
@@ -242,6 +252,11 @@ export async function getSeason(s: Season, opts?: FetchOptions): Promise<MediaCa
 		};
 	});
 	return uniqueBy(all, (m) => m.id);
+}
+
+export async function searchAnime(search: string, opts?: FetchOptions): Promise<MediaCard[]> {
+	const data = await anilistFetch(SearchQuery, { search }, opts);
+	return compact(data.Page?.media).filter((m) => !m.isAdult);
 }
 
 export async function getMedia(id: number, opts?: FetchOptions): Promise<MediaDetail | null> {

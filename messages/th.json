@@ -93,5 +93,20 @@
 	"day_today": "วันนี้",
 	"day_tomorrow": "พรุ่งนี้",
 	"home_top_rank": "อันดับ {rank}",
-	"home_top_lead": "จัดอันดับจากคะแนนเฉลี่ยบน AniList ของเรื่องที่ฉายซีซันนี้"
+	"home_top_lead": "จัดอันดับจากคะแนนเฉลี่ยบน AniList ของเรื่องที่ฉายซีซันนี้",
+	"search_label": "ค้นหาอนิเมะ",
+	"search_placeholder": "ค้นหาอนิเมะ",
+	"search_results": "ผลการค้นหา",
+	"search_empty": "ไม่พบเรื่องที่ตรงกับ “{query}”",
+	"search_loading": "กำลังค้นหา…",
+	"search_open": "เปิดช่องค้นหา",
+	"search_close": "ปิดช่องค้นหา",
+	"unit_days": "วัน",
+	"unit_hours": "ชม.",
+	"unit_minutes": "นาที",
+	"unit_seconds": "วินาที",
+	"home_hero_airs": "EP {episode} ฉาย {time}",
+	"home_hero_open": "ดูเรื่องนี้",
+	"home_count_more": "ดูทั้ง {count} เรื่อง",
+	"home_top_open": "ดูรายละเอียด"
 }

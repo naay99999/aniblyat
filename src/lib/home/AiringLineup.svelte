@@ -38,9 +38,20 @@
 					{#each day.items as entry (entry.media.id + ':' + entry.episode)}
 						<tr use:reveal>
 							<td class="name">
-								<a href={animePath(entry.media.id)} class="link"
-									>{displayTitle(entry.media.title ?? {})}</a
-								>
+								<a href={animePath(entry.media.id)} class="show">
+									{#if entry.media.coverImage?.large}
+										<img
+											src={entry.media.coverImage.large}
+											alt=""
+											width="40"
+											height="60"
+											loading="lazy"
+										/>
+									{:else}
+										<span class="thumb-blank"></span>
+									{/if}
+									<span class="show-title">{displayTitle(entry.media.title ?? {})}</span>
+								</a>
 							</td>
 							<td class="soft">{entry.media.format?.replace('_', ' ') ?? ''}</td>
 							<td class="tabular">EP {entry.episode}</td>
@@ -79,8 +90,37 @@
 		letter-spacing: -0.02em;
 	}
 	td {
-		vertical-align: baseline;
-		padding: 0;
+		vertical-align: middle;
+		padding: 6px 0;
+	}
+	.show {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+	.show img,
+	.thumb-blank {
+		flex: none;
+		width: 40px;
+		height: 60px;
+		object-fit: cover;
+		background: var(--color-bg);
+		transition: transform var(--t-ui) var(--ease-out);
+	}
+	.show-title {
+		text-decoration: underline;
+		text-decoration-color: transparent;
+		text-underline-offset: 0.2em;
+		text-decoration-thickness: 0.07em;
+		transition: text-decoration-color var(--t-hover) ease;
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.show:hover .show-title {
+			text-decoration-color: currentColor;
+		}
+		.show:hover img {
+			transform: scale(1.06);
+		}
 	}
 	.name {
 		width: 48%;
@@ -104,7 +144,8 @@
 	}
 	.day th {
 		position: sticky;
-		top: 0;
+		top: var(--bar-shown, 0px);
+		transition: top 360ms var(--ease-out);
 		z-index: 1;
 		padding: 72px 0 20px;
 		background: var(--color-surface);
@@ -144,6 +185,15 @@
 			font-size: var(--text-lead);
 			line-height: 1.3;
 			padding: 0;
+		}
+		.show {
+			gap: 12px;
+		}
+		td:not(.name) {
+			padding: 0;
+		}
+		td:nth-child(2) {
+			padding-left: 52px;
 		}
 		td:not(.name) {
 			width: auto;

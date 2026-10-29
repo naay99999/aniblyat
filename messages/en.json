@@ -93,5 +93,20 @@
 	"day_today": "Today",
 	"day_tomorrow": "Tomorrow",
 	"home_top_rank": "No. {rank}",
-	"home_top_lead": "Ranked by average score on AniList among this season’s titles."
+	"home_top_lead": "Ranked by average score on AniList among this season’s titles.",
+	"search_label": "Search anime",
+	"search_placeholder": "Search anime",
+	"search_results": "Search results",
+	"search_empty": "Nothing matches “{query}”",
+	"search_loading": "Searching…",
+	"search_open": "Open search",
+	"search_close": "Close search",
+	"unit_days": "days",
+	"unit_hours": "hrs",
+	"unit_minutes": "min",
+	"unit_seconds": "sec",
+	"home_hero_airs": "EP {episode} airs {time}",
+	"home_hero_open": "See this show",
+	"home_count_more": "See all {count}",
+	"home_top_open": "Details"
 }

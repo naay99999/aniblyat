@@ -60,7 +60,7 @@
 
 <style>
 	.wrap {
-		height: 160svh;
+		height: 130svh;
 	}
 	.stage {
 		position: sticky;
@@ -115,7 +115,7 @@
 	.more {
 		display: grid;
 		gap: 48px;
-		padding-block: 96px 160px;
+		padding-block: 48px 160px;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.wrap {
@@ -134,12 +134,29 @@
 			padding-block: 64px 72px;
 		}
 	}
-	@media (max-width: 720px) {
+	@media (max-width: 900px) {
+		.wrap {
+			height: auto;
+		}
+		.stage {
+			position: static;
+			height: auto;
+			padding-top: 96px;
+		}
+		.intro {
+			padding-top: 0;
+		}
+		.trio {
+			gap: 8px;
+			padding-top: 32px;
+		}
 		.pic {
-			width: 20vw;
+			width: 15vw;
+			margin-top: 32px;
+			transform: none !important;
 		}
 		.pic.centre {
-			width: 64vw;
+			width: 56vw;
 		}
 	}
 </style>
