@@ -1,4 +1,15 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "สวัสดี {name}"
+	"countdown_days": "อีก {days} วัน {hours} ชม.",
+	"countdown_hours": "อีก {hours} ชม. {minutes} นาที",
+	"countdown_minutes": "อีก {minutes} นาที",
+	"countdown_now": "กำลังจะฉาย",
+	"status_next": "EP {episode} · {countdown}",
+	"status_airing": "กำลังฉาย",
+	"status_upcoming_date": "เริ่มฉาย {date}",
+	"status_upcoming_tba": "ยังไม่ประกาศวัน",
+	"status_finished": "จบแล้ว",
+	"status_hiatus": "พักฉาย",
+	"status_cancelled": "ยกเลิก",
+	"status_unknown": "ไม่ทราบสถานะ"
 }
