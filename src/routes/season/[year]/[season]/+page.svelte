@@ -117,7 +117,7 @@
 		gap: 16px 32px;
 	}
 	h1 {
-		font-size: var(--text-head);
+		font-size: var(--text-title);
 		font-weight: 800;
 		letter-spacing: -0.04em;
 		line-height: 1;

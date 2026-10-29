@@ -263,7 +263,7 @@
 		max-width: 72ch;
 	}
 	h1 {
-		font-size: clamp(2rem, 1.3rem + 2.4vw, 3.5rem);
+		font-size: var(--text-title);
 		font-weight: 800;
 		letter-spacing: -0.04em;
 		line-height: 1;
@@ -364,7 +364,7 @@
 	}
 	.rel-type {
 		font-size: var(--text-small);
-		color: var(--color-accent);
+		color: var(--color-accent-text);
 		font-weight: 600;
 	}
 	.rel-title {

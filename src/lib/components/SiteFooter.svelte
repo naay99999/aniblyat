@@ -39,7 +39,7 @@
 	.places {
 		display: grid;
 		gap: 4px;
-		font-size: clamp(26px, 2.4vw, 36px);
+		font-size: var(--text-lead);
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		color: var(--color-accent-200);

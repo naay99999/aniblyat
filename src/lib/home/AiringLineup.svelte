@@ -74,7 +74,7 @@
 	table {
 		width: 100%;
 		border-collapse: collapse;
-		font-size: clamp(20px, 2.1vw, 30px);
+		font-size: var(--text-lead);
 		line-height: 1.5;
 		letter-spacing: -0.02em;
 	}
@@ -108,7 +108,7 @@
 		z-index: 1;
 		padding: 72px 0 20px;
 		background: var(--color-surface);
-		color: var(--color-accent);
+		color: var(--color-accent-text);
 		font-weight: 400;
 		text-align: left;
 	}
@@ -141,13 +141,13 @@
 		.name {
 			grid-column: 1 / -1;
 			width: auto;
-			font-size: 22px;
+			font-size: var(--text-lead);
 			line-height: 1.3;
 			padding: 0;
 		}
 		td:not(.name) {
 			width: auto;
-			font-size: 14px;
+			font-size: var(--text-small);
 			color: var(--color-muted);
 		}
 		.day {
@@ -155,7 +155,7 @@
 		}
 		.day th {
 			display: block;
-			font-size: 22px;
+			font-size: var(--text-lead);
 			padding-top: 40px;
 		}
 	}

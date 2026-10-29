@@ -10,16 +10,22 @@
 		refetch: () => unknown;
 	};
 
-	let { query, children, pending }: { query: Query; children: Snippet; pending?: Snippet } =
-		$props();
+	let {
+		query,
+		children,
+		pending,
+		inset = false
+	}: { query: Query; children: Snippet; pending?: Snippet; inset?: boolean } = $props();
 
 	const rateLimited = $derived(query.error instanceof AniListError && query.error.status === 429);
 </script>
 
 {#if query.isPending}
-	{#if pending}{@render pending()}{:else}<p class="state" role="status">{m.loading()}</p>{/if}
+	{#if pending}{@render pending()}{:else}<p class="state" class:page={inset} role="status">
+			{m.loading()}
+		</p>{/if}
 {:else if query.isError}
-	<div class="state" role="alert">
+	<div class="state" class:page={inset} role="alert">
 		<p class="title">{m.error_title()}</p>
 		<p>{rateLimited ? m.error_rate() : String((query.error as Error)?.message ?? '')}</p>
 		<button type="button" class="btn btn-ink" onclick={() => query.refetch()}>{m.retry()}</button>
@@ -35,6 +41,9 @@
 		justify-items: start;
 		padding: 48px 0;
 		color: var(--color-muted);
+	}
+	.state.page {
+		padding-inline: var(--gutter);
 	}
 	.title {
 		color: var(--color-ink);

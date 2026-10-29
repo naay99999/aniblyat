@@ -91,5 +91,7 @@
 	"footer_note": "ข้อมูลจาก AniList",
 	"footer_top": "กลับขึ้นบน",
 	"day_today": "วันนี้",
-	"day_tomorrow": "พรุ่งนี้"
+	"day_tomorrow": "พรุ่งนี้",
+	"home_top_rank": "อันดับ {rank}",
+	"home_top_lead": "จัดอันดับจากคะแนนเฉลี่ยบน AniList ของเรื่องที่ฉายซีซันนี้"
 }

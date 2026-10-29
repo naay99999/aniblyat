@@ -52,7 +52,9 @@
 		"#lib/*": "./src/lib/*"
 	},
 	"dependencies": {
+		"@tanstack/query-sync-storage-persister": "^5.105.0",
 		"@tanstack/svelte-query": "^6.3.6",
+		"@tanstack/svelte-query-persist-client": "^6.3.6",
 		"graphql": "^17.0.2"
 	}
 }

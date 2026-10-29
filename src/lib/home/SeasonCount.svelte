@@ -11,7 +11,9 @@
 	<h2 id="count-title" class="claim" use:reveal>{m.home_count_title()}</h2>
 	<div class="figure-block">
 		<p class="figure display tabular" use:reveal={1}>
-			<a href={seasonHref(season)}>{count ?? ''}</a><sup>{m.home_count_unit()}</sup>
+			<a href={seasonHref(season)} class:pending={count == null}>{count ?? '…'}</a><sup
+				>{m.home_count_unit()}</sup
+			>
 		</p>
 		<p class="caption" use:reveal={2}>
 			{m.home_count_caption({ season: seasonLabel(season) })}
@@ -29,19 +31,22 @@
 		color: var(--color-bg);
 	}
 	.claim {
-		font-size: clamp(28px, 2.6vw, 44px);
+		font-size: var(--text-lead);
 		font-weight: 800;
 		letter-spacing: -0.03em;
 		line-height: 1.05;
 	}
 	.figure-block {
 		align-self: end;
-		padding-top: 22vh;
+		padding-top: 12vh;
 	}
 	.figure {
 		font-size: clamp(180px, 23vw, 380px);
 		line-height: 0.8;
 		min-height: 0.8em;
+	}
+	.pending {
+		color: #5c5852;
 	}
 	.figure a {
 		transition: color var(--t-hover) ease;

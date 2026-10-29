@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { onNavigate } from '$app/navigation';
 	import { page } from '$app/state';
-	import { QueryClientProvider } from '@tanstack/svelte-query';
+	import { PersistQueryClientProvider } from '@tanstack/svelte-query-persist-client';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale, setLocale } from '#lib/paraglide/runtime.js';
 	import favicon from '#lib/assets/favicon.svg';
-	import { queryClient } from '#lib/anilist/query-client.svelte.js';
+	import { CACHE_MAX_AGE, persister, queryClient } from '#lib/anilist/query-client.svelte.js';
 	import { currentSeason } from '#lib/season.js';
 	import SiteFooter from '#lib/components/SiteFooter.svelte';
 	import { homePath, listPath, seasonHref, seasonsPath } from '#lib/paths.js';
@@ -44,7 +44,10 @@
 	<title>aniblyat</title>
 </svelte:head>
 
-<QueryClientProvider client={queryClient}>
+<PersistQueryClientProvider
+	client={queryClient}
+	persistOptions={{ persister, maxAge: CACHE_MAX_AGE, buster: 'v1' }}
+>
 	<a class="skip" href="#main">{m.nav_skip()}</a>
 	<header class="bar page" class:over={page.url.pathname === '/'}>
 		<a href={homePath()} class="wordmark">aniblyat</a>
@@ -71,7 +74,7 @@
 		{@render children()}
 	</main>
 	<SiteFooter />
-</QueryClientProvider>
+</PersistQueryClientProvider>
 
 <style>
 	.skip {
@@ -98,12 +101,12 @@
 		font-size: var(--text-small);
 	}
 	.over {
-		color: #fff;
-		mix-blend-mode: difference;
+		color: var(--hero-ink, var(--color-ink));
+		transition: color 400ms ease;
 	}
 	.wordmark {
 		font-weight: 800;
-		font-size: 1.125rem;
+		font-size: var(--text-body);
 		letter-spacing: -0.04em;
 	}
 	nav ul {

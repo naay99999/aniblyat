@@ -12,6 +12,7 @@
 	--color-muted: #5c5852;
 	--color-accent: #256f82;
 	--color-accent-ink: #ffffff;
+	--color-accent-text: #1b5666;
 	--color-accent-50: #e6f0f2;
 	--color-accent-100: #cde1e6;
 	--color-accent-200: #9cc3cd;
@@ -21,6 +22,7 @@
 	--text-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
 	--text-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
 	--text-display: clamp(90px, 10vw, 160px);
+	--text-title: clamp(1.75rem, 1.45rem + 1vw, 2.5rem);
 
 	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }

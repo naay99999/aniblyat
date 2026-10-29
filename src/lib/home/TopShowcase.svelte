@@ -18,6 +18,10 @@
 </script>
 
 <section class="top" aria-labelledby="top-title">
+	<header class="intro page">
+		<h2 id="top-title" use:reveal>{m.home_top_title()}</h2>
+		<p use:reveal={1}>{m.home_top_lead()}</p>
+	</header>
 	{#each podium as media, i (media.id)}
 		{@const title = displayTitle(media.title ?? {})}
 		{@const wide = media.bannerImage ?? media.coverImage?.extraLarge}
@@ -26,15 +30,11 @@
 			style:background-color={media.coverImage?.color ?? 'var(--color-surface)'}
 		>
 			{#if wide}
-				<img class="wide" src={wide} alt="" loading="lazy" width="1900" height="400" />
+				<img class="wide" src={wide} alt="" fetchpriority="low" width="1900" height="400" />
 			{/if}
 			<div class="card" style:--col={i + 2} use:reveal>
-				{#if i === 0}
-					<h2 id="top-title" class="section-name">{m.home_top_title()}</h2>
-				{/if}
-				<p class="rank display tabular">{i + 1}</p>
 				<h3 class="name"><a href={animePath(media.id)} class="link">{title}</a></h3>
-				<p class="facts">{facts(media)}</p>
+				<p class="facts">{m.home_top_rank({ rank: String(i + 1) })} · {facts(media)}</p>
 				<p class="facts">
 					{media.unscored
 						? m.unscored()
@@ -78,11 +78,11 @@
 <style>
 	.frame {
 		position: relative;
-		min-height: 100svh;
 		overflow: hidden;
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
-		align-items: center;
+		align-items: start;
+		padding-block: 22svh 8svh;
 		padding-inline: var(--gutter);
 		column-gap: var(--gutter);
 	}
@@ -91,7 +91,7 @@
 		top: 0;
 		left: 0;
 		width: 100%;
-		height: min(64svh, 34vw);
+		height: min(48svh, 26vw);
 		object-fit: cover;
 	}
 	@supports (animation-timeline: view()) {
@@ -122,16 +122,19 @@
 		background: var(--color-ink);
 		color: var(--color-bg);
 	}
-	.section-name {
-		font-size: var(--text-small);
-		font-weight: 600;
-		color: var(--color-accent-200);
+	.intro {
+		display: grid;
+		gap: 12px;
+		padding-block: 160px 64px;
 	}
-	.rank {
-		font-size: clamp(64px, 6vw, 96px);
+	.intro h2 {
+		font-size: var(--text-head);
+		font-weight: 800;
+		letter-spacing: -0.04em;
+		line-height: 1;
 	}
 	.name {
-		font-size: clamp(24px, 2.2vw, 34px);
+		font-size: var(--text-lead);
 		font-weight: 800;
 		letter-spacing: -0.03em;
 		line-height: 1.05;
@@ -173,7 +176,7 @@
 	ol {
 		list-style: none;
 		counter-reset: rank 3;
-		font-size: clamp(20px, 2.1vw, 30px);
+		font-size: var(--text-lead);
 		letter-spacing: -0.02em;
 	}
 	li {
@@ -188,7 +191,7 @@
 	}
 	.row::before {
 		content: counter(rank);
-		color: var(--color-accent);
+		color: var(--color-accent-text);
 		font-variant-numeric: tabular-nums;
 	}
 	@media (hover: hover) and (pointer: fine) {

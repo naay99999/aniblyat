@@ -12,13 +12,19 @@
 	let { season, items }: { season: Season; items: MediaCard[] | undefined } = $props();
 
 	const panels = $derived(
-		(items ?? []).filter((m) => m.coverImage?.extraLarge ?? m.coverImage?.large).slice(0, 5)
+		(items ?? []).filter((m) => m.coverImage?.extraLarge ?? m.coverImage?.large).slice(0, 3)
 	);
 	let progress = $state(0);
 	const index = $derived(activeIndex(progress, panels.length));
 	const active = $derived(panels[index]);
 	const ground = $derived(active?.coverImage?.color ?? null);
 	const ink = $derived(inkOn(ground));
+
+	// the site bar sits over the hero: give it the same solid ink as the title
+	$effect(() => {
+		document.documentElement.style.setProperty('--hero-ink', ink);
+		return () => document.documentElement.style.removeProperty('--hero-ink');
+	});
 </script>
 
 <section
@@ -29,6 +35,7 @@
 >
 	<div class="stage" style:background-color={ground ?? 'var(--color-bg)'} style:color={ink}>
 		<h1 id="hero-title" class="title display">{seasonLabel(season)}</h1>
+		<p class="lead">{m.home_title({ season: seasonLabel(season) })}</p>
 
 		<div class="covers">
 			{#each panels as media, i (media.id)}
@@ -45,7 +52,6 @@
 						alt={displayTitle(media.title ?? {})}
 						width="460"
 						height="690"
-						loading={i === 0 ? 'eager' : 'lazy'}
 						fetchpriority={i === 0 ? 'high' : undefined}
 					/>
 				</a>
@@ -54,18 +60,16 @@
 			{/each}
 		</div>
 
-		<p class="lead">{m.home_hero_lead()}</p>
-
-		<div class="aside">
+		<p class="caption" aria-live="polite">
 			{#if active}
-				<p class="caption" aria-live="polite">
-					<span>{m.home_trending_caption()} {index + 1}/{panels.length}</span>
-					<a href={animePath(active.id)} class="link name">{displayTitle(active.title ?? {})}</a>
-					<AiringBadge media={active} showTime />
-				</p>
+				<span>{m.home_trending_caption()} {index + 1}/{panels.length}</span>
+				<a href={animePath(active.id)} class="link name">{displayTitle(active.title ?? {})}</a>
+				<AiringBadge media={active} showTime />
+			{:else}
+				<span>{m.home_hero_lead()}</span>
 			{/if}
-			<a href={seasonHref(season)} class="btn btn-ink">{m.home_hero_action()}</a>
-		</div>
+		</p>
+		<a href={seasonHref(season)} class="btn btn-ink action">{m.home_hero_action()}</a>
 	</div>
 </section>
 
@@ -79,31 +83,37 @@
 		top: 0;
 		height: 100svh;
 		overflow: hidden;
+		display: grid;
+		grid-template-columns: 1fr minmax(0, auto) 1fr;
+		grid-template-rows: auto auto minmax(0, 1fr);
+		column-gap: var(--gutter);
+		padding: calc(var(--nav-h) + 8px) var(--gutter) 0;
 		transition:
 			background-color 700ms var(--ease-in-out),
 			color 400ms ease;
 	}
 	.title {
-		position: absolute;
-		z-index: 10;
-		top: 96px;
-		left: 0;
-		right: 0;
+		grid-column: 1 / -1;
 		text-align: center;
 		font-size: var(--text-display);
 		text-transform: uppercase;
 		white-space: nowrap;
-		color: #fff;
-		mix-blend-mode: difference;
-		pointer-events: none;
+	}
+	.lead {
+		grid-column: 1 / -1;
+		margin-top: 16px;
+		text-align: center;
+		font-size: var(--text-lead);
+		font-weight: 600;
+		letter-spacing: -0.02em;
 	}
 	.covers {
-		position: absolute;
-		top: 90px;
-		bottom: 0;
-		left: 50%;
-		width: min(37vw, calc((100svh - 90px) * 2 / 3));
-		transform: translateX(-50%);
+		grid-column: 2;
+		grid-row: 3;
+		position: relative;
+		margin-top: 32px;
+		height: 100%;
+		aspect-ratio: 2 / 3;
 	}
 	.cover {
 		position: absolute;
@@ -127,28 +137,14 @@
 	.placeholder {
 		background: var(--color-surface);
 	}
-	.lead {
-		position: absolute;
-		left: var(--gutter);
-		bottom: 32px;
-		max-width: 26ch;
-		font-weight: 600;
-		font-size: var(--text-body);
-		line-height: 1.35;
-	}
-	.aside {
-		position: absolute;
-		right: var(--gutter);
-		bottom: 32px;
-		display: grid;
-		justify-items: end;
-		gap: 16px;
-		max-width: 26ch;
-		text-align: right;
-	}
 	.caption {
+		grid-column: 1;
+		grid-row: 3;
+		align-self: end;
 		display: grid;
-		gap: 2px;
+		gap: 4px;
+		max-width: 28ch;
+		padding-bottom: 32px;
 		font-size: var(--text-small);
 		font-weight: 600;
 	}
@@ -158,6 +154,13 @@
 	.name {
 		font-size: var(--text-body);
 	}
+	.action {
+		grid-column: 3;
+		grid-row: 3;
+		align-self: end;
+		justify-self: end;
+		margin-bottom: 32px;
+	}
 	@media (prefers-reduced-motion: reduce) {
 		.cover,
 		.cover img,
@@ -165,40 +168,35 @@
 			transition: none;
 		}
 	}
-	@media (max-width: 720px) {
+	@media (max-width: 900px) {
 		.stage {
-			display: flex;
-			flex-direction: column;
-			gap: 12px;
-			padding: calc(var(--nav-h) + 4px) var(--gutter) 20px;
+			grid-template-columns: 1fr auto;
+			grid-template-rows: auto auto minmax(0, 1fr) auto;
+			padding-bottom: 20px;
 		}
 		.title {
-			position: relative;
-			top: 0;
 			font-size: 15vw;
 			text-align: left;
 		}
-		.covers {
-			position: relative;
-			top: auto;
-			left: auto;
-			transform: none;
-			flex: 1;
-			width: auto;
-			margin-top: -9vw;
-		}
 		.lead {
-			position: static;
-			max-width: none;
-			font-size: var(--text-small);
-		}
-		.aside {
-			position: static;
-			grid-template-columns: 1fr auto;
-			align-items: end;
-			justify-items: start;
-			max-width: none;
 			text-align: left;
+			font-size: var(--text-lead);
+		}
+		.covers {
+			grid-column: 1 / -1;
+			grid-row: 3;
+			justify-self: center;
+			margin-top: 16px;
+		}
+		.caption {
+			grid-column: 1;
+			grid-row: 4;
+			padding: 16px 0 0;
+		}
+		.action {
+			grid-column: 2;
+			grid-row: 4;
+			margin: 0;
 		}
 	}
 </style>

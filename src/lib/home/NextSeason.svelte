@@ -33,13 +33,13 @@
 						href={animePath(media.id)}
 						class="pic"
 						class:centre={i === 1}
-						style:transform="translateY({(1 - Math.min(1, progress * 1.6 * speeds[i])) * 45}%)
+						style:transform="translateY({(1 - Math.min(1, progress * 1.6 * speeds[i])) * 28}%)
 						scale({i === 1 ? 0.82 + 0.18 * Math.min(1, progress * 1.6) : 1})"
 					>
 						<img
 							src={media.coverImage?.extraLarge ?? media.coverImage?.large}
 							alt={displayTitle(media.title ?? {})}
-							loading="lazy"
+							fetchpriority="low"
 							width="460"
 							height="690"
 						/>
@@ -61,7 +61,7 @@
 
 <style>
 	.wrap {
-		height: 200svh;
+		height: 160svh;
 	}
 	.stage {
 		position: sticky;
@@ -69,6 +69,7 @@
 		height: 100svh;
 		overflow: hidden;
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		grid-template-rows: auto 1fr;
 	}
 	.intro {
@@ -79,7 +80,7 @@
 		justify-items: center;
 	}
 	.head {
-		font-size: clamp(32px, 2.8vw, 44px);
+		font-size: var(--text-head);
 		font-weight: 800;
 		letter-spacing: -0.03em;
 		line-height: 1.05;
@@ -95,7 +96,7 @@
 	}
 	.pic {
 		flex: 0 0 auto;
-		width: 360px;
+		width: min(360px, 25vw);
 		aspect-ratio: 2 / 3;
 		margin-top: 55px;
 		overflow: hidden;
@@ -103,7 +104,7 @@
 		will-change: transform;
 	}
 	.pic.centre {
-		width: 520px;
+		width: min(520px, 36vw);
 		aspect-ratio: 4 / 5;
 		margin-top: 0;
 	}

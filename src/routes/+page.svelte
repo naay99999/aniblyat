@@ -33,13 +33,13 @@
 
 <Hero {season} items={home.data?.trending} />
 
-<QueryState query={airing}>
+<QueryState query={airing} inset>
 	<AiringLineup entries={airing.data ?? []} />
 </QueryState>
 
 <SeasonCount {season} count={seasonList.data?.length} />
 
-<QueryState query={home}>
+<QueryState query={home} inset>
 	<TopShowcase items={home.data?.top10 ?? []} />
 	<NextSeason season={next} items={home.data?.nextSeason ?? []} />
 </QueryState>
