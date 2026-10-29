@@ -14,7 +14,7 @@
 		"format": "prettier --write .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
-		"codegen": "graphql-codegen"
+		"codegen": "prettier --write src/lib/anilist && graphql-codegen"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
