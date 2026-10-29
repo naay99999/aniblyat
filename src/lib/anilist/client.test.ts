@@ -36,7 +36,7 @@ describe('anilistFetch', () => {
 		const fetch = vi.fn(async () => json({ errors: [] }, 429, { 'Retry-After': '1' }));
 		const sleep = vi.fn(async () => {});
 		const err = await anilistFetch(QUERY, undefined, { fetch, sleep, maxRetries: 2 }).catch(
-			(e) => e
+			(e: AniListError) => e
 		);
 		expect(err).toBeInstanceOf(AniListError);
 		expect(err.status).toBe(429);
@@ -48,7 +48,7 @@ describe('anilistFetch', () => {
 		const fetch = vi.fn(async () =>
 			json({ errors: [{ message: 'Not Found.', status: 404 }], data: { Media: null } }, 404)
 		);
-		const err = await anilistFetch(QUERY, undefined, { fetch }).catch((e) => e);
+		const err = await anilistFetch(QUERY, undefined, { fetch }).catch((e: AniListError) => e);
 		expect(err).toBeInstanceOf(AniListError);
 		expect(err.status).toBe(404);
 		expect(err.retryable).toBe(false);
