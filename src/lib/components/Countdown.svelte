@@ -24,20 +24,34 @@
 	const spoken = $derived(formatCountdown(airingAt - clock.now));
 </script>
 
-<p class="countdown tabular" role="img" aria-label={spoken}>
-	{#each cells as cell (cell.unit)}
-		<span class="cell" aria-hidden="true">
-			<span class="value">{cell.value}</span>
-			<span class="unit">{cell.unit}</span>
-		</span>
-	{/each}
-</p>
+{#if left > 0}
+	<p class="countdown tabular" role="img" aria-label={spoken}>
+		{#each cells as cell (cell.unit)}
+			<span class="cell" aria-hidden="true">
+				<span class="value">{cell.value}</span>
+				<span class="unit">{cell.unit}</span>
+			</span>
+		{/each}
+	</p>
+{:else}
+	<!-- aired: AniList moves on to the next episode a few minutes later, and the page refetches -->
+	<p class="countdown aired">{m.countdown_now()}</p>
+{/if}
 
 <style>
 	.countdown {
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 8px;
+	}
+	.aired {
+		display: block;
+		padding: 0.3em 0.4em;
+		background: color-mix(in srgb, currentColor 10%, transparent);
+		font-size: var(--countdown-size, clamp(2.5rem, 1.6rem + 3.6vw, 5.5rem));
+		font-weight: 800;
+		letter-spacing: -0.04em;
+		line-height: 1;
 	}
 	.cell {
 		display: grid;

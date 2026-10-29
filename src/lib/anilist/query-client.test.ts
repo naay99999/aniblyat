@@ -25,10 +25,20 @@ describe('invalidates when airingAt passes', () => {
 		expect(shouldInvalidate(100, 99, null)).toBe(false);
 	});
 	test('false when already invalidated for that time', () => {
-		expect(shouldInvalidate(100, 150, 100)).toBe(false);
+		expect(shouldInvalidate(100, 150, { for: 100, at: 150 })).toBe(false);
 	});
 	test('false when nothing airs', () => {
 		expect(shouldInvalidate(null, 150, null)).toBe(false);
+	});
+	test('tries again five minutes after a refetch that came back unchanged', () => {
+		expect(shouldInvalidate(100, 100 + 299, { for: 100, at: 100 })).toBe(false);
+		expect(shouldInvalidate(100, 100 + 300, { for: 100, at: 100 })).toBe(true);
+	});
+	test('leaves it to the regular refetch an hour after the airing', () => {
+		expect(shouldInvalidate(100, 100 + 3600, { for: 100, at: 100 + 3000 })).toBe(false);
+	});
+	test('a new airing time invalidates at once', () => {
+		expect(shouldInvalidate(200, 200, { for: 100, at: 199 })).toBe(true);
 	});
 });
 

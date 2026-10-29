@@ -40,21 +40,30 @@ export function earliestAiringAt(data: unknown): number | null {
 	return min;
 }
 
+// AniList often moves nextAiringEpisode on a few minutes after the episode airs, so a refetch
+// that comes back unchanged is tried again; after an hour the 30-minute refetch takes over
+const RETRY_AFTER_SEC = 5 * 60;
+const GIVE_UP_AFTER_SEC = 60 * 60;
+
+export type LastInvalidation = { for: number; at: number } | null;
+
 export function shouldInvalidate(
 	earliest: number | null,
 	nowSec: number,
-	lastInvalidatedFor: number | null
+	last: LastInvalidation
 ): boolean {
-	return earliest != null && earliest <= nowSec && earliest !== lastInvalidatedFor;
+	if (earliest == null || earliest > nowSec) return false;
+	if (last?.for !== earliest) return true;
+	return nowSec - last.at >= RETRY_AFTER_SEC && nowSec - earliest < GIVE_UP_AFTER_SEC;
 }
 
 /** Refetch a query as soon as an episode it shows has aired, so countdowns move to the next one. */
 export function useAiringInvalidation(queryKey: () => unknown[], getData: () => unknown) {
-	let lastInvalidatedFor: number | null = null;
+	let last: LastInvalidation = null;
 	$effect(() => {
 		const earliest = earliestAiringAt(getData());
-		if (shouldInvalidate(earliest, clock.now, lastInvalidatedFor)) {
-			lastInvalidatedFor = earliest;
+		if (shouldInvalidate(earliest, clock.now, last)) {
+			last = { for: earliest!, at: clock.now };
 			queryClient.invalidateQueries({ queryKey: queryKey() });
 		}
 	});
