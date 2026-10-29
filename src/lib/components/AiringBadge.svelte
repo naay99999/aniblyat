@@ -8,8 +8,8 @@
 </script>
 
 <span class="tabular" class:next={status.kind === 'next'}>
-	{statusLabel(status)}{#if showTime && status.kind === 'next'}<span class="time">
-			· {formatAirTime(status.airingAt)}</span
+	{statusLabel(status)}{#if showTime && status.kind === 'next'}<span class="time"
+			>{` · ${formatAirTime(status.airingAt)}`}</span
 		>{/if}
 </span>
 
