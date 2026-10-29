@@ -89,5 +89,7 @@
 	"list_empty_action": "Browse this season",
 	"list_remove": "Remove",
 	"footer_note": "Data from AniList",
-	"footer_top": "Back to top"
+	"footer_top": "Back to top",
+	"day_today": "Today",
+	"day_tomorrow": "Tomorrow"
 }

@@ -7,6 +7,7 @@
 	import favicon from '#lib/assets/favicon.svg';
 	import { queryClient } from '#lib/anilist/query-client.svelte.js';
 	import { currentSeason } from '#lib/season.js';
+	import SiteFooter from '#lib/components/SiteFooter.svelte';
 	import { homePath, listPath, seasonHref, seasonsPath } from '#lib/paths.js';
 	import './layout.css';
 	import type { LayoutProps } from './$types';
@@ -45,7 +46,7 @@
 
 <QueryClientProvider client={queryClient}>
 	<a class="skip" href="#main">{m.nav_skip()}</a>
-	<header class="bar page">
+	<header class="bar page" class:over={page.url.pathname === '/'}>
 		<a href={homePath()} class="wordmark">aniblyat</a>
 		<nav aria-label="main">
 			<ul>
@@ -69,6 +70,7 @@
 	<main id="main">
 		{@render children()}
 	</main>
+	<SiteFooter />
 </QueryClientProvider>
 
 <style>
@@ -91,9 +93,13 @@
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
 		gap: 24px;
-		min-height: 64px;
+		min-height: var(--nav-h);
 		font-weight: 600;
 		font-size: var(--text-small);
+	}
+	.over {
+		color: #fff;
+		mix-blend-mode: difference;
 	}
 	.wordmark {
 		font-weight: 800;

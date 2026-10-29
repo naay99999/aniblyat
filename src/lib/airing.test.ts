@@ -4,6 +4,7 @@ import {
 	formatAirTime,
 	formatCountdown,
 	formatFuzzyDate,
+	groupByDay,
 	statusLabel,
 	type AiringInput
 } from './airing';
@@ -75,5 +76,24 @@ describe('statusLabel', () => {
 		[{ kind: 'cancelled' }, 'ยกเลิก']
 	] as const)('%o', (status, label) => {
 		expect(statusLabel(status)).toBe(label);
+	});
+});
+
+describe('groupByDay', () => {
+	// 2026-10-30 12:00 Asia/Bangkok = 05:00 UTC
+	const now = Date.UTC(2026, 9, 30, 5, 0) / 1000;
+	const at = (h: number, d = 30) => Date.UTC(2026, 9, d, h - 7, 0) / 1000;
+	test('splits entries into today and tomorrow in the given zone, keeping order', () => {
+		const entries = [{ airingAt: at(13) }, { airingAt: at(23) }, { airingAt: at(1, 31) }];
+		const groups = groupByDay(entries, now, 'Asia/Bangkok');
+		expect(groups.map((g) => g.day)).toEqual(['today', 'tomorrow']);
+		expect(groups[0].items).toHaveLength(2);
+		expect(groups[1].items).toEqual([entries[2]]);
+	});
+	test('omits empty days', () => {
+		expect(groupByDay([{ airingAt: at(1, 31) }], now, 'Asia/Bangkok').map((g) => g.day)).toEqual([
+			'tomorrow'
+		]);
+		expect(groupByDay([], now, 'Asia/Bangkok')).toEqual([]);
 	});
 });

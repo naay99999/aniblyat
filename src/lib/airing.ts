@@ -104,3 +104,21 @@ export function statusLabel(s: AiringStatus): string {
 			return m.status_unknown();
 	}
 }
+
+function dayKey(sec: number, tz?: string): string {
+	return new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date(sec * 1000));
+}
+
+/** Split an airing window into "today" and "tomorrow" in the viewer's timezone. */
+export function groupByDay<T extends { airingAt: number }>(
+	entries: T[],
+	nowSec: number,
+	tz?: string
+): { day: 'today' | 'tomorrow'; items: T[] }[] {
+	const today = dayKey(nowSec, tz);
+	const groups: { day: 'today' | 'tomorrow'; items: T[] }[] = [
+		{ day: 'today', items: entries.filter((e) => dayKey(e.airingAt, tz) === today) },
+		{ day: 'tomorrow', items: entries.filter((e) => dayKey(e.airingAt, tz) !== today) }
+	];
+	return groups.filter((g) => g.items.length > 0);
+}

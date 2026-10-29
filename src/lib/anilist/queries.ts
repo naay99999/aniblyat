@@ -17,8 +17,10 @@ graphql(`
 		}
 		coverImage {
 			large
+			extraLarge
 			color
 		}
+		bannerImage
 		format
 		status
 		episodes
@@ -136,10 +138,6 @@ const MediaDetailQuery = graphql(`
 			...MediaCard
 			title {
 				native
-			}
-			bannerImage
-			coverImage {
-				extraLarge
 			}
 			description(asHtml: false)
 			studios(isMain: true) {

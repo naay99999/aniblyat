@@ -166,3 +166,12 @@
 		transform: translateY(16px);
 	}
 }
+
+:root {
+	--nav-h: 64px;
+}
+@media (max-width: 720px) {
+	:root {
+		--nav-h: 100px;
+	}
+}

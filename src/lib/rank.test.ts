@@ -7,7 +7,8 @@ function card(overrides: Partial<MediaCard> = {}): MediaCard {
 	return {
 		id: nextId++,
 		title: { romaji: 'Title', english: null },
-		coverImage: { large: null, color: null },
+		coverImage: { large: null, extraLarge: null, color: null },
+		bannerImage: null,
 		format: 'TV',
 		status: 'RELEASING',
 		episodes: null,

@@ -89,5 +89,7 @@
 	"list_empty_action": "ไปดูซีซันนี้",
 	"list_remove": "เอาออก",
 	"footer_note": "ข้อมูลจาก AniList",
-	"footer_top": "กลับขึ้นบน"
+	"footer_top": "กลับขึ้นบน",
+	"day_today": "วันนี้",
+	"day_tomorrow": "พรุ่งนี้"
 }

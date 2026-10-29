@@ -12,7 +12,8 @@ function cardJson(id: number, isAdult = false) {
 	return {
 		id,
 		title: { romaji: `T${id}`, english: null },
-		coverImage: { large: null, color: null },
+		coverImage: { large: null, extraLarge: null, color: null },
+		bannerImage: null,
 		format: 'TV',
 		status: 'RELEASING',
 		episodes: null,
