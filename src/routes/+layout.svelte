@@ -150,12 +150,24 @@
 				</ul>
 			</nav>
 			<SearchBox onopenchange={(open) => (searching = open)} />
+			<!-- the label names the other language in its own tongue, so it carries that language's tag -->
 			<button
 				type="button"
-				class="lang link"
+				class="lang"
 				lang={getLocale() === 'th' ? 'en' : 'th'}
-				onclick={() => setLocale(getLocale() === 'th' ? 'en' : 'th')}>{m.nav_language()}</button
+				aria-label={m.nav_language()}
+				title={m.nav_language()}
+				onclick={() => setLocale(getLocale() === 'th' ? 'en' : 'th')}
 			>
+				<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+					<g fill="none" stroke="currentColor" stroke-width="2">
+						<circle cx="12" cy="12" r="9" />
+						<path
+							d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"
+						/>
+					</g>
+				</svg>
+			</button>
 		</header>
 	</div>
 
@@ -251,7 +263,19 @@
 		text-decoration-color: currentColor;
 	}
 	.lang {
-		font-weight: 600;
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		/* the icon's edge lines up with the page edge, as the text label did */
+		margin-inline-end: -12px;
+		color: inherit;
+		transition: opacity var(--t-ui) var(--ease-out);
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.lang:hover {
+			opacity: 0.6;
+		}
 	}
 	@media (max-width: 720px) {
 		.bar {
