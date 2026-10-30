@@ -74,7 +74,10 @@
 			revert = () => mm.revert();
 
 			mm.add('(min-width: 901px) and (prefers-reduced-motion: no-preference)', () => {
-				const TOP = 72;
+				// pinned, the heading sits a clear gap below the bar rather than right against it
+				const top = () =>
+					(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bar-shown')) ||
+						64) + 40;
 				let lift = 0;
 				let step = 0;
 				let last = -1;
@@ -87,7 +90,7 @@
 					step = Math.round(window.innerHeight * 0.28);
 				};
 				const fits = () =>
-					TOP +
+					top() +
 						Math.max(card.offsetHeight, ranks.offsetTop - head.offsetTop + ranks.offsetHeight) <=
 					window.innerHeight - 16;
 
@@ -108,20 +111,22 @@
 				const trigger = ScrollTrigger.create({
 					trigger: head,
 					pin: pinned,
-					start: `top ${TOP}px`,
+					start: () => `top ${top()}px`,
 					end: () => {
 						measure();
 						return `+=${lift + step * count}`;
 					},
 					invalidateOnRefresh: true,
 					anticipatePin: 1,
-					// settle on the middle of a rank's stretch, never between two
+					// settle on the middle of a rank's stretch, never between two; the very end is a stop too,
+					// or the last half stretch would pull back to rank 10 before letting the page go on
 					snap: {
 						snapTo: (value) => {
 							const total = lift + step * count;
 							const stops = [
 								0,
-								...Array.from({ length: count }, (_, i) => lift + step * (i + 0.5))
+								...Array.from({ length: count }, (_, i) => lift + step * (i + 0.5)),
+								total
 							];
 							const at = value * total;
 							const near = stops.reduce((a, b) => (Math.abs(b - at) < Math.abs(a - at) ? b : a));
@@ -140,7 +145,23 @@
 					window.scrollTo({ top: trigger.start + lift + step * (rank + 0.5), behavior: 'smooth' });
 					return true;
 				};
+				// sections above fill in after load (the season wall grows from blanks to posters) and push
+				// this one down: measure the pin again whenever the page changes height
+				let height = document.body.offsetHeight;
+				let frame = 0;
+				const ro = new ResizeObserver(() => {
+					if (frame || document.body.offsetHeight === height) return;
+					frame = requestAnimationFrame(() => {
+						frame = 0;
+						height = document.body.offsetHeight;
+						ScrollTrigger.refresh();
+					});
+				});
+				ro.observe(document.body);
+
 				return () => {
+					ro.disconnect();
+					cancelAnimationFrame(frame);
 					goTo = undefined;
 				};
 			});
