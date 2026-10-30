@@ -1,0 +1,17 @@
+node_modules
+build
+.svelte-kit
+.git
+.env
+.env.*
+!.env.example
+src/lib/paraglide
+project.inlang/cache
+.agents
+.claude
+.superpowers
+.taste-skill
+.vscode
+docs
+Dockerfile
+.dockerignore
