@@ -9,9 +9,10 @@
 	import { animePath } from '../paths';
 	import { displayTitle } from '../text';
 
-	let { entries }: { entries: AiringEntry[] } = $props();
+	// no entries yet: the strip holds its shape with blank cards
+	let { entries }: { entries: AiringEntry[] | undefined } = $props();
 
-	const upcoming = $derived(entries.filter((e) => e.airingAt > clock.now));
+	const upcoming = $derived((entries ?? []).filter((e) => e.airingAt > clock.now));
 	const days = $derived(groupByDay(upcoming, clock.now));
 	// one strip in time order; each day starts where the one before it ends
 	const strip = $derived(days.flatMap((d) => d.items.map((entry) => ({ entry, day: d.day }))));
@@ -72,7 +73,7 @@
 	<div class="top">
 		<h2 id="lineup-title" class="head" use:reveal>{m.home_airing_title()}</h2>
 		{#if strip.length}
-			<div class="controls">
+			<div class="controls" use:reveal={1}>
 				{#if starts.length > 1}
 					<ul class="days">
 						{#each starts as start (start.day)}
@@ -109,11 +110,23 @@
 		{/if}
 	</div>
 
-	{#if strip.length === 0}
+	{#if !entries}
+		<ol class="track" role="status" aria-label={m.loading()}>
+			{#each { length: 10 }, i (i)}
+				<li class="slide">
+					<span class="ghost cover"></span>
+					<span class="ghost ghost-line when-line"></span>
+					<span class="ghost ghost-line"></span>
+					<span class="ghost ghost-line short"></span>
+				</li>
+			{/each}
+		</ol>
+	{:else if strip.length === 0}
 		<p class="empty">{m.home_airing_empty()}</p>
 	{:else}
 		<div
 			class="viewport"
+			use:reveal={2}
 			use:emblaCarousel={{
 				options: { align: 'start', dragFree: true, containScroll: 'trimSnaps', duration: 28 },
 				plugins: []
@@ -129,12 +142,12 @@
 								class="cover"
 								style:background-color={entry.media.coverImage?.color ?? 'var(--color-bg)'}
 							>
-								{#if entry.media.coverImage?.large}
+								{#if entry.media.coverImage?.extraLarge ?? entry.media.coverImage?.large}
 									<img
-										src={entry.media.coverImage.large}
+										src={entry.media.coverImage?.extraLarge ?? entry.media.coverImage?.large}
 										alt=""
-										width="230"
-										height="345"
+										width="460"
+										height="690"
 										loading="lazy"
 										draggable="false"
 									/>
@@ -163,6 +176,7 @@
 		padding-block: var(--section);
 		background: var(--color-surface);
 		overflow: hidden;
+		--ghost: var(--color-bg);
 	}
 	.top {
 		display: flex;
@@ -202,8 +216,8 @@
 		font-size: var(--text-small);
 		font-weight: 600;
 		transition:
-			background-color var(--t-hover) ease,
-			color var(--t-hover) ease,
+			background-color var(--t-ui) var(--ease-out),
+			color var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
 	.day[aria-pressed='true'] {
@@ -218,8 +232,8 @@
 		background: var(--color-bg);
 		font-weight: 600;
 		transition:
-			background-color var(--t-hover) ease,
-			opacity var(--t-hover) ease,
+			background-color var(--t-ui) var(--ease-out),
+			opacity var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
 	.arrow:disabled {
@@ -272,7 +286,14 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		transition: transform 600ms var(--ease-soft);
+		transition: transform var(--t-move) var(--ease-out);
+	}
+	.when-line {
+		width: 45%;
+		font-size: var(--text-lead);
+	}
+	.short {
+		width: 60%;
 	}
 	.when {
 		font-size: var(--text-lead);
@@ -301,7 +322,7 @@
 		text-decoration-color: transparent;
 		text-underline-offset: 0.2em;
 		text-decoration-thickness: 0.07em;
-		transition: text-decoration-color var(--t-hover) ease;
+		transition: text-decoration-color var(--t-ui) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.show:hover img {

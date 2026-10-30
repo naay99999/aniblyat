@@ -85,7 +85,7 @@
 		letter-spacing: -0.04em;
 		line-height: 1.05;
 		color: var(--color-bg);
-		transition: color var(--t-hover) ease;
+		transition: color var(--t-ui) var(--ease-out);
 	}
 	/* the arrow slides out of the word on hover and focus */
 	.arrow {
@@ -93,7 +93,7 @@
 		opacity: 0;
 		transform: translateX(-0.4em);
 		transition:
-			opacity var(--t-ui) ease,
+			opacity var(--t-ui) var(--ease-out),
 			transform var(--t-ui) var(--ease-out);
 	}
 	.place:focus-visible .arrow {
@@ -137,7 +137,7 @@
 	@media (prefers-reduced-motion: no-preference) {
 		.name span {
 			transform: translateY(100%);
-			transition: transform 1100ms var(--ease-expo);
+			transition: transform 1100ms var(--ease-out);
 			transition-delay: calc(var(--i) * 60ms);
 		}
 		.name.risen span {

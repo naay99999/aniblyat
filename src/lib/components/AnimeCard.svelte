@@ -8,7 +8,7 @@
 	let { media, note }: { media: MediaCard; note?: string } = $props();
 
 	const title = $derived(displayTitle(media.title ?? {}));
-	const cover = $derived(media.coverImage?.large ?? null);
+	const cover = $derived(media.coverImage?.extraLarge ?? media.coverImage?.large ?? null);
 </script>
 
 <article class="card">
@@ -18,7 +18,7 @@
 		style:background-color={media.coverImage?.color ?? 'var(--color-surface)'}
 	>
 		{#if cover}
-			<img src={cover} alt="" width="230" height="345" loading="lazy" data-cover />
+			<img src={cover} alt="" width="460" height="690" loading="lazy" data-cover />
 		{/if}
 	</a>
 	<div class="save"><SaveButton item={{ id: media.id, title, cover }} /></div>
@@ -43,7 +43,7 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		transition: transform 600ms var(--ease-soft);
+		transition: transform var(--t-move) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.card:hover .cover img {

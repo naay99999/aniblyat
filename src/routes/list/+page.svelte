@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
+	import { expoOut } from 'svelte/easing';
 	import { createQueries, createQuery } from '@tanstack/svelte-query';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getHome, getMediaByIds, type MediaCard } from '#lib/anilist/queries.js';
@@ -97,10 +98,10 @@
 				>{m.list_empty_action()}</a
 			>
 		</div>
-		{#if trending.length}
+		{#if trending.length || home.isPending}
 			<section class="start" aria-labelledby="start-title">
 				<h2 id="start-title">{m.list_empty_trending()}</h2>
-				<MediaGrid items={trending} />
+				<MediaGrid items={home.isPending ? undefined : trending} />
 			</section>
 		{/if}
 	{:else}
@@ -148,8 +149,8 @@
 		<ul class="rows">
 			{#each rows as { item, media } (item.id)}
 				{@const title = media ? displayTitle(media.title ?? {}) : item.title}
-				{@const cover = media?.coverImage?.large ?? item.cover}
-				<li animate:flip={{ duration: 300 }} out:fade={{ duration: 160 }}>
+				{@const cover = media?.coverImage?.extraLarge ?? media?.coverImage?.large ?? item.cover}
+				<li animate:flip={{ duration: 400, easing: expoOut }} out:fade={{ duration: 200 }}>
 					<a
 						href={animePath(item.id)}
 						class="thumb"
@@ -160,8 +161,8 @@
 						{#if cover}<img
 								src={cover}
 								alt=""
-								width="230"
-								height="345"
+								width="460"
+								height="690"
 								loading="lazy"
 								data-cover
 							/>{/if}
@@ -169,7 +170,9 @@
 					<div class="text">
 						<a href={animePath(item.id)} class="link name">{title}</a>
 						<span class="status">
-							{#if media}<AiringBadge {media} showTime />{:else if query.isPending}…{/if}
+							{#if media}<AiringBadge {media} showTime />{:else if query.isPending}<span
+									class="ghost ghost-line wait"
+								></span>{/if}
 						</span>
 					</div>
 					<button
@@ -274,12 +277,15 @@
 		gap: 20px;
 		padding: 10px 16px 10px 10px;
 		background: var(--color-raised);
-		transition: background-color var(--t-hover) ease;
+		transition: background-color var(--t-ui) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		li:hover {
 			background: #f2f0ec;
 		}
+	}
+	.wait {
+		width: 10em;
 	}
 	.thumb {
 		aspect-ratio: 2 / 3;
@@ -311,7 +317,7 @@
 		font-weight: 600;
 		color: var(--color-muted);
 		transition:
-			color var(--t-hover) ease,
+			color var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
 	.remove:active {

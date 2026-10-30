@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import type { EmblaCarouselType } from 'embla-carousel';
 	import Autoplay from 'embla-carousel-autoplay';
 	import emblaCarousel from 'embla-carousel-svelte';
@@ -90,25 +92,29 @@
 
 		<div class="now">
 			{#if active}
-				{#key active.id}
-					<div class="panel" aria-live="polite">
-						<a href={animePath(active.id)} class="link name">{displayTitle(active.title ?? {})}</a>
-						{#if status?.kind === 'next'}
-							<p class="airs">
-								{m.home_hero_rank({ rank: String(index + 1) })} ·
-								{m.home_hero_airs({
-									episode: String(status.episode),
-									time: formatAirTime(status.airingAt)
-								})}
-							</p>
-							<div class="clock"><Countdown airingAt={status.airingAt} /></div>
-						{:else}
-							<p class="airs">
-								{m.home_hero_rank({ rank: String(index + 1) })} · <AiringBadge media={active} />
-							</p>
-						{/if}
-					</div>
-				{/key}
+				<!-- the outgoing title fades where it stands while the next one rises into the same place -->
+				<div class="slot">
+					{#key active.id}
+						<div class="panel" aria-live="polite" out:fade={{ duration: 150, easing: cubicOut }}>
+							<a href={animePath(active.id)} class="link name">{displayTitle(active.title ?? {})}</a
+							>
+							{#if status?.kind === 'next'}
+								<p class="airs">
+									{m.home_hero_rank({ rank: String(index + 1) })} ·
+									{m.home_hero_airs({
+										episode: String(status.episode),
+										time: formatAirTime(status.airingAt)
+									})}
+								</p>
+								<div class="clock"><Countdown airingAt={status.airingAt} /></div>
+							{:else}
+								<p class="airs">
+									{m.home_hero_rank({ rank: String(index + 1) })} · <AiringBadge media={active} />
+								</p>
+							{/if}
+						</div>
+					{/key}
+				</div>
 				<p class="actions">
 					<a
 						href={animePath(active.id)}
@@ -194,7 +200,7 @@
 					</div>
 				</div>
 			{:else}
-				<div class="cover placeholder"></div>
+				<div class="cover placeholder ghost"></div>
 			{/if}
 		</div>
 	</div>
@@ -215,8 +221,8 @@
 		column-gap: var(--gutter);
 		padding: calc(var(--nav-h) + var(--space-3)) var(--gutter) var(--space-4);
 		transition:
-			background-color 700ms var(--ease-in-out),
-			color 400ms ease;
+			background-color var(--t-scene) var(--ease-out),
+			color var(--t-scene) var(--ease-out);
 	}
 	.sr-only {
 		position: absolute;
@@ -233,7 +239,11 @@
 		gap: var(--space-4);
 		max-width: 760px;
 	}
+	.slot {
+		display: grid;
+	}
 	.panel {
+		grid-area: 1 / 1;
 		display: grid;
 		gap: var(--space-1);
 	}
@@ -265,10 +275,13 @@
 		flex-wrap: wrap;
 		gap: var(--space-3);
 	}
+	/* its colours are the stage's inverted, so they turn on the stage's clock */
 	.open {
 		transition:
 			transform var(--t-press) var(--ease-out),
-			opacity var(--t-hover) ease;
+			opacity var(--t-ui) var(--ease-out),
+			background-color var(--t-scene) var(--ease-out),
+			color var(--t-scene) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.open:hover {
@@ -289,7 +302,7 @@
 		gap: 6px;
 		opacity: 0.5;
 		transition:
-			opacity var(--t-ui) ease,
+			opacity var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
 	.step img {
@@ -365,7 +378,7 @@
 		object-fit: cover;
 		user-select: none;
 		transform: scale(1.06);
-		transition: transform 1400ms var(--ease-soft);
+		transition: transform var(--t-scene) var(--ease-out);
 	}
 	.cover.on img {
 		transform: none;
@@ -374,20 +387,21 @@
 		background: var(--color-surface);
 	}
 	@media (prefers-reduced-motion: no-preference) {
+		/* the words rise on the scene clock the ground and cover already change on, a beat behind the fade */
 		.panel > * {
-			animation: rise 600ms var(--ease-expo) both;
+			animation: rise var(--t-scene) var(--ease-out) 60ms both;
 		}
 		.panel > :nth-child(2) {
-			animation-delay: 50ms;
+			animation-delay: 100ms;
 		}
 		.panel > :nth-child(n + 3) {
-			animation-delay: 100ms;
+			animation-delay: 140ms;
 		}
 	}
 	@keyframes rise {
 		from {
 			opacity: 0;
-			transform: translateY(16px);
+			transform: translateY(var(--rise));
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {

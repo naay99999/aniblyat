@@ -50,13 +50,19 @@
 
 <Hero {season} items={home.data?.trending} />
 
-<QueryState query={airing} inset>
+{#snippet lineupWaiting()}<AiringLineup entries={undefined} />{/snippet}
+{#snippet homeWaiting()}
+	<TopShowcase items={undefined} />
+	<NextSeason season={next} items={undefined} />
+{/snippet}
+
+<QueryState query={airing} inset pending={lineupWaiting}>
 	<AiringLineup entries={airing.data ?? []} />
 </QueryState>
 
 <SeasonCount {season} items={seasonList.data} />
 
-<QueryState query={home} inset>
+<QueryState query={home} inset pending={homeWaiting}>
 	<TopShowcase items={home.data?.top10 ?? []} />
 	<NextSeason season={next} items={home.data?.nextSeason ?? []} />
 </QueryState>

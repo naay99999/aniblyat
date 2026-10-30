@@ -181,10 +181,20 @@
 				</li>
 			{/each}
 		</ul>
-		{#if items.length === 0}
-			<p class="note" aria-live="polite">
-				{searching ? m.search_loading() : m.search_empty({ query: query.trim() })}
-			</p>
+		{#if items.length === 0 && searching}
+			<ul class="waiting" role="status" aria-label={m.search_loading()}>
+				{#each { length: 4 }, i (i)}
+					<li class="option">
+						<span class="ghost blank"></span>
+						<span class="text">
+							<span class="ghost ghost-line"></span>
+							<span class="ghost ghost-line short"></span>
+						</span>
+					</li>
+				{/each}
+			</ul>
+		{:else if items.length === 0}
+			<p class="note" aria-live="polite">{m.search_empty({ query: query.trim() })}</p>
 		{/if}
 	</div>
 </div>
@@ -221,7 +231,7 @@
 		color: inherit;
 		font: inherit;
 		font-weight: 500;
-		transition: background-color var(--t-hover) ease;
+		transition: background-color var(--t-ui) var(--ease-out);
 	}
 	.field::placeholder {
 		color: inherit;
@@ -262,8 +272,8 @@
 	/* each new set of results steps in from the top */
 	@media (prefers-reduced-motion: no-preference) {
 		.option {
-			animation: drop 320ms var(--ease-expo) both;
-			animation-delay: calc(var(--i) * 25ms);
+			animation: drop var(--t-move) var(--ease-out) both;
+			animation-delay: calc(min(var(--i), 6) * 25ms);
 		}
 	}
 	@keyframes drop {
@@ -275,6 +285,9 @@
 	mark {
 		background: var(--color-accent-100);
 		color: inherit;
+	}
+	.short {
+		width: 40%;
 	}
 	.option img,
 	.blank {

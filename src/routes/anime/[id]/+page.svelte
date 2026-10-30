@@ -134,13 +134,19 @@
 {/snippet}
 
 {#snippet relatedList(kind: 'rows' | 'wall')}
-	<ul class={kind}>
+	<ul class={kind} use:reveal={1}>
 		{#each related as rel (rel.node.id)}
 			<li>
 				<a href={animePath(rel.node.id)} class="rel">
 					<span class="thumb">
-						{#if rel.node.coverImage?.large}
-							<img src={rel.node.coverImage.large} alt="" width="230" height="345" loading="lazy" />
+						{#if rel.node.coverImage?.extraLarge ?? rel.node.coverImage?.large}
+							<img
+								src={rel.node.coverImage?.extraLarge ?? rel.node.coverImage?.large}
+								alt=""
+								width="460"
+								height="690"
+								loading="lazy"
+							/>
 						{/if}
 					</span>
 					<span class="rel-text">
@@ -275,7 +281,7 @@
 
 				<section class="info" class:alone={!synopsis && !fewRelated} aria-labelledby="facts-title">
 					<h2 id="facts-title" use:reveal>{m.detail_facts()}</h2>
-					<dl class="facts">
+					<dl class="facts" use:reveal={1}>
 						{#each facts as [label, value] (label)}
 							<div>
 								<dt>{label}</dt>
@@ -443,17 +449,17 @@
 		.rating,
 		.now,
 		.poster img {
-			animation: arrive 800ms var(--ease-expo) both;
+			animation: arrive var(--t-scene) var(--ease-out) both;
 		}
 		.rating {
-			animation-delay: 80ms;
+			animation-delay: 60ms;
 		}
 		.now {
-			animation-delay: 160ms;
+			animation-delay: 120ms;
 		}
 		.poster img {
 			animation-name: unveil;
-			animation-duration: 1000ms;
+			animation-duration: var(--t-scene);
 		}
 		/* the picked cover is already flying into place */
 		:global(html.vt-cover) .poster img {
@@ -463,7 +469,7 @@
 	@keyframes arrive {
 		from {
 			opacity: 0;
-			transform: translateY(24px);
+			transform: translateY(var(--rise));
 		}
 	}
 	@keyframes unveil {
@@ -678,7 +684,7 @@
 		gap: 24px;
 		padding: 12px;
 		background: var(--color-raised);
-		transition: background-color var(--t-hover) ease;
+		transition: background-color var(--t-ui) var(--ease-out);
 	}
 	.rows .rel-title {
 		letter-spacing: -0.01em;
@@ -697,7 +703,7 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		transition: transform 600ms var(--ease-soft);
+		transition: transform var(--t-move) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.rel:hover img {

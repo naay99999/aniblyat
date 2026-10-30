@@ -115,7 +115,7 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href={favicon} type="image/svg+xml" sizes="any" />
 	<title>aniblyat</title>
 </svelte:head>
 
@@ -207,9 +207,9 @@
 		font-weight: 600;
 		font-size: var(--text-small);
 		transition:
-			min-height 280ms var(--ease-out),
-			background-color 700ms var(--ease-in-out),
-			color 400ms ease;
+			min-height var(--t-move) var(--ease-out),
+			background-color var(--t-scene) var(--ease-out),
+			color var(--t-scene) var(--ease-out);
 	}
 	.compact {
 		min-height: 48px;
@@ -239,7 +239,7 @@
 	}
 	@media (prefers-reduced-motion: no-preference) {
 		.count {
-			animation: bump 420ms var(--ease-expo);
+			animation: bump var(--t-move) var(--ease-out);
 		}
 	}
 	@keyframes bump {
@@ -269,8 +269,8 @@
 			overflow-x: auto;
 			max-height: 44px;
 			transition:
-				max-height 280ms var(--ease-out),
-				opacity 200ms ease;
+				max-height var(--t-move) var(--ease-out),
+				opacity var(--t-ui) var(--ease-out);
 		}
 		.folded nav {
 			max-height: 0;

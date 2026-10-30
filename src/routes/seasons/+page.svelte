@@ -52,8 +52,17 @@
 			{#if faces.length}
 				<span class="faces" aria-hidden="true">
 					{#each faces as media (media.id)}
-						<img src={media.coverImage?.large} alt="" width="230" height="345" />
+						<img
+							src={media.coverImage?.extraLarge ?? media.coverImage?.large}
+							alt=""
+							width="460"
+							height="690"
+						/>
 					{/each}
+				</span>
+			{:else if onAir.isPending}
+				<span class="faces" aria-hidden="true">
+					{#each { length: 5 }, i (i)}<span class="ghost face"></span>{/each}
 				</span>
 			{/if}
 			<span class="now-name display">{seasonLabel(current)}</span>
@@ -127,7 +136,7 @@
 		background: var(--color-accent);
 		color: var(--color-accent-ink);
 		transition:
-			background-color var(--t-hover) ease,
+			background-color var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
 	.now:active {
@@ -148,7 +157,8 @@
 		gap: 6px;
 		margin-block: 8px 16px;
 	}
-	.faces img {
+	.faces img,
+	.face {
 		width: 100%;
 		aspect-ratio: 2 / 3;
 		object-fit: cover;
@@ -210,7 +220,7 @@
 		background: var(--color-raised);
 		font-weight: 600;
 		transition:
-			background-color var(--t-hover) ease,
+			background-color var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
 	.season:active {

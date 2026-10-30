@@ -37,7 +37,13 @@
 		{#each wall as media, i (media.id)}
 			<li use:reveal={i % 8}>
 				<a href={animePath(media.id)} tabindex="-1" title={displayTitle(media.title ?? {})}>
-					<img src={media.coverImage?.large} alt="" width="230" height="345" loading="lazy" />
+					<img
+						src={media.coverImage?.extraLarge ?? media.coverImage?.large}
+						alt=""
+						width="460"
+						height="690"
+						loading="lazy"
+					/>
 				</a>
 			</li>
 		{:else}
@@ -97,7 +103,7 @@
 		}
 	}
 	.figure a {
-		transition: color var(--t-hover) ease;
+		transition: color var(--t-ui) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.figure a:hover {
@@ -136,8 +142,8 @@
 		height: 100%;
 		object-fit: cover;
 		transition:
-			transform 500ms var(--ease-out),
-			opacity var(--t-hover) ease;
+			transform var(--t-move) var(--ease-out),
+			opacity var(--t-ui) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.wall:hover img {

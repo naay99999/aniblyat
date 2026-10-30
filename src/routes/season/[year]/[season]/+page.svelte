@@ -53,9 +53,7 @@
 
 {#snippet cards()}
 	<!-- the grid's own shape while AniList answers -->
-	<ul class="ghosts" role="status" aria-label={m.loading()}>
-		{#each { length: 12 }, i (i)}<li></li>{/each}
-	</ul>
+	<MediaGrid items={undefined} />
 {/snippet}
 
 <div class="page screen">
@@ -80,11 +78,16 @@
 			{#each faces as media, i (media.id)}
 				<li use:reveal={i}>
 					<a href={animePath(media.id)} tabindex="-1">
-						<img src={media.coverImage?.large} alt="" width="230" height="345" />
+						<img
+							src={media.coverImage?.extraLarge ?? media.coverImage?.large}
+							alt=""
+							width="460"
+							height="690"
+						/>
 					</a>
 				</li>
 			{:else}
-				{#each { length: 6 }, i (i)}<li class="blank"></li>{/each}
+				{#each { length: 6 }, i (i)}<li class="blank" class:ghost={query.isPending}></li>{/each}
 			{/each}
 		</ul>
 	</header>
@@ -193,31 +196,11 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		transition: transform 500ms var(--ease-out);
+		transition: transform var(--t-move) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.faces a:hover img {
 			transform: scale(1.05);
-		}
-	}
-	.ghosts {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-		gap: 32px 20px;
-		list-style: none;
-	}
-	.ghosts li {
-		aspect-ratio: 2 / 3;
-		background: var(--color-surface);
-	}
-	@media (prefers-reduced-motion: no-preference) {
-		.ghosts li {
-			animation: wait 1.4s ease-in-out infinite alternate;
-		}
-	}
-	@keyframes wait {
-		to {
-			opacity: 0.5;
 		}
 	}
 	@media (max-width: 900px) {
@@ -232,14 +215,10 @@
 		h1 {
 			font-size: 15vw;
 		}
-		.ghosts {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
 	}
 	.toolbar {
 		position: sticky;
 		top: var(--bar-shown, 0px);
-		transition: top 360ms var(--ease-out);
 		z-index: 5;
 		display: flex;
 		flex-wrap: wrap;
@@ -265,7 +244,7 @@
 		color: #134452;
 		font-size: var(--text-small);
 		font-weight: 600;
-		transition: background-color var(--t-hover) ease;
+		transition: background-color var(--t-ui) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.chip:hover {
