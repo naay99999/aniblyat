@@ -41,33 +41,39 @@
 		{ href: listPath(), label: m.nav_list(), active: page.url.pathname === '/list' }
 	]);
 
-	// the bar steps out of the way while reading down and comes back on the way up
-	let hidden = $state(false);
+	// the bar stays, slimmer once the page moves; on a phone its row of links folds away
+	// while reading down and comes back on the way up
+	let compact = $state(false);
+	let folded = $state(false);
 	let searching = $state(false);
+	let bar: HTMLElement;
 	$effect(() => {
 		let last = window.scrollY;
 		let frame = 0;
 		const update = () => {
 			frame = 0;
 			const y = window.scrollY;
+			compact = y > 24;
 			if (Math.abs(y - last) < 8) return;
-			hidden = y > last && y > 160;
+			folded = y > last && y > 160;
 			last = y;
 		};
 		const onScroll = () => {
 			if (!frame) frame = requestAnimationFrame(update);
 		};
+		update();
 		window.addEventListener('scroll', onScroll, { passive: true });
 		return () => {
 			window.removeEventListener('scroll', onScroll);
 			cancelAnimationFrame(frame);
 		};
 	});
+	// sticky parts of a page sit under the bar at whatever height it has now
 	$effect(() => {
-		document.documentElement.style.setProperty(
-			'--bar-shown',
-			hidden && !searching ? '0px' : 'var(--nav-h)'
-		);
+		const root = document.documentElement.style;
+		const ro = new ResizeObserver(() => root.setProperty('--bar-shown', `${bar.offsetHeight}px`));
+		ro.observe(bar);
+		return () => ro.disconnect();
 	});
 
 	onNavigate((navigation) => {
@@ -99,27 +105,30 @@
 	}}
 >
 	<a class="skip" href="#main">{m.nav_skip()}</a>
-	<header class="bar page" class:hidden={hidden && !searching}>
-		<a href={homePath()} class="wordmark">aniblyat</a>
-		<nav aria-label="main">
-			<ul>
-				{#each links as link (link.href)}
-					<li>
-						<a href={link.href} class="link" aria-current={link.active ? 'page' : undefined}
-							>{link.label}</a
-						>
-					</li>
-				{/each}
-			</ul>
-		</nav>
-		<SearchBox onopenchange={(open) => (searching = open)} />
-		<button
-			type="button"
-			class="lang link"
-			lang={getLocale() === 'th' ? 'en' : 'th'}
-			onclick={() => setLocale(getLocale() === 'th' ? 'en' : 'th')}>{m.nav_language()}</button
-		>
-	</header>
+	<!-- the slot keeps its height, so the bar can shrink without moving the page under it -->
+	<div class="bar-slot">
+		<header class="bar page" class:compact class:folded={folded && !searching} bind:this={bar}>
+			<a href={homePath()} class="wordmark">aniblyat</a>
+			<nav aria-label="main">
+				<ul>
+					{#each links as link (link.href)}
+						<li>
+							<a href={link.href} class="link" aria-current={link.active ? 'page' : undefined}
+								>{link.label}</a
+							>
+						</li>
+					{/each}
+				</ul>
+			</nav>
+			<SearchBox onopenchange={(open) => (searching = open)} />
+			<button
+				type="button"
+				class="lang link"
+				lang={getLocale() === 'th' ? 'en' : 'th'}
+				onclick={() => setLocale(getLocale() === 'th' ? 'en' : 'th')}>{m.nav_language()}</button
+			>
+		</header>
+	</div>
 
 	<main id="main">
 		{@render children()}
@@ -140,10 +149,15 @@
 	.skip:focus {
 		top: 8px;
 	}
-	.bar {
+	.bar-slot {
 		position: sticky;
 		top: 0;
 		z-index: 20;
+		height: var(--nav-h);
+		pointer-events: none;
+	}
+	.bar {
+		pointer-events: auto;
 		display: grid;
 		grid-template-columns: auto 1fr auto auto;
 		align-items: center;
@@ -154,12 +168,12 @@
 		font-weight: 600;
 		font-size: var(--text-small);
 		transition:
-			transform 360ms var(--ease-out),
+			min-height 280ms var(--ease-out),
 			background-color 700ms var(--ease-in-out),
 			color 400ms ease;
 	}
-	.hidden {
-		transform: translateY(-100%);
+	.compact {
+		min-height: 48px;
 	}
 	.wordmark {
 		font-weight: 800;
@@ -184,10 +198,22 @@
 			row-gap: 0;
 			padding-block: 6px 4px;
 		}
+		.compact {
+			min-height: 0;
+		}
 		nav {
 			grid-column: 1 / -1;
 			grid-row: 2;
 			overflow-x: auto;
+			max-height: 44px;
+			transition:
+				max-height 280ms var(--ease-out),
+				opacity 200ms ease;
+		}
+		.folded nav {
+			max-height: 0;
+			opacity: 0;
+			visibility: hidden;
 		}
 		nav ul {
 			justify-content: flex-start;

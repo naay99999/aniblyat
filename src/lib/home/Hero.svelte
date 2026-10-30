@@ -86,46 +86,14 @@
 	onfocusout={hold(false)}
 >
 	<div class="stage" style:background-color={ground ?? 'var(--color-bg)'} style:color={ink}>
-		<div class="words">
-			<h1 id="hero-title" class="title display">{seasonLabel(season)}</h1>
-			<p class="lead">{m.home_title({ season: seasonLabel(season) })}</p>
-			{#if panels.length > 1}
-				<ul
-					class="steps"
-					onpointerenter={hold(true)}
-					onpointerleave={hold(false)}
-					class:running
-					style:--delay="{DELAY}ms"
-					aria-label={m.home_trending_caption()}
-				>
-					{#each panels as media, i (media.id)}
-						<li>
-							<button
-								type="button"
-								class="step"
-								class:on={i === index}
-								aria-current={i === index ? 'true' : undefined}
-								aria-label={displayTitle(media.title ?? {})}
-								onclick={() => jump(i)}
-							>
-								<img src={media.coverImage?.large} alt="" width="36" height="54" />
-								<span>{displayTitle(media.title ?? {})}</span>
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-		</div>
+		<h1 id="hero-title" class="sr-only">{m.home_title({ season: seasonLabel(season) })}</h1>
 
 		<div class="now">
 			{#if active}
 				{#key active.id}
-					<div class="panel">
-						<p class="which" aria-live="polite">
-							<span>{m.home_trending_caption()} {index + 1}/{panels.length}</span>
-							<a href={animePath(active.id)} class="link name">{displayTitle(active.title ?? {})}</a
-							>
-						</p>
+					<div class="panel" aria-live="polite">
+						<p class="which">{m.home_trending_caption()} {index + 1}/{panels.length}</p>
+						<a href={animePath(active.id)} class="link name">{displayTitle(active.title ?? {})}</a>
 						{#if status?.kind === 'next'}
 							<p class="airs">
 								{m.home_hero_airs({
@@ -133,7 +101,7 @@
 									time: formatAirTime(status.airingAt)
 								})}
 							</p>
-							<Countdown airingAt={status.airingAt} />
+							<div class="clock"><Countdown airingAt={status.airingAt} /></div>
 						{:else}
 							<p class="airs"><AiringBadge media={active} /></p>
 						{/if}
@@ -148,6 +116,32 @@
 					>
 					<a href={seasonHref(season)} class="link season">{m.home_hero_action()}</a>
 				</p>
+				{#if panels.length > 1}
+					<ul
+						class="steps"
+						onpointerenter={hold(true)}
+						onpointerleave={hold(false)}
+						class:running
+						style:--delay="{DELAY}ms"
+						aria-label={m.home_trending_caption()}
+					>
+						{#each panels as media, i (media.id)}
+							<li>
+								<button
+									type="button"
+									class="step"
+									class:on={i === index}
+									aria-current={i === index ? 'true' : undefined}
+									aria-label={displayTitle(media.title ?? {})}
+									title={displayTitle(media.title ?? {})}
+									onclick={() => jump(i)}
+								>
+									<img src={media.coverImage?.large} alt="" width="48" height="72" />
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
 			{:else}
 				<p class="airs">{m.home_hero_lead()}</p>
 				<p class="actions">
@@ -210,123 +204,37 @@
 	.stage {
 		height: 100svh;
 		min-height: 640px;
-		max-height: 1000px;
+		max-height: 960px;
 		overflow: hidden;
 		display: grid;
 		grid-template-columns: repeat(12, minmax(0, 1fr));
-		grid-template-rows: auto minmax(0, 1fr);
+		grid-template-rows: minmax(0, 1fr);
 		column-gap: var(--gutter);
-		padding: calc(var(--nav-h) + 8px) var(--gutter) 32px;
+		padding: calc(var(--nav-h) + var(--space-3)) var(--gutter) var(--space-4);
 		transition:
 			background-color 700ms var(--ease-in-out),
 			color 400ms ease;
 	}
-	.words {
-		grid-column: 1 / 8;
-		grid-row: 1;
-	}
-	.title {
-		font-size: var(--text-display);
-		text-transform: uppercase;
-		white-space: nowrap;
-	}
-	.lead {
-		margin-top: 24px;
-		max-width: 36ch;
-		font-size: var(--text-lead);
-		font-weight: 600;
-		letter-spacing: -0.02em;
-		line-height: 1.25;
-	}
-	.steps {
-		display: grid;
-		gap: 4px;
-		margin-top: 40px;
-		max-width: 420px;
-		list-style: none;
-	}
-	.step {
-		position: relative;
-		display: grid;
-		grid-template-columns: 36px 1fr;
-		align-items: center;
-		gap: 14px;
-		width: 100%;
-		padding: 6px;
-		text-align: left;
-		font-size: var(--text-small);
-		font-weight: 600;
-		opacity: 0.62;
-		transition:
-			opacity var(--t-ui) ease,
-			background-color var(--t-ui) ease,
-			transform var(--t-press) var(--ease-out);
-	}
-	/* the active step fills with its tint; while the slides move on by themselves the fill
-	   runs across the step in the time left before the next one */
-	.step::before {
-		content: '';
+	.sr-only {
 		position: absolute;
-		inset: 0;
-		z-index: -1;
-		background: color-mix(in srgb, currentColor 10%, transparent);
-		transform: scaleX(0);
-		transform-origin: left;
-	}
-	.step.on {
-		opacity: 1;
-	}
-	.step.on::before {
-		transform: none;
-	}
-	@media (prefers-reduced-motion: no-preference) {
-		.running .step.on::before {
-			animation: fill var(--delay) linear both;
-		}
-	}
-	@keyframes fill {
-		from {
-			transform: scaleX(0.04);
-		}
-	}
-	.steps li {
-		isolation: isolate;
-	}
-	.step:active {
-		transform: scale(0.98);
-	}
-	@media (hover: hover) and (pointer: fine) {
-		.step:hover {
-			opacity: 1;
-		}
-	}
-	.step img {
-		width: 36px;
-		height: 54px;
-		object-fit: cover;
-	}
-	.step span {
+		width: 1px;
+		height: 1px;
 		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		clip-path: inset(50%);
 	}
+	/* the clock is the hero: what is next, how long until it airs, and the way in */
 	.now {
 		grid-column: 1 / 8;
-		grid-row: 2;
-		align-self: end;
+		align-self: center;
 		display: grid;
-		gap: 28px;
-		max-width: 680px;
-		/* the home page's one big clock */
-		--countdown-size: clamp(2.5rem, 1.6rem + 3.6vw, 5.5rem);
+		gap: var(--space-4);
+		max-width: 760px;
 	}
 	.panel {
 		display: grid;
-		gap: 12px;
+		gap: var(--space-1);
 	}
 	.which {
-		display: grid;
-		gap: 6px;
 		font-size: var(--text-small);
 		font-weight: 600;
 	}
@@ -348,11 +256,15 @@
 	.airs :global(span) {
 		color: inherit;
 	}
+	.clock {
+		margin-top: var(--space-3);
+		--countdown-size: clamp(3rem, 1.6rem + 4.6vw, 7rem);
+	}
 	.actions {
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 24px;
+		gap: var(--space-3);
 	}
 	.open {
 		transition:
@@ -368,9 +280,58 @@
 		font-weight: 600;
 		text-decoration-color: currentColor;
 	}
+	.steps {
+		display: flex;
+		gap: var(--space-1);
+		list-style: none;
+	}
+	.step {
+		display: grid;
+		gap: 6px;
+		opacity: 0.5;
+		transition:
+			opacity var(--t-ui) ease,
+			transform var(--t-press) var(--ease-out);
+	}
+	.step img {
+		width: 48px;
+		height: 72px;
+		object-fit: cover;
+	}
+	/* under the title on screen, a block fills in the time left before the next one */
+	.step::after {
+		content: '';
+		height: 4px;
+		background: currentColor;
+		transform: scaleX(0);
+		transform-origin: left;
+	}
+	.step.on {
+		opacity: 1;
+	}
+	.step.on::after {
+		transform: none;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.running .step.on::after {
+			animation: fill var(--delay) linear both;
+		}
+	}
+	@keyframes fill {
+		from {
+			transform: scaleX(0);
+		}
+	}
+	.step:active {
+		transform: scale(0.96);
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.step:hover {
+			opacity: 1;
+		}
+	}
 	.covers {
 		grid-column: 8 / -1;
-		grid-row: 1 / -1;
 		position: relative;
 		justify-self: end;
 		height: 100%;
@@ -414,14 +375,20 @@
 		background: var(--color-surface);
 	}
 	@media (prefers-reduced-motion: no-preference) {
-		.panel {
-			animation: rise 700ms var(--ease-expo) both;
+		.panel > * {
+			animation: rise 600ms var(--ease-expo) both;
+		}
+		.panel > :nth-child(2) {
+			animation-delay: 50ms;
+		}
+		.panel > :nth-child(n + 3) {
+			animation-delay: 100ms;
 		}
 	}
 	@keyframes rise {
 		from {
 			opacity: 0;
-			transform: translateY(24px);
+			transform: translateY(16px);
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
@@ -433,41 +400,23 @@
 	@media (max-width: 900px) {
 		.stage {
 			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: auto minmax(0, 1fr) auto;
-			row-gap: 20px;
-			padding-bottom: 20px;
-		}
-		.words,
-		.now {
-			grid-column: 1;
-		}
-		.title {
-			font-size: 15vw;
-		}
-		.steps {
-			display: flex;
-			gap: 6px;
-			margin-top: 16px;
-		}
-		.step {
-			grid-template-columns: 36px;
-			padding: 4px;
-		}
-		.step span {
-			display: none;
-		}
-		.lead {
-			margin-top: 12px;
+			grid-template-rows: minmax(0, 1fr) auto;
+			row-gap: var(--space-3);
+			padding-bottom: var(--space-3);
 		}
 		.covers {
 			grid-column: 1;
-			grid-row: 2;
+			grid-row: 1;
 			justify-self: center;
 		}
 		.now {
-			grid-row: 3;
-			gap: 16px;
+			grid-column: 1;
+			grid-row: 2;
+			gap: var(--space-2);
 			max-width: none;
+		}
+		.clock {
+			margin-top: var(--space-1);
 			--countdown-size: clamp(1.75rem, 8vw, 2.75rem);
 		}
 		.name {
@@ -475,6 +424,10 @@
 		}
 		.airs {
 			font-size: var(--text-small);
+		}
+		.step img {
+			width: 36px;
+			height: 54px;
 		}
 	}
 </style>

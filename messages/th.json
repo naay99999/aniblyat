@@ -121,5 +121,7 @@
 	"season_lead_pending": "อนิเมะทุกเรื่องที่ AniList จัดไว้ใน {season}",
 	"seasons_now": "ซีซันนี้",
 	"list_next_title": "ตอนต่อไปในลิสต์ของคุณ",
-	"list_empty_trending": "เริ่มจากเรื่องที่มาแรงตอนนี้"
+	"list_empty_trending": "เริ่มจากเรื่องที่มาแรงตอนนี้",
+	"strip_prev": "ก่อนหน้า",
+	"strip_next": "ถัดไป"
 }

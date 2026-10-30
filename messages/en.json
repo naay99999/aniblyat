@@ -121,5 +121,7 @@
 	"season_lead_pending": "Every title AniList lists for {season}",
 	"seasons_now": "This season",
 	"list_next_title": "Next up on your list",
-	"list_empty_trending": "Start with what's trending"
+	"list_empty_trending": "Start with what's trending",
+	"strip_prev": "Previous",
+	"strip_next": "Next"
 }
