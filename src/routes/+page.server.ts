@@ -1,4 +1,5 @@
-import { getAiringWindow, getHome } from '#lib/anilist/queries.js';
+import { getAiringWindow } from '#lib/anilist/queries.js';
+import { cachedHome } from '#lib/server/anilist-cache.js';
 import { cached } from '#lib/server/cache.js';
 import type { PageServerLoad } from './$types';
 
@@ -15,10 +16,7 @@ export const load: PageServerLoad = async ({ isDataRequest }) => {
 	const hour = Math.floor(now / 3600_000);
 	try {
 		const [home, airing] = await Promise.all([
-			cached('home', TTL, async () => ({
-				value: await getHome(new Date(now), { maxRetries: 0 }),
-				at: Date.now()
-			})),
+			cachedHome(),
 			cached(`airing:${hour}`, TTL, async () => ({
 				value: await getAiringWindow(hour * 3600, hour * 3600 + 86400 + 3600, { maxRetries: 0 }),
 				at: Date.now()

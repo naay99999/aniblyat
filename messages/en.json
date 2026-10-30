@@ -129,5 +129,6 @@
 	"toast_undo": "Undo",
 	"toast_open_list": "View list",
 	"video_pause": "Pause video",
-	"video_play": "Play video"
+	"video_play": "Play video",
+	"home_hero_rank": "Trending No. {rank}"
 }

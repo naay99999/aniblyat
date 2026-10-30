@@ -7,6 +7,9 @@
 	import { clock } from '#lib/clock.svelte.js';
 	import { seasonHref } from '#lib/paths.js';
 	import { currentSeason, sameSeason, seasonGrid, seasonLabel } from '#lib/season.js';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 
 	// follows the shared clock, so a tab left open across a season boundary moves on
 	const now = $derived(new Date(clock.now * 1000));
@@ -19,9 +22,11 @@
 		queryFn: () => getSeason(current)
 	}));
 	const faces = $derived(
-		sortMedia(onAir.data ?? [], 'popularity', clock.now)
-			.filter((md) => md.coverImage?.large)
-			.slice(0, 5)
+		onAir.data
+			? sortMedia(onAir.data, 'popularity', clock.now)
+					.filter((md) => md.coverImage?.large)
+					.slice(0, 5)
+			: (data.faces ?? [])
 	);
 	const names = { WINTER: 'Winter', SPRING: 'Spring', SUMMER: 'Summer', FALL: 'Fall' } as const;
 	// the months each season covers, in the UI's language: Winter is January to March

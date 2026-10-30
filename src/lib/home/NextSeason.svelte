@@ -116,9 +116,6 @@
 			overflow-x: auto;
 			overscroll-behavior-x: contain;
 			scroll-snap-type: x mandatory;
-			scroll-padding-inline: var(--gutter);
-			margin-inline: calc(-1 * var(--gutter));
-			padding-inline: var(--gutter);
 			scrollbar-width: none;
 		}
 		.more :global(.grid > li) {

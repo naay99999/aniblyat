@@ -124,13 +124,14 @@
 								</a>
 							{/if}
 							<div class="info">
-								<p class="place tabular">{m.home_top_rank({ rank: String(picked + 1) })}</p>
 								<h3 class="name">
 									<a href={animePath(current.id)} class="link"
 										>{displayTitle(current.title ?? {})}</a
 									>
 								</h3>
-								<p class="facts">{facts(current)}</p>
+								<p class="facts tabular">
+									{m.home_top_rank({ rank: String(picked + 1) })} · {facts(current)}
+								</p>
 								<p class="big-score tabular">
 									{score(current)}{#if !current.unscored}<span>/100</span>{/if}
 								</p>
@@ -244,7 +245,6 @@
 		align-content: start;
 		gap: var(--space-1);
 	}
-	.place,
 	.facts {
 		font-size: var(--text-small);
 		font-weight: 600;

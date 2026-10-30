@@ -17,6 +17,9 @@
 	import { toggleSaved } from '#lib/save-feedback.js';
 	import { displayTitle } from '#lib/text.js';
 	import { bucketIds, watchlist, type WatchItem } from '#lib/watchlist.svelte.js';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 
 	// one query per bucket: saving a title refetches its bucket, not the whole list
 	const buckets = $derived(bucketIds(watchlist.items.map((i) => i.id)));
@@ -68,6 +71,8 @@
 	const home = createQuery(() => ({
 		queryKey: ['home'],
 		queryFn: () => getHome(new Date()),
+		initialData: data.home ?? undefined,
+		initialDataUpdatedAt: data.fetchedAt,
 		enabled: watchlist.items.length === 0
 	}));
 	const trending = $derived((home.data?.trending ?? []).slice(0, 12));

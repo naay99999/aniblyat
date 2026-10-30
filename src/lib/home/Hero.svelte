@@ -92,10 +92,10 @@
 			{#if active}
 				{#key active.id}
 					<div class="panel" aria-live="polite">
-						<p class="which">{m.home_trending_caption()} {index + 1}/{panels.length}</p>
 						<a href={animePath(active.id)} class="link name">{displayTitle(active.title ?? {})}</a>
 						{#if status?.kind === 'next'}
 							<p class="airs">
+								{m.home_hero_rank({ rank: String(index + 1) })} ·
 								{m.home_hero_airs({
 									episode: String(status.episode),
 									time: formatAirTime(status.airingAt)
@@ -103,7 +103,9 @@
 							</p>
 							<div class="clock"><Countdown airingAt={status.airingAt} /></div>
 						{:else}
-							<p class="airs"><AiringBadge media={active} /></p>
+							<p class="airs">
+								{m.home_hero_rank({ rank: String(index + 1) })} · <AiringBadge media={active} />
+							</p>
 						{/if}
 					</div>
 				{/key}
@@ -234,10 +236,6 @@
 	.panel {
 		display: grid;
 		gap: var(--space-1);
-	}
-	.which {
-		font-size: var(--text-small);
-		font-weight: 600;
 	}
 	.name {
 		font-size: var(--text-title);

@@ -129,5 +129,6 @@
 	"toast_undo": "เลิกทำ",
 	"toast_open_list": "ดูลิสต์",
 	"video_pause": "หยุดวิดีโอ",
-	"video_play": "เล่นวิดีโอ"
+	"video_play": "เล่นวิดีโอ",
+	"home_hero_rank": "มาแรงอันดับ {rank}"
 }

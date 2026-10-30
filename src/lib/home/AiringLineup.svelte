@@ -236,10 +236,8 @@
 			background: var(--color-raised);
 		}
 	}
-	/* the strip runs past the right margin so the next card always shows */
 	.viewport {
 		overflow: hidden;
-		margin-right: calc(-1 * var(--gutter));
 		cursor: grab;
 		touch-action: pan-y pinch-zoom;
 	}
