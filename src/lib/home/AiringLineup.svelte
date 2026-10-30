@@ -6,8 +6,10 @@
 	import { reveal } from '../actions/reveal';
 	import { formatAirTime, formatCountdown, groupByDay } from '../airing';
 	import { clock } from '../clock.svelte';
+	import Figures from '../components/Figures.svelte';
+	import SaveButton from '../components/SaveButton.svelte';
 	import { animePath } from '../paths';
-	import { displayTitle } from '../text';
+	import { displayTitle, formatLabel } from '../text';
 
 	// no entries yet: the strip holds its shape with blank cards
 	let { entries }: { entries: AiringEntry[] | undefined } = $props();
@@ -136,7 +138,12 @@
 			<ol class="track" aria-labelledby="lineup-title">
 				{#each strip as { entry, day }, i (entry.media.id + ':' + entry.episode)}
 					{@const opens = i === 0 || strip[i - 1].day !== day}
+					{@const title = displayTitle(entry.media.title ?? {})}
+					{@const cover =
+						entry.media.coverImage?.extraLarge ?? entry.media.coverImage?.large ?? null}
 					<li class="slide" class:opens>
+						<!-- the mark is a sibling of the link, over the cover's corner: a button can't sit inside an anchor -->
+						<div class="save"><SaveButton item={{ id: entry.media.id, title, cover }} /></div>
 						<a href={animePath(entry.media.id)} class="show">
 							<span
 								class="cover"
@@ -153,15 +160,19 @@
 									/>
 								{/if}
 							</span>
-							<span class="when tabular">
+							<span class="when">
 								{#if opens && i > 0}<span class="which">{dayLabel(day)}</span>{/if}
-								{time(entry.airingAt)}
+								<Figures text={time(entry.airingAt) ?? ''} />
 							</span>
-							<span class="left tabular">{formatCountdown(entry.airingAt - clock.now)}</span>
-							<span class="title">{displayTitle(entry.media.title ?? {})}</span>
-							<span class="meta tabular"
-								>EP {entry.episode}{#if entry.media.format}
-									· {entry.media.format.replace('_', ' ')}{/if}</span
+							<span class="left"
+								><Figures text={formatCountdown(entry.airingAt - clock.now)} /></span
+							>
+							<span class="title">{title}</span>
+							<span class="meta"
+								><Figures
+									text={m.strip_episode({ episode: entry.episode })}
+								/>{#if entry.media.format}
+									· {formatLabel(entry.media.format)}{/if}</span
 							>
 						</a>
 					</li>
@@ -263,6 +274,7 @@
 		list-style: none;
 	}
 	.slide {
+		position: relative;
 		flex: 0 0 clamp(148px, 11vw, 184px);
 		min-width: 0;
 		margin-right: 32px;
@@ -270,6 +282,12 @@
 	/* a new day leaves a wider gap before its first card */
 	.slide.opens:not(:first-child) {
 		margin-left: var(--space-5);
+	}
+	.save {
+		position: absolute;
+		top: 8px;
+		right: 8px;
+		z-index: 1;
 	}
 	.show {
 		display: grid;
@@ -312,7 +330,7 @@
 	.title {
 		margin-top: 4px;
 		font-weight: 600;
-		line-height: 1.25;
+		line-height: 1.45;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
 		line-clamp: 2;

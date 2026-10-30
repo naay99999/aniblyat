@@ -1,15 +1,16 @@
 <script lang="ts">
 	import { airingStatus, formatAirTime, statusLabel, type AiringInput } from '../airing';
 	import { clock } from '../clock.svelte';
+	import Figures from './Figures.svelte';
 
 	let { media, showTime = false }: { media: AiringInput; showTime?: boolean } = $props();
 
 	const status = $derived(airingStatus(media, clock.now));
 </script>
 
-<span class="tabular" class:next={status.kind === 'next'}>
-	{statusLabel(status)}{#if showTime && status.kind === 'next'}<span class="time"
-			>{` · ${formatAirTime(status.airingAt)}`}</span
+<span class:next={status.kind === 'next'}>
+	<Figures text={statusLabel(status)} />{#if showTime && status.kind === 'next'}<span class="time"
+			><Figures text={` · ${formatAirTime(status.airingAt)}`} /></span
 		>{/if}
 </span>
 

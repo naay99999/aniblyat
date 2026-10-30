@@ -47,6 +47,16 @@
 			.filter((md) => md.coverImage?.large)
 			.slice(0, 6)
 	);
+
+	// the sticky toolbar's height, so a jump link lands below it and not under it
+	let toolbar = $state<HTMLDivElement>();
+	let toolbarH = $state(0);
+	$effect(() => {
+		if (!toolbar) return;
+		const ro = new ResizeObserver(() => (toolbarH = toolbar!.offsetHeight));
+		ro.observe(toolbar);
+		return () => ro.disconnect();
+	});
 </script>
 
 <svelte:head><title>{seasonLabel(season)} · aniblyat</title></svelte:head>
@@ -56,7 +66,7 @@
 	<MediaGrid items={undefined} />
 {/snippet}
 
-<div class="page screen">
+<div class="page screen" style:--toolbar-h="{toolbarH}px">
 	<header class="head">
 		<div class="words">
 			<h1 class="display">{seasonLabel(season)}</h1>
@@ -92,7 +102,7 @@
 		</ul>
 	</header>
 
-	<div class="toolbar">
+	<div class="toolbar" bind:this={toolbar}>
 		{#if groups.length > 1}
 			<ul class="jump">
 				{#each groups as group (group.group)}
@@ -158,7 +168,7 @@
 		padding-bottom: 8px;
 	}
 	h1 {
-		font-size: clamp(3rem, 1.8rem + 4vw, 6rem);
+		font-size: var(--text-head);
 		text-transform: uppercase;
 		white-space: nowrap;
 	}
@@ -212,9 +222,6 @@
 		.faces {
 			grid-column: 1;
 		}
-		h1 {
-			font-size: 15vw;
-		}
 	}
 	.toolbar {
 		position: sticky;
@@ -241,7 +248,7 @@
 		min-height: 36px;
 		padding: 0 14px;
 		background: var(--color-accent-50);
-		color: #134452;
+		color: var(--color-accent-text);
 		font-size: var(--text-small);
 		font-weight: 600;
 		transition: background-color var(--t-ui) var(--ease-out);
@@ -271,8 +278,14 @@
 			position: static;
 		}
 	}
+	/* a jump lands below the bar and the pinned toolbar (static on a phone: the bar alone) */
 	.group {
-		scroll-margin-top: 80px;
+		scroll-margin-top: calc(var(--bar-shown, 64px) + var(--toolbar-h, 0px) + var(--space-2));
+	}
+	@media (max-width: 720px) {
+		.group {
+			scroll-margin-top: calc(var(--bar-shown, 64px) + var(--space-2));
+		}
 	}
 	.group + .group {
 		margin-top: var(--space-6);

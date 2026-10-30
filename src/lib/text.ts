@@ -37,3 +37,27 @@ export function stripHtml(html: string | null): string {
 export function displayTitle(t: { english?: string | null; romaji?: string | null }): string {
 	return t.english ?? t.romaji ?? '';
 }
+
+/**
+ * Split text into runs of digits and runs of everything else. Tabular figures belong on the
+ * digits only: on a whole string Schibsted Grotesk sets ":" and "." at figure width ("06 : 00").
+ */
+export function figures(text: string): { text: string; digits: boolean }[] {
+	return (text.match(/\d+|\D+/g) ?? []).map((run) => ({ text: run, digits: /^\d/.test(run) }));
+}
+
+const FORMATS: Record<string, string> = {
+	TV: 'TV',
+	TV_SHORT: 'TV Short',
+	MOVIE: 'Movie',
+	SPECIAL: 'Special',
+	OVA: 'OVA',
+	ONA: 'ONA',
+	MUSIC: 'Music'
+};
+
+/** AniList's format enum as one label everywhere: the same words as the season page's groups. */
+export function formatLabel(format: string | null | undefined): string | null {
+	if (!format) return null;
+	return FORMATS[format] ?? format.replaceAll('_', ' ');
+}

@@ -37,7 +37,8 @@
 		<ul class="places">
 			{#each links as link, i (link.href)}
 				<li use:reveal={i}>
-					<a href={link.href} class="place"><span>{link.label}</span><span class="arrow">→</span></a
+					<a href={link.href} class="place"
+						><span>{link.label}</span><span class="arrow" aria-hidden="true">→</span></a
 					>
 				</li>
 			{/each}
@@ -47,7 +48,7 @@
 				{m.footer_note()} ·
 				<a href="https://anilist.co" class="link" rel="external noopener">anilist.co</a>
 			</p>
-			<a href="#main" class="link">{m.footer_top()} ↑</a>
+			<a href="#main" class="link">{m.footer_top()} <span aria-hidden="true">↑</span></a>
 		</div>
 	</div>
 	<p class="name display" class:risen bind:this={name} aria-hidden="true">

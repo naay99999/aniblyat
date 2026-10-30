@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { m } from '#lib/paraglide/messages.js';
-	import { AniListError } from '../anilist/client';
+	import { isRateLimited } from '../anilist/client';
 	import { queryView } from '../query-view';
 
 	type Query = {
@@ -19,7 +19,7 @@
 		inset = false
 	}: { query: Query; children: Snippet; pending?: Snippet; inset?: boolean } = $props();
 
-	const rateLimited = $derived(query.error instanceof AniListError && query.error.status === 429);
+	const rateLimited = $derived(isRateLimited(query.error));
 	const view = $derived(queryView(query));
 </script>
 
@@ -28,11 +28,22 @@
 			{m.loading()}
 		</p>{/if}
 {:else if view === 'error'}
-	<div class="state" class:page={inset} role="alert">
-		<p class="title">{m.error_title()}</p>
-		<p>{rateLimited ? m.error_rate() : m.error_generic()}</p>
-		<button type="button" class="btn btn-ink" onclick={() => query.refetch()}>{m.retry()}</button>
-	</div>
+	{#snippet alert()}
+		<div class="state" class:page={inset} class:over={pending} role="alert">
+			<p class="title">{m.error_title()}</p>
+			<p>{rateLimited ? m.error_rate() : m.error_generic()}</p>
+			<button type="button" class="btn btn-ink" onclick={() => query.refetch()}>{m.retry()}</button>
+		</div>
+	{/snippet}
+	{#if pending}
+		<!-- the page keeps its shape: the ghosts stand still behind the message -->
+		<div class="held">
+			<div class="shape" aria-hidden="true" inert>{@render pending()}</div>
+			{@render alert()}
+		</div>
+	{:else}
+		{@render alert()}
+	{/if}
 {:else}
 	{#if view === 'stale'}
 		<p class="notice" class:page={inset} role="status">
@@ -63,6 +74,27 @@
 	}
 	.state.page {
 		padding-inline: var(--gutter);
+	}
+	.held {
+		display: grid;
+	}
+	.held > * {
+		grid-area: 1 / 1;
+	}
+	/* a held shape must not pulse: nothing is loading */
+	.shape :global(*) {
+		animation: none !important;
+	}
+	.state.over {
+		align-self: start;
+		justify-self: start;
+		margin-top: 48px;
+		padding: 24px;
+		background: var(--color-raised);
+	}
+	.state.over.page {
+		margin-inline: var(--gutter);
+		padding-inline: 24px;
 	}
 	.title {
 		color: var(--color-ink);

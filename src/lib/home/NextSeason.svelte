@@ -40,13 +40,16 @@
 					class:centre={i === 1}
 					use:reveal={i === 1 ? 0 : 2}
 				>
-					<img
-						src={media.coverImage?.extraLarge ?? media.coverImage?.large}
-						alt={displayTitle(media.title ?? {})}
-						loading="lazy"
-						width="460"
-						height="690"
-					/>
+					<span class="frame">
+						<img
+							src={media.coverImage?.extraLarge ?? media.coverImage?.large}
+							alt=""
+							loading="lazy"
+							width="460"
+							height="690"
+						/>
+					</span>
+					<span class="caption">{displayTitle(media.title ?? {})}</span>
 				</a>
 			{/each}
 		</div>
@@ -91,15 +94,35 @@
 	}
 	.pic {
 		flex: 0 0 auto;
+		display: grid;
+		gap: var(--space-1);
+		align-content: start;
 		width: min(260px, 20vw);
-		aspect-ratio: 2 / 3;
 		margin-top: 48px;
-		overflow: hidden;
 	}
 	.pic.centre {
 		width: min(380px, 28vw);
-		aspect-ratio: 4 / 5;
 		margin-top: 0;
+	}
+	.frame,
+	.pic.ghost {
+		display: block;
+		aspect-ratio: 2 / 3;
+		overflow: hidden;
+	}
+	.pic.centre .frame,
+	.pic.centre.ghost {
+		aspect-ratio: 4 / 5;
+	}
+	.caption {
+		font-size: var(--text-small);
+		font-weight: 600;
+		line-height: 1.45;
+		display: -webkit-box;
+		-webkit-line-clamp: 1;
+		line-clamp: 1;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 	.pic img {
 		width: 100%;

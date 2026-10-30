@@ -28,6 +28,7 @@
 					.slice(0, 5)
 			: (data.faces ?? [])
 	);
+	// season names stay in English in both languages, on purpose: they are the names AniList and fans use
 	const names = { WINTER: 'Winter', SPRING: 'Spring', SUMMER: 'Summer', FALL: 'Fall' } as const;
 	// the months each season covers, in the UI's language: Winter is January to March
 	const firstMonth = { WINTER: 0, SPRING: 3, SUMMER: 6, FALL: 9 } as const;
@@ -115,7 +116,7 @@
 		gap: 24px;
 	}
 	h1 {
-		font-size: clamp(3rem, 1.8rem + 4vw, 6rem);
+		font-size: var(--text-head);
 	}
 	.lead {
 		max-width: 34ch;
@@ -246,9 +247,6 @@
 		.words,
 		.now {
 			grid-column: 1;
-		}
-		h1 {
-			font-size: 15vw;
 		}
 		.now {
 			min-height: 180px;

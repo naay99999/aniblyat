@@ -13,7 +13,8 @@
 	import SaveButton from '#lib/components/SaveButton.svelte';
 	import { inkOn } from '#lib/color.js';
 	import { animePath, homePath, seasonHref } from '#lib/paths.js';
-	import { displayTitle, stripHtml } from '#lib/text.js';
+	import { seasonLabel } from '#lib/season.js';
+	import { displayTitle, formatLabel, stripHtml } from '#lib/text.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -36,8 +37,19 @@
 	const status = $derived(media ? airingStatus(media, clock.now) : null);
 	// the headline steps down as the title grows, so it holds to two lines
 	const titleSize = $derived(
-		title.length <= 22 ? 'xl' : title.length <= 48 ? 'l' : title.length <= 70 ? 'm' : 's'
+		title.length <= 18 ? 'xl' : title.length <= 36 ? 'l' : title.length <= 60 ? 'm' : 's'
 	);
+	// a second title line is only worth showing when it says something the headline doesn't
+	const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+	const altTitles = $derived(
+		media?.title
+			? [media.title.romaji, media.title.native].filter(
+					(t): t is string => !!t && norm(t) !== norm(title)
+				)
+			: []
+	);
+	const WALL_LIMIT = 12;
+	let showAllRelated = $state(false);
 	const related = $derived(
 		(media?.relations?.edges ?? []).flatMap((e) =>
 			e?.node && e.node.type === 'ANIME' ? [{ type: e.relationType, node: e.node }] : []
@@ -76,7 +88,7 @@
 	const glance = $derived(
 		media
 			? [
-					media.format?.replace('_', ' '),
+					formatLabel(media.format),
 					media.episodes ? m.detail_episode_count({ count: String(media.episodes) }) : null,
 					media.duration ? m.detail_duration_value({ minutes: String(media.duration) }) : null,
 					studios
@@ -87,7 +99,7 @@
 	const facts = $derived.by(() => {
 		if (!media) return [];
 		const rows: [string, string | null][] = [
-			[m.detail_format(), media.format?.replace('_', ' ') ?? null],
+			[m.detail_format(), formatLabel(media.format) ?? null],
 			[m.detail_episodes(), media.episodes ? String(media.episodes) : null],
 			[
 				m.detail_duration(),
@@ -133,9 +145,9 @@
 	</section>
 {/snippet}
 
-{#snippet relatedList(kind: 'rows' | 'wall')}
+{#snippet relatedList(kind: 'rows' | 'wall', items: typeof related)}
 	<ul class={kind} use:reveal={1}>
-		{#each related as rel (rel.node.id)}
+		{#each items as rel (rel.node.id)}
 			<li>
 				<a href={animePath(rel.node.id)} class="rel">
 					<span class="thumb">
@@ -179,10 +191,9 @@
 			>
 				<header class="words">
 					<h1 id="anime-title" class="title t-{titleSize}">{title}</h1>
-					{#if media.title?.romaji && media.title.romaji !== title}
-						<p class="alt">{media.title.romaji}</p>
-					{/if}
-					{#if media.title?.native}<p class="alt" lang="ja">{media.title.native}</p>{/if}
+					{#each altTitles as alt (alt)}
+						<p class="alt" lang={alt === media.title?.native ? 'ja' : undefined}>{alt}</p>
+					{/each}
 					{#if glance.length}<p class="glance">{glance.join(' · ')}</p>{/if}
 					{#if media.genres?.length}
 						<p class="genres">
@@ -228,7 +239,7 @@
 							<a
 								class="link more"
 								href={seasonHref({ season: media.season, year: media.seasonYear })}
-								>{titleCase(media.season)} {media.seasonYear}</a
+								>{seasonLabel({ season: media.season, year: media.seasonYear })}</a
 							>
 						{/if}
 					</div>
@@ -273,7 +284,7 @@
 						{#if fewRelated}
 							<section aria-labelledby="related-title">
 								<h2 id="related-title" use:reveal>{m.detail_related()}</h2>
-								{@render relatedList('rows')}
+								{@render relatedList('rows', related)}
 							</section>
 						{/if}
 					</div>
@@ -309,7 +320,17 @@
 			{#if related.length && !fewRelated}
 				<section class="page related" aria-labelledby="related-title">
 					<h2 id="related-title" use:reveal>{m.detail_related()}</h2>
-					{@render relatedList('wall')}
+					{@render relatedList('wall', showAllRelated ? related : related.slice(0, WALL_LIMIT))}
+					{#if related.length > WALL_LIMIT && !showAllRelated}
+						<button
+							type="button"
+							class="btn more-rel"
+							aria-expanded={showAllRelated}
+							onclick={() => (showAllRelated = true)}
+						>
+							{m.detail_related_all({ count: String(related.length) })}
+						</button>
+					{/if}
 				</section>
 			{/if}
 		</article>
@@ -355,12 +376,12 @@
 		line-height: 0.98;
 	}
 	.t-xl {
-		font-size: clamp(3rem, 1.6rem + 4.5vw, 6rem);
+		font-size: var(--text-head);
 		letter-spacing: -0.05em;
-		line-height: 0.9;
+		line-height: 0.92;
 	}
 	.t-l {
-		font-size: var(--text-head);
+		font-size: calc(var(--text-head) * 0.8);
 	}
 	.t-m {
 		font-size: var(--text-title);
@@ -371,7 +392,6 @@
 	.alt {
 		font-size: var(--text-body);
 		font-weight: 500;
-		opacity: 0.8;
 	}
 	.glance {
 		margin-top: 12px;
@@ -419,6 +439,10 @@
 			background: var(--hero-ink);
 			opacity: 0.86;
 		}
+	}
+	/* the cover's colour can be teal; the ring follows the ink instead */
+	.hero :global(:focus-visible) {
+		outline-color: var(--hero-ink);
 	}
 	.more {
 		font-weight: 600;
@@ -508,6 +532,13 @@
 	.poster-block {
 		height: 100%;
 		min-height: 320px;
+	}
+	@media (max-width: 900px) {
+		.poster-block {
+			height: auto;
+			min-height: 0;
+			aspect-ratio: 2 / 3;
+		}
 	}
 	@media (prefers-reduced-motion: no-preference) {
 		.waiting .block {
@@ -648,7 +679,7 @@
 	.frame {
 		aspect-ratio: 16 / 9;
 		max-width: 1200px;
-		background: #1f1f1f;
+		background: var(--color-ink-raised);
 	}
 	.frame iframe {
 		width: 100%;
@@ -720,7 +751,10 @@
 	}
 	.rel-title {
 		font-weight: 600;
-		line-height: 1.25;
+		line-height: 1.45;
+	}
+	.more-rel {
+		margin-top: var(--space-5);
 	}
 	.sr-only {
 		position: absolute;
@@ -732,35 +766,42 @@
 
 	@media (max-width: 900px) {
 		.hero {
-			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: auto auto auto auto;
+			/* clock first: title, then the airs line and Save, then rating beside a small cover */
+			grid-template-columns: minmax(0, 1fr) 112px;
+			grid-template-rows: auto auto auto;
 			row-gap: 28px;
 			min-height: 0;
 			padding-top: calc(var(--nav-h) + 24px);
 			padding-bottom: 32px;
 		}
 		.words,
-		.rating,
-		.now,
-		.poster {
-			grid-column: 1;
+		.now {
+			grid-column: 1 / -1;
 		}
-		.poster {
-			grid-row: 2;
-		}
-		.poster img {
-			max-height: 72svh;
+		.words {
+			grid-row: 1;
 		}
 		.rating {
+			grid-column: 1;
 			grid-row: 3;
 		}
+		.poster {
+			grid-column: 2;
+			grid-row: 3;
+			align-self: end;
+		}
+		.poster img {
+			height: auto;
+			max-height: none;
+			aspect-ratio: 2 / 3;
+		}
 		.now {
-			grid-row: 4;
+			grid-row: 2;
 			max-width: none;
 			--countdown-size: clamp(1.75rem, 8vw, 2.75rem);
 		}
 		.t-xl {
-			font-size: clamp(2.75rem, 12vw, 4.5rem);
+			font-size: clamp(2.25rem, 10vw, var(--text-head));
 		}
 		.glance {
 			font-size: var(--text-body);

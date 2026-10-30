@@ -6,7 +6,12 @@
 	import { seasonLabel, type Season } from '../season';
 	import { displayTitle } from '../text';
 
-	let { season, items }: { season: Season; items: MediaCard[] | undefined } = $props();
+	// `failed`: the season query errored, so the figure will never arrive
+	let {
+		season,
+		items,
+		failed = false
+	}: { season: Season; items: MediaCard[] | undefined; failed?: boolean } = $props();
 
 	const count = $derived(items?.length);
 	// the wall shows the season's most followed titles; the link carries the rest
@@ -17,7 +22,9 @@
 	<div class="words">
 		<h2 id="count-title" class="claim" use:reveal>{m.home_count_title()}</h2>
 		<p class="figure display tabular" use:reveal={1}>
-			{#if count == null}
+			{#if count == null && failed}
+				<span class="unavailable">{m.home_count_unavailable()}</span>
+			{:else if count == null}
 				<span class="pending" aria-hidden="true"></span>
 			{:else}
 				<a href={seasonHref(season)}>{count}</a><sup>{m.home_count_unit()}</sup>
@@ -63,6 +70,8 @@
 		padding-block: calc(var(--section) * 1.25);
 		background: var(--color-ink);
 		color: var(--color-bg);
+		/* the wall's blank tone: ink lifted a little toward white */
+		--tile: color-mix(in srgb, var(--color-ink) 88%, white);
 	}
 	/* mirrored against the Top 10 split that follows: pictures left, figure right */
 	.words {
@@ -90,7 +99,16 @@
 		display: block;
 		width: 1.8em;
 		height: 0.72em;
-		background: #1f1f1f;
+		background: var(--tile);
+	}
+	/* the season query failed: say so once, at reading size, instead of an endless pulse */
+	.unavailable {
+		display: block;
+		max-width: 16ch;
+		font-size: var(--text-lead);
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		line-height: 1.2;
 	}
 	@media (prefers-reduced-motion: no-preference) {
 		.pending {
@@ -135,7 +153,7 @@
 		display: block;
 		aspect-ratio: 2 / 3;
 		overflow: hidden;
-		background: #1f1f1f;
+		background: var(--tile);
 	}
 	.wall img {
 		width: 100%;

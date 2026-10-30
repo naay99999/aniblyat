@@ -8,7 +8,7 @@
 	import SaveButton from '../components/SaveButton.svelte';
 	import { inkOn } from '../color';
 	import { animePath } from '../paths';
-	import { displayTitle } from '../text';
+	import { displayTitle, formatLabel } from '../text';
 
 	// no items yet: the list and the card hold their shape with blanks
 	let { items }: { items: RankedMedia[] | undefined } = $props();
@@ -153,9 +153,7 @@
 	});
 
 	const facts = (media: RankedMedia) =>
-		[media.format?.replace('_', ' '), ...(media.genres ?? []).slice(0, 2)]
-			.filter(Boolean)
-			.join(' · ');
+		[formatLabel(media.format), ...(media.genres ?? []).slice(0, 2)].filter(Boolean).join(' · ');
 	const score = (media: RankedMedia) =>
 		media.unscored ? m.unscored() : String(media.averageScore ?? '');
 </script>
@@ -249,13 +247,16 @@
 
 			{#if current}
 				{@const ground = current.coverImage?.color ?? null}
+				<!-- a small stable live region: only the pick is announced, not the whole card -->
+				<p class="sr-only" aria-live="polite" aria-atomic="true">
+					{displayTitle(current.title ?? {})}, {m.home_top_rank({ rank: String(picked + 1) })}
+				</p>
 				<article
 					id="top-feature"
 					class="feature"
 					bind:this={feature}
 					style:background-color={ground ?? 'var(--color-ink)'}
 					style:color={ground ? inkOn(ground) : 'var(--color-bg)'}
-					aria-live="polite"
 				>
 					<!-- the card stays; the title on it fades out where it stands while the next one settles in -->
 					{#key current.id}
@@ -308,6 +309,13 @@
 </section>
 
 <style>
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+	}
 	.intro {
 		grid-column: 1 / 6;
 		grid-row: 1;

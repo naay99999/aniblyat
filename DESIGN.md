@@ -175,7 +175,9 @@ A warm uncoated-paper neutral set, near-black ink, and one teal spot colour. Sat
 
 **The Showpiece-Only Rule.** Display sizes belong to the clock and the footer. A section someone uses to find or pick something gets section or body type, never display.
 
-**The Tabular Time Rule.** Every countdown, time, episode number and count uses `font-variant-numeric: tabular-nums`, so the figures don't jitter as they tick.
+**The Tabular Time Rule.** Every countdown, time, episode number and count uses `font-variant-numeric: tabular-nums`, so the figures don't jitter as they tick. Only the digit runs take it: colons, full stops and units such as "ชม." stay proportional, or they open up into "06 : 00" and "ชม .".
+
+**The Season Name Rule.** Season names stay in English in both languages ("Fall 2026", "WINTER"), because that is how Thai fans say them. The months beside them are localised. Everything else around a season name is translated.
 
 ## Layout
 

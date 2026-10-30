@@ -22,6 +22,11 @@ export type FetchOptions = {
 	now?: () => number;
 };
 
+/** True for a throttled or unreachable AniList: the UI shows the rate-limit copy for it. */
+export function isRateLimited(e: unknown): boolean {
+	return e instanceof AniListError && e.status === 429;
+}
+
 const defaultSleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 /** Retry-After when readable; in browsers CORS hides it, so use the exposed X-RateLimit-Reset (unix seconds). */
@@ -50,11 +55,20 @@ export async function anilistFetch<TData, TVars>(
 	const body = JSON.stringify({ query, variables: variables ?? {} });
 
 	for (let attempt = 0; ; attempt++) {
-		const res = await doFetch(ANILIST_URL, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-			body
-		});
+		let res: Response;
+		try {
+			res = await doFetch(ANILIST_URL, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+				body
+			});
+		} catch (e) {
+			// a throttled reply often carries no CORS headers, so the browser rejects with a bare
+			// TypeError and the 429 never shows; treat a network failure as AniList being busy
+			if (e instanceof TypeError)
+				throw new AniListError('AniList is busy or unreachable', 429, true);
+			throw e;
+		}
 
 		if (res.status === 429) {
 			if (attempt >= maxRetries) {

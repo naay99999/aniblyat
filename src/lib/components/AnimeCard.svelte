@@ -15,6 +15,8 @@
 	<a
 		href={animePath(media.id)}
 		class="cover"
+		tabindex="-1"
+		aria-hidden="true"
 		style:background-color={media.coverImage?.color ?? 'var(--color-surface)'}
 	>
 		{#if cover}
@@ -59,7 +61,7 @@
 		margin-top: 4px;
 		font-weight: 600;
 		font-size: var(--text-body);
-		line-height: 1.25;
+		line-height: 1.45;
 		display: -webkit-box;
 		-webkit-line-clamp: 2;
 		line-clamp: 2;

@@ -2,7 +2,6 @@
 	import { fade } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import type { EmblaCarouselType } from 'embla-carousel';
-	import Autoplay from 'embla-carousel-autoplay';
 	import emblaCarousel from 'embla-carousel-svelte';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { MediaCard } from '../anilist/queries';
@@ -12,11 +11,17 @@
 	import Countdown from '../components/Countdown.svelte';
 	import { clock } from '../clock.svelte';
 	import { inkOn } from '../color';
+	import type { HeroReason } from '../hero-pick';
 	import { animePath, seasonHref } from '../paths';
 	import { seasonLabel, type Season } from '../season';
 	import { displayTitle } from '../text';
 
-	let { season, items }: { season: Season; items: MediaCard[] | undefined } = $props();
+	// items arrive in airing order: the up-next queue, soonest first
+	let {
+		season,
+		items,
+		reason
+	}: { season: Season; items: MediaCard[] | undefined; reason: HeroReason } = $props();
 
 	const panels = $derived(
 		(items ?? []).filter((m) => m.coverImage?.extraLarge ?? m.coverImage?.large).slice(0, 3)
@@ -26,20 +31,31 @@
 	const ground = $derived(active?.coverImage?.color ?? null);
 	const ink = $derived(inkOn(ground));
 	const status = $derived(active ? airingStatus(active, clock.now) : null);
+	const why = $derived(reason === 'list' ? m.home_hero_why_list() : m.home_hero_why_soon());
 
-	const DELAY = 6000;
 	const reduce =
 		typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 	let embla: EmblaCarouselType | undefined;
-	// the step's fill runs only while the slides move on by themselves
-	let running = $state(false);
+	// read out by the stable live region, and only when the visitor picks a step or swipes
+	let announced = $state('');
 
 	function init(event: CustomEvent<EmblaCarouselType>) {
 		embla = event.detail;
-		embla.on('select', () => (index = embla!.selectedScrollSnap()));
-		embla.on('autoplay:play', () => (running = true));
-		embla.on('autoplay:stop', () => (running = false));
-		running = embla.plugins().autoplay?.isPlaying() ?? false;
+		embla.on('select', () => {
+			index = embla!.selectedScrollSnap();
+			const media = panels[index];
+			const next = media && airingStatus(media, clock.now);
+			announced =
+				media && next?.kind === 'next'
+					? m.home_hero_announce({
+							title: displayTitle(media.title ?? {}),
+							episode: String(next.episode),
+							time: formatAirTime(next.airingAt)
+						})
+					: media
+						? displayTitle(media.title ?? {})
+						: '';
+		});
 	}
 
 	// a refetch can reorder or replace the titles under the carousel
@@ -51,56 +67,28 @@
 	function jump(i: number) {
 		embla?.scrollTo(i, reduce);
 	}
-
-	// pause while the pointer rests on the slides or a focus is inside the hero, and off screen
-	let section: HTMLElement;
-	let visible = true;
-	let holding = false;
-	const sync = () => {
-		const autoplay = embla?.plugins().autoplay;
-		if (!autoplay) return;
-		if (visible && !holding) autoplay.play();
-		else autoplay.stop();
-	};
-	$effect(() => {
-		const io = new IntersectionObserver(([e]) => {
-			visible = e.isIntersecting;
-			sync();
-		});
-		io.observe(section);
-		return () => io.disconnect();
-	});
-	const hold = (on: boolean) => () => {
-		holding = on;
-		sync();
-	};
 </script>
 
 <section
 	class="hero"
-	bind:this={section}
 	use:barTint={{ bg: ground ?? 'var(--color-bg)', ink }}
 	aria-labelledby="hero-title"
-	onfocusin={(e) => {
-		// a click leaves focus on the step; only keyboard focus holds the slides
-		if ((e.target as Element).matches(':focus-visible')) hold(true)();
-	}}
-	onfocusout={hold(false)}
 >
 	<div class="stage" style:background-color={ground ?? 'var(--color-bg)'} style:color={ink}>
 		<h1 id="hero-title" class="sr-only">{m.home_title({ season: seasonLabel(season) })}</h1>
+		<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{announced}</p>
 
 		<div class="now">
 			{#if active}
 				<!-- the outgoing title fades where it stands while the next one rises into the same place -->
 				<div class="slot">
 					{#key active.id}
-						<div class="panel" aria-live="polite" out:fade={{ duration: 150, easing: cubicOut }}>
+						<div class="panel" out:fade={{ duration: 150, easing: cubicOut }}>
 							<a href={animePath(active.id)} class="link name">{displayTitle(active.title ?? {})}</a
 							>
 							{#if status?.kind === 'next'}
 								<p class="airs">
-									{m.home_hero_rank({ rank: String(index + 1) })} ·
+									{why} ·
 									{m.home_hero_airs({
 										episode: String(status.episode),
 										time: formatAirTime(status.airingAt)
@@ -108,9 +96,7 @@
 								</p>
 								<div class="clock"><Countdown airingAt={status.airingAt} /></div>
 							{:else}
-								<p class="airs">
-									{m.home_hero_rank({ rank: String(index + 1) })} · <AiringBadge media={active} />
-								</p>
+								<p class="airs">{why} · <AiringBadge media={active} /></p>
 							{/if}
 						</div>
 					{/key}
@@ -125,14 +111,7 @@
 					<a href={seasonHref(season)} class="link season">{m.home_hero_action()}</a>
 				</p>
 				{#if panels.length > 1}
-					<ul
-						class="steps"
-						onpointerenter={hold(true)}
-						onpointerleave={hold(false)}
-						class:running
-						style:--delay="{DELAY}ms"
-						aria-label={m.home_trending_caption()}
-					>
+					<ul class="steps" aria-label={m.home_hero_queue()}>
 						{#each panels as media, i (media.id)}
 							<li>
 								<button
@@ -144,7 +123,7 @@
 									title={displayTitle(media.title ?? {})}
 									onclick={() => jump(i)}
 								>
-									<img src={media.coverImage?.large} alt="" width="48" height="72" />
+									<img src={media.coverImage?.large} alt="" width="44" height="66" />
 								</button>
 							</li>
 						{/each}
@@ -162,19 +141,12 @@
 			class="covers"
 			role="group"
 			aria-roledescription="carousel"
-			aria-label={m.home_trending_caption()}
-			onpointerenter={hold(true)}
-			onpointerleave={hold(false)}
+			aria-label={m.home_hero_queue()}
 		>
 			{#if panels.length}
 				<div
 					class="viewport"
-					use:emblaCarousel={{
-						options: { loop: true, duration: 32 },
-						plugins: reduce
-							? []
-							: [Autoplay({ delay: DELAY, stopOnInteraction: false, stopOnFocusIn: false })]
-					}}
+					use:emblaCarousel={{ options: { loop: true, duration: 32 }, plugins: [] }}
 					onemblaInit={init}
 				>
 					<div class="track">
@@ -211,8 +183,10 @@
 		margin-top: calc(-1 * var(--nav-h));
 	}
 	.stage {
-		height: 100svh;
-		min-height: 640px;
+		/* ends above the strip's top padding (--section) with room for its heading, so the
+		   next 24 hours start in the first screen: at 1440x900 the stage is 714px and the heading sits at ~836px */
+		height: calc(100svh - var(--section) - 4rem);
+		min-height: 520px;
 		max-height: 960px;
 		overflow: hidden;
 		display: grid;
@@ -300,39 +274,31 @@
 	.step {
 		display: grid;
 		gap: 6px;
+		min-width: 44px;
 		opacity: 0.5;
 		transition:
 			opacity var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
 	.step img {
-		width: 48px;
-		height: 72px;
+		width: 44px;
+		height: 66px;
 		object-fit: cover;
 	}
-	/* under the title on screen, a block fills in the time left before the next one */
+	/* a block under the title on screen marks the step the visitor is on */
 	.step::after {
 		content: '';
 		height: 4px;
 		background: currentColor;
 		transform: scaleX(0);
 		transform-origin: left;
+		transition: transform var(--t-ui) var(--ease-out);
 	}
 	.step.on {
 		opacity: 1;
 	}
 	.step.on::after {
 		transform: none;
-	}
-	@media (prefers-reduced-motion: no-preference) {
-		.running .step.on::after {
-			animation: fill var(--delay) linear both;
-		}
-	}
-	@keyframes fill {
-		from {
-			transform: scaleX(0);
-		}
 	}
 	.step:active {
 		transform: scale(0.96);
@@ -411,16 +377,21 @@
 		}
 	}
 	@media (max-width: 900px) {
+		/* title, clock and buttons stay in the first screen; the cover leads but takes ~42svh */
 		.stage {
+			height: auto;
+			min-height: 0;
+			max-height: none;
 			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: minmax(0, 1fr) auto;
+			grid-template-rows: auto auto;
 			row-gap: var(--space-3);
-			padding-bottom: var(--space-3);
+			padding-bottom: var(--space-4);
 		}
 		.covers {
 			grid-column: 1;
 			grid-row: 1;
 			justify-self: center;
+			height: clamp(240px, 42svh, 400px);
 		}
 		.now {
 			grid-column: 1;
@@ -437,10 +408,6 @@
 		}
 		.airs {
 			font-size: var(--text-small);
-		}
-		.step img {
-			width: 36px;
-			height: 54px;
 		}
 	}
 </style>

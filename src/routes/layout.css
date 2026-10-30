@@ -8,6 +8,7 @@
 	--color-bg: #dedad3;
 	--color-surface: #d3cec6;
 	--color-raised: #ebe8e3;
+	--color-ink-raised: #1f1f1f;
 	--color-ink: #0a0a0a;
 	--color-muted: #5c5852;
 	--color-accent: #256f82;
@@ -50,6 +51,11 @@
 	p,
 	li {
 		text-wrap: pretty;
+	}
+	/* the forms plugin rings fields in Tailwind blue; fields use the site's teal instead */
+	:is(input, select, textarea):focus {
+		--tw-ring-color: var(--color-accent);
+		border-color: var(--color-accent);
 	}
 	::selection {
 		background: var(--color-accent-100);
@@ -124,10 +130,10 @@
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.btn:hover {
-			background: #1b5666;
+			background: var(--color-accent-text);
 		}
 		.btn-ink:hover {
-			background: #2a2a2a;
+			background: var(--color-ink-raised);
 		}
 		.link:hover {
 			text-decoration-color: currentColor;

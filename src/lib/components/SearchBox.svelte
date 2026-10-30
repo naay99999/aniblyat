@@ -2,10 +2,11 @@
 	import { goto } from '$app/navigation';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { m } from '#lib/paraglide/messages.js';
+	import { isRateLimited } from '../anilist/client';
 	import { searchAnime } from '../anilist/queries';
 	import { handOff } from '../cover-handoff';
 	import { animePath } from '../paths';
-	import { displayTitle } from '../text';
+	import { displayTitle, formatLabel } from '../text';
 
 	let { onopenchange }: { onopenchange?: (open: boolean) => void } = $props();
 
@@ -48,6 +49,22 @@
 	const open = $derived(focused && !dismissed && query.trim().length >= 2);
 	const searching = $derived(query.trim() !== term || results.isFetching);
 
+	// a failed search must not read as "nothing matches"
+	const failed = $derived(results.isError && !searching && items.length === 0);
+	const status = $derived(
+		!open
+			? ''
+			: items.length
+				? m.search_count({ count: String(items.length) })
+				: searching
+					? m.search_loading()
+					: failed
+						? isRateLimited(results.error)
+							? m.error_rate()
+							: m.error_generic()
+						: m.search_empty({ query: query.trim() })
+	);
+
 	$effect(() => onopenchange?.(open || expanded));
 
 	const year = (media: (typeof items)[number]) => media.startDate?.year ?? '';
@@ -72,6 +89,7 @@
 		} else if (e.key === 'Enter') {
 			e.preventDefault();
 			if (open && items[active]) pick(items[active].id);
+			else if (open && failed) results.refetch();
 		} else if (e.key === 'Escape') {
 			if (open) dismissed = true;
 			else if (query) query = '';
@@ -175,7 +193,7 @@
 									>{:else}{part.text}{/if}{/each}</span
 						>
 						<span class="meta"
-							>{[media.format?.replace('_', ' '), year(media)].filter(Boolean).join(' · ')}</span
+							>{[formatLabel(media.format), year(media)].filter(Boolean).join(' · ')}</span
 						>
 					</span>
 				</li>
@@ -193,10 +211,23 @@
 					</li>
 				{/each}
 			</ul>
+		{:else if failed}
+			<div class="note failed">
+				<p>{isRateLimited(results.error) ? m.error_rate() : m.error_generic()}</p>
+				<!-- pointerdown is held so the input keeps focus and the panel stays open -->
+				<button
+					type="button"
+					class="retry"
+					onpointerdown={(e) => e.preventDefault()}
+					onclick={() => results.refetch()}>{m.retry()}</button
+				>
+			</div>
 		{:else if items.length === 0}
-			<p class="note" aria-live="polite">{m.search_empty({ query: query.trim() })}</p>
+			<p class="note">{m.search_empty({ query: query.trim() })}</p>
 		{/if}
 	</div>
+	<!-- stays mounted so screen readers hear each change; the panel itself is display:none when closed -->
+	<p class="sr-only" role="status" aria-live="polite">{status}</p>
 </div>
 
 <style>
@@ -240,6 +271,11 @@
 	.field:focus {
 		box-shadow: none; /* taste-skill-ignore: resets the forms plugin focus ring */
 		background: color-mix(in srgb, currentColor 16%, transparent);
+	}
+	/* the forms plugin clears the outline on [type=search]:focus; currentColor reads on any bar tint */
+	.field:focus-visible {
+		outline: 2px solid currentColor;
+		outline-offset: -2px;
 	}
 	.field::-webkit-search-cancel-button {
 		display: none;
@@ -316,6 +352,28 @@
 	}
 	.note {
 		padding: 12px 8px;
+	}
+	.failed {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+	}
+	.retry {
+		flex: none;
+		min-height: 44px;
+		padding: 0 12px;
+		font-weight: 600;
+		color: var(--color-ink);
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
 	}
 	@media (max-width: 720px) {
 		.search {
