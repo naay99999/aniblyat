@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onNavigate } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { PersistQueryClientProvider } from '@tanstack/svelte-query-persist-client';
 	import { m } from '#lib/paraglide/messages.js';
@@ -15,7 +16,10 @@
 	import { QueryClient } from '@tanstack/svelte-query';
 	import { clock } from '#lib/clock.svelte.js';
 	import { currentSeason } from '#lib/season.js';
+	import { Toaster } from 'svelte-sonner';
 	import SearchBox from '#lib/components/SearchBox.svelte';
+	import { coverFor, handOff, takeHandOff } from '#lib/cover-handoff.js';
+	import { watchlist } from '#lib/watchlist.svelte.js';
 	import SiteFooter from '#lib/components/SiteFooter.svelte';
 	import { homePath, listPath, seasonHref, seasonsPath } from '#lib/paths.js';
 	import './layout.css';
@@ -38,8 +42,13 @@
 				page.url.pathname.startsWith('/seasons') ||
 				(page.url.pathname.startsWith('/season/') && page.url.pathname !== thisSeason)
 		},
-		{ href: listPath(), label: m.nav_list(), active: page.url.pathname === '/list' }
+		{ href: listPath(), label: m.nav_list(), active: page.url.pathname === '/list', list: true }
 	]);
+
+	// the list lives in this browser only: count it once the page is running here
+	let mounted = $state(false);
+	onMount(() => (mounted = true));
+	const listCount = $derived(mounted ? watchlist.items.length : 0);
 
 	// the bar stays, slimmer once the page moves; on a phone its row of links folds away
 	// while reading down and comes back on the way up
@@ -76,13 +85,31 @@
 		return () => ro.disconnect();
 	});
 
+	// a click on a link to a title marks its cover for the hand-off
+	$effect(() => {
+		const onClick = (e: MouseEvent) => {
+			const link = (e.target as Element | null)?.closest?.('a');
+			if (link?.pathname.startsWith('/anime/')) handOff(coverFor(link));
+		};
+		document.addEventListener('click', onClick, true);
+		return () => document.removeEventListener('click', onClick, true);
+	});
+
 	onNavigate((navigation) => {
+		const cover = navigation.to?.route.id === '/anime/[id]' ? takeHandOff() : null;
 		if (!document.startViewTransition) return;
+		const root = document.documentElement;
+		if (cover) {
+			cover.style.viewTransitionName = 'cover';
+			root.classList.add('vt-cover');
+		}
 		return new Promise((resolve) => {
-			document.startViewTransition(async () => {
+			const transition = document.startViewTransition(async () => {
+				if (cover) cover.style.viewTransitionName = '';
 				resolve();
 				await navigation.complete;
 			});
+			transition.finished.finally(() => root.classList.remove('vt-cover'));
 		});
 	});
 </script>
@@ -114,7 +141,9 @@
 					{#each links as link (link.href)}
 						<li>
 							<a href={link.href} class="link" aria-current={link.active ? 'page' : undefined}
-								>{link.label}</a
+								>{link.label}{#if link.list && listCount}
+									{#key listCount}<span class="count tabular">{listCount}</span>{/key}
+								{/if}</a
 							>
 						</li>
 					{/each}
@@ -129,6 +158,16 @@
 			>
 		</header>
 	</div>
+
+	<Toaster
+		position="bottom-left"
+		duration={5000}
+		offset={16}
+		toastOptions={{
+			unstyled: true,
+			classes: { toast: 'toast', title: 'toast-title', actionButton: 'toast-action' }
+		}}
+	/>
 
 	<main id="main">
 		{@render children()}
@@ -184,6 +223,29 @@
 		display: flex;
 		gap: 24px;
 		justify-content: center;
+	}
+	.count {
+		display: inline-grid;
+		place-items: center;
+		min-width: 1.5em;
+		height: 1.5em;
+		margin-left: 6px;
+		padding-inline: 4px;
+		background: var(--color-accent);
+		color: var(--color-accent-ink);
+		font-size: 0.85em;
+		line-height: 1;
+		vertical-align: 0.05em;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.count {
+			animation: bump 420ms var(--ease-expo);
+		}
+	}
+	@keyframes bump {
+		from {
+			transform: scale(1.6);
+		}
 	}
 	[aria-current='page'] {
 		text-decoration-color: currentColor;

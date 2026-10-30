@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { m } from '#lib/paraglide/messages.js';
+	import { Spring } from 'svelte/motion';
+	import { toggleSaved } from '../save-feedback';
 	import { watchlist } from '../watchlist.svelte';
 
 	let {
@@ -9,6 +11,14 @@
 		$props();
 
 	const saved = $derived(watchlist.has(item.id));
+
+	// the mark squeezes in and springs back past its size when it is pressed
+	const pop = new Spring(1, { stiffness: 0.25, damping: 0.3 });
+	function press() {
+		if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		pop.set(saved ? 0.85 : 0.55, { instant: true });
+		pop.target = 1;
+	}
 </script>
 
 <button
@@ -24,10 +34,17 @@
 	onclick={(e) => {
 		e.preventDefault();
 		e.stopPropagation();
-		watchlist.toggle(item);
+		press();
+		toggleSaved(item);
 	}}
 >
-	<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+	<svg
+		viewBox="0 0 24 24"
+		width="20"
+		height="20"
+		aria-hidden="true"
+		style:transform="scale({pop.current})"
+	>
 		<path
 			d="M6 3h12v18l-6-4.5L6 21z"
 			fill={saved ? 'currentColor' : 'none'}

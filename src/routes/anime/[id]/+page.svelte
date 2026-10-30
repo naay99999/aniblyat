@@ -9,6 +9,7 @@
 	import { clock } from '#lib/clock.svelte.js';
 	import Countdown from '#lib/components/Countdown.svelte';
 	import QueryState from '#lib/components/QueryState.svelte';
+	import TrailerLoop from '#lib/components/TrailerLoop.svelte';
 	import SaveButton from '#lib/components/SaveButton.svelte';
 	import { inkOn } from '#lib/color.js';
 	import { animePath, homePath, seasonHref } from '#lib/paths.js';
@@ -235,15 +236,22 @@
 							width="460"
 							height="690"
 							fetchpriority="high"
-							style:view-transition-name="cover-{media.id}"
+							style:view-transition-name="cover"
 						/>
 					</div>
 				{/if}
 			</section>
 
-			{#if media.bannerImage}
-				<div class="band" style:background-color={ground ?? 'var(--color-surface)'}>
-					<img src={media.bannerImage} alt="" width="1900" height="400" />
+			{#if media.bannerImage || trailerId}
+				<div
+					class="band"
+					class:moving={trailerId}
+					style:background-color={ground ?? 'var(--color-surface)'}
+				>
+					{#if media.bannerImage}
+						<img src={media.bannerImage} alt="" width="1900" height="400" />
+					{/if}
+					{#if trailerId}<TrailerLoop id={trailerId} {title} />{/if}
 				</div>
 			{/if}
 
@@ -447,6 +455,10 @@
 			animation-name: unveil;
 			animation-duration: 1000ms;
 		}
+		/* the picked cover is already flying into place */
+		:global(html.vt-cover) .poster img {
+			animation: none;
+		}
 	}
 	@keyframes arrive {
 		from {
@@ -503,14 +515,23 @@
 	}
 
 	.band {
+		position: relative;
 		overflow: hidden;
+		aspect-ratio: 4 / 1;
+		max-height: 48svh;
+		width: 100%;
 	}
 	.band img {
 		display: block;
 		width: 100%;
-		aspect-ratio: 4 / 1;
-		max-height: 48svh;
+		height: 100%;
 		object-fit: cover;
+	}
+	/* on a phone a wide band would leave the clip a sliver */
+	@media (max-width: 720px) {
+		.band.moving {
+			aspect-ratio: 16 / 9;
+		}
 	}
 	@supports (animation-timeline: view()) {
 		@media (prefers-reduced-motion: no-preference) {

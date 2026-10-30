@@ -3,6 +3,7 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import { m } from '#lib/paraglide/messages.js';
 	import { searchAnime } from '../anilist/queries';
+	import { handOff } from '../cover-handoff';
 	import { animePath } from '../paths';
 	import { displayTitle } from '../text';
 
@@ -32,6 +33,18 @@
 	}));
 
 	const items = $derived(term.length >= 2 ? (results.data ?? []) : []);
+
+	// the part of a title that matches what was typed, to mark it
+	function parts(title: string): { text: string; hit: boolean }[] {
+		const needle = term.trim().toLowerCase();
+		const at = needle ? title.toLowerCase().indexOf(needle) : -1;
+		if (at < 0) return [{ text: title, hit: false }];
+		return [
+			{ text: title.slice(0, at), hit: false },
+			{ text: title.slice(at, at + needle.length), hit: true },
+			{ text: title.slice(at + needle.length), hit: false }
+		].filter((p) => p.text);
+	}
 	const open = $derived(focused && !dismissed && query.trim().length >= 2);
 	const searching = $derived(query.trim() !== term || results.isFetching);
 
@@ -40,6 +53,7 @@
 	const year = (media: (typeof items)[number]) => media.startDate?.year ?? '';
 
 	function pick(id: number) {
+		handOff(document.querySelector<HTMLImageElement>(`#search-${id} img`));
 		query = '';
 		term = '';
 		expanded = false;
@@ -142,6 +156,7 @@
 					role="option"
 					aria-selected={i === active}
 					class="option"
+					style:--i={i}
 					onpointerdown={(e) => {
 						e.preventDefault();
 						pick(media.id);
@@ -154,7 +169,11 @@
 						<span class="blank"></span>
 					{/if}
 					<span class="text">
-						<span class="name">{displayTitle(media.title ?? {})}</span>
+						<span class="name"
+							>{#each parts(displayTitle(media.title ?? {})) as part, j (j)}{#if part.hit}<mark
+										>{part.text}</mark
+									>{:else}{part.text}{/if}{/each}</span
+						>
 						<span class="meta"
 							>{[media.format?.replace('_', ' '), year(media)].filter(Boolean).join(' · ')}</span
 						>
@@ -239,6 +258,23 @@
 	}
 	.option[aria-selected='true'] {
 		background: var(--color-accent-50);
+	}
+	/* each new set of results steps in from the top */
+	@media (prefers-reduced-motion: no-preference) {
+		.option {
+			animation: drop 320ms var(--ease-expo) both;
+			animation-delay: calc(var(--i) * 25ms);
+		}
+	}
+	@keyframes drop {
+		from {
+			opacity: 0;
+			transform: translateY(-6px);
+		}
+	}
+	mark {
+		background: var(--color-accent-100);
+		color: inherit;
 	}
 	.option img,
 	.blank {

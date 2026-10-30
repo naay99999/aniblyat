@@ -184,6 +184,7 @@
 									width="460"
 									height="690"
 									draggable="false"
+									data-cover={i === index ? '' : undefined}
 									fetchpriority={i === 0 ? 'high' : undefined}
 								/>
 							</a>

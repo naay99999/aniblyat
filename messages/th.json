@@ -123,5 +123,11 @@
 	"list_next_title": "ตอนต่อไปในลิสต์ของคุณ",
 	"list_empty_trending": "เริ่มจากเรื่องที่มาแรงตอนนี้",
 	"strip_prev": "ก่อนหน้า",
-	"strip_next": "ถัดไป"
+	"strip_next": "ถัดไป",
+	"toast_saved": "บันทึก {title} แล้ว",
+	"toast_removed": "เอา {title} ออกจากลิสต์แล้ว",
+	"toast_undo": "เลิกทำ",
+	"toast_open_list": "ดูลิสต์",
+	"video_pause": "หยุดวิดีโอ",
+	"video_play": "เล่นวิดีโอ"
 }

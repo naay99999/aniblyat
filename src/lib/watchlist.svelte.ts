@@ -50,6 +50,13 @@ export class Watchlist {
 		saveList(this.#storage, this.items);
 	}
 
+	/** Put back an item that was removed, in its old place. */
+	restore(item: WatchItem): void {
+		if (this.has(item.id)) return;
+		this.items = [...this.items, item].sort((a, b) => a.addedAt - b.addedAt);
+		saveList(this.#storage, this.items);
+	}
+
 	toggle(item: Omit<WatchItem, 'addedAt'>): void {
 		if (this.has(item.id)) this.remove(item.id);
 		else this.add(item);

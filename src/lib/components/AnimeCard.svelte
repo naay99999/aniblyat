@@ -18,14 +18,7 @@
 		style:background-color={media.coverImage?.color ?? 'var(--color-surface)'}
 	>
 		{#if cover}
-			<img
-				src={cover}
-				alt=""
-				width="230"
-				height="345"
-				loading="lazy"
-				style:view-transition-name="cover-{media.id}"
-			/>
+			<img src={cover} alt="" width="230" height="345" loading="lazy" data-cover />
 		{/if}
 	</a>
 	<div class="save"><SaveButton item={{ id: media.id, title, cover }} /></div>

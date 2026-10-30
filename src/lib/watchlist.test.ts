@@ -75,6 +75,26 @@ describe('Watchlist', () => {
 		expect(list.has(3)).toBe(false);
 	});
 
+	test('restore puts a removed item back in its old place', () => {
+		const storage = memoryStorage({
+			[LIST_KEY]: JSON.stringify({
+				version: 1,
+				items: [
+					{ id: 1, title: 'A', cover: null, addedAt: 1 },
+					{ id: 2, title: 'B', cover: null, addedAt: 2 },
+					{ id: 3, title: 'C', cover: null, addedAt: 3 }
+				]
+			})
+		});
+		const list = new Watchlist(storage);
+		const removed = list.items[1];
+		list.remove(2);
+		list.restore(removed);
+		list.restore(removed);
+		expect(list.items.map((i) => i.id)).toEqual([1, 2, 3]);
+		expect(JSON.parse(storage.data[LIST_KEY]).items).toHaveLength(3);
+	});
+
 	test('reads existing items on construction', () => {
 		const storage = memoryStorage({
 			[LIST_KEY]: JSON.stringify({

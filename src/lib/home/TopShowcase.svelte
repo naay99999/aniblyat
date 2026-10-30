@@ -69,7 +69,14 @@
 					{#if i === picked}
 						<div class="inline">
 							{#if media.coverImage?.large}
-								<img src={media.coverImage.large} alt="" width="230" height="345" loading="lazy" />
+								<img
+									src={media.coverImage.large}
+									alt=""
+									width="230"
+									height="345"
+									loading="lazy"
+									data-cover
+								/>
 							{/if}
 							<div class="inline-text">
 								<p class="facts">{facts(media)}</p>
@@ -112,6 +119,7 @@
 										alt=""
 										width="460"
 										height="690"
+										data-cover
 									/>
 								</a>
 							{/if}

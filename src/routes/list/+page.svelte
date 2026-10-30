@@ -14,6 +14,7 @@
 	import { animePath, seasonHref } from '#lib/paths.js';
 	import { sortMedia } from '#lib/rank.js';
 	import { currentSeason } from '#lib/season.js';
+	import { toggleSaved } from '#lib/save-feedback.js';
 	import { displayTitle } from '#lib/text.js';
 	import { bucketIds, watchlist, type WatchItem } from '#lib/watchlist.svelte.js';
 
@@ -151,7 +152,14 @@
 						aria-hidden="true"
 						style:background-color={media?.coverImage?.color ?? 'var(--color-surface)'}
 					>
-						{#if cover}<img src={cover} alt="" width="230" height="345" loading="lazy" />{/if}
+						{#if cover}<img
+								src={cover}
+								alt=""
+								width="230"
+								height="345"
+								loading="lazy"
+								data-cover
+							/>{/if}
 					</a>
 					<div class="text">
 						<a href={animePath(item.id)} class="link name">{title}</a>
@@ -159,7 +167,11 @@
 							{#if media}<AiringBadge {media} showTime />{:else if query.isPending}…{/if}
 						</span>
 					</div>
-					<button type="button" class="remove" onclick={() => watchlist.remove(item.id)}>
+					<button
+						type="button"
+						class="remove"
+						onclick={() => toggleSaved({ id: item.id, title, cover })}
+					>
 						{m.list_remove()}<span class="sr-only"> {title}</span>
 					</button>
 				</li>

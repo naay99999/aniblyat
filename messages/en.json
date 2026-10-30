@@ -123,5 +123,11 @@
 	"list_next_title": "Next up on your list",
 	"list_empty_trending": "Start with what's trending",
 	"strip_prev": "Previous",
-	"strip_next": "Next"
+	"strip_next": "Next",
+	"toast_saved": "Saved {title}",
+	"toast_removed": "Removed {title} from your list",
+	"toast_undo": "Undo",
+	"toast_open_list": "View list",
+	"video_pause": "Pause video",
+	"video_play": "Play video"
 }
