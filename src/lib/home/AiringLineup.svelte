@@ -18,8 +18,7 @@
 	const starts = $derived(
 		days.map((d) => ({
 			day: d.day,
-			at: strip.findIndex((s) => s.day === d.day),
-			count: d.items.length
+			at: strip.findIndex((s) => s.day === d.day)
 		}))
 	);
 	const time = (sec: number) => formatAirTime(sec).split(' ').at(-1);
@@ -84,7 +83,7 @@
 									aria-pressed={shownDay === start.day}
 									onclick={() => go(start.at)}
 								>
-									{dayLabel(start.day)} <span class="tabular">{start.count}</span>
+									{dayLabel(start.day)}
 								</button>
 							</li>
 						{/each}
@@ -254,11 +253,11 @@
 	.slide {
 		flex: 0 0 clamp(148px, 11vw, 184px);
 		min-width: 0;
-		margin-right: var(--space-2);
+		margin-right: 32px;
 	}
 	/* a new day leaves a wider gap before its first card */
 	.slide.opens:not(:first-child) {
-		margin-left: var(--space-4);
+		margin-left: var(--space-5);
 	}
 	.show {
 		display: grid;
@@ -320,10 +319,10 @@
 		}
 		.slide {
 			flex-basis: 38vw;
-			margin-right: 12px;
+			margin-right: 20px;
 		}
 		.slide.opens:not(:first-child) {
-			margin-left: var(--space-3);
+			margin-left: var(--space-4);
 		}
 	}
 </style>
