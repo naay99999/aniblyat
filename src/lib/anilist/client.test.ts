@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { AniListError, anilistFetch, fetchAllPages } from './client';
+import { AniListError, anilistFetch, fetchAllPages, isRateLimited } from './client';
 
 function json(body: unknown, status = 200, headers: Record<string, string> = {}) {
 	return new Response(JSON.stringify(body), {
@@ -49,6 +49,25 @@ describe('anilistFetch', () => {
 		expect(err.status).toBe(429);
 		expect(err.retryable).toBe(true);
 		expect(fetch).toHaveBeenCalledTimes(3);
+	});
+
+	test('maps a network TypeError (429 without CORS headers) to a retryable 429', async () => {
+		const fetch = vi.fn(async () => {
+			throw new TypeError('Failed to fetch');
+		});
+		const err = await failure(anilistFetch(QUERY, undefined, { fetch }));
+		expect(err).toBeInstanceOf(AniListError);
+		expect(err.status).toBe(429);
+		expect(err.retryable).toBe(true);
+		expect(isRateLimited(err)).toBe(true);
+		expect(isRateLimited(new AniListError('x', 500, true))).toBe(false);
+	});
+
+	test('rethrows other fetch failures unchanged', async () => {
+		const fetch = vi.fn(async () => {
+			throw new DOMException('aborted', 'AbortError');
+		});
+		await expect(anilistFetch(QUERY, undefined, { fetch })).rejects.toBeInstanceOf(DOMException);
 	});
 
 	test('throws on GraphQL errors', async () => {

@@ -66,8 +66,8 @@
 		color: var(--color-ink);
 		transition:
 			transform var(--t-press) var(--ease-out),
-			background-color var(--t-hover) ease,
-			color var(--t-hover) ease;
+			background-color var(--t-ui) var(--ease-out),
+			color var(--t-ui) var(--ease-out);
 	}
 	.icon:active {
 		transform: scale(0.9);

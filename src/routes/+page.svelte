@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { browser } from '$app/env';
-	import { createQuery, keepPreviousData } from '@tanstack/svelte-query';
-	import { getAiringWindow, getHome, getSeason } from '#lib/anilist/queries.js';
+	import { onMount } from 'svelte';
+	import { createQuery, keepPreviousData, useQueryClient } from '@tanstack/svelte-query';
+	import { getAiringWindow, getHome, getSeason, type MediaCard } from '#lib/anilist/queries.js';
 	import { useAiringInvalidation } from '#lib/anilist/query-client.svelte.js';
 	import { clock } from '#lib/clock.svelte.js';
 	import QueryState from '#lib/components/QueryState.svelte';
@@ -10,7 +11,9 @@
 	import NextSeason from '#lib/home/NextSeason.svelte';
 	import SeasonCount from '#lib/home/SeasonCount.svelte';
 	import TopShowcase from '#lib/home/TopShowcase.svelte';
+	import { pickHero } from '#lib/hero-pick.js';
 	import { currentSeason, shiftSeason } from '#lib/season.js';
+	import { watchlist } from '#lib/watchlist.svelte.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -46,17 +49,50 @@
 		() => ['home'],
 		() => home.data
 	);
+
+	// the saved list lives in localStorage: reading it before mount would not match the server render
+	let mounted = $state(false);
+	onMount(() => (mounted = true));
+	const queryClient = useQueryClient();
+
+	// the server render and the first client render pick by popularity; after mount the visitor's
+	// own list takes over. Only airing data we already hold is used, nothing is fetched for it.
+	const hero = $derived.by(() => {
+		const saved = mounted ? watchlist.items.map((i) => i.id) : [];
+		const known: MediaCard[] = saved.length
+			? [
+					...(seasonList.data ?? []),
+					...(home.data?.trending ?? []),
+					...queryClient
+						.getQueriesData<MediaCard[]>({ queryKey: ['byIds'] })
+						.flatMap(([, cards]) => cards ?? [])
+				]
+			: [];
+		return pickHero({
+			savedIds: saved,
+			known,
+			season: seasonList.data,
+			trending: home.data?.trending,
+			nowSec: clock.now
+		});
+	});
 </script>
 
-<Hero {season} items={home.data?.trending} />
+<Hero {season} items={hero.items} reason={hero.reason} />
 
-<QueryState query={airing} inset>
+{#snippet lineupWaiting()}<AiringLineup entries={undefined} />{/snippet}
+{#snippet homeWaiting()}
+	<TopShowcase items={undefined} />
+	<NextSeason season={next} items={undefined} />
+{/snippet}
+
+<QueryState query={airing} inset pending={lineupWaiting}>
 	<AiringLineup entries={airing.data ?? []} />
 </QueryState>
 
-<SeasonCount {season} items={seasonList.data} />
+<SeasonCount {season} items={seasonList.data} failed={seasonList.isError} />
 
-<QueryState query={home} inset>
+<QueryState query={home} inset pending={homeWaiting}>
 	<TopShowcase items={home.data?.top10 ?? []} />
 	<NextSeason season={next} items={home.data?.nextSeason ?? []} />
 </QueryState>

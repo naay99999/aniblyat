@@ -182,6 +182,7 @@ const MediaDetailQuery = graphql(`
 						}
 						coverImage {
 							large
+							extraLarge
 						}
 					}
 				}

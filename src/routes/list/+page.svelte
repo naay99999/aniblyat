@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
+	import { expoOut } from 'svelte/easing';
 	import { createQueries, createQuery } from '@tanstack/svelte-query';
 	import { m } from '#lib/paraglide/messages.js';
+	import { isRateLimited } from '#lib/anilist/client.js';
 	import { getHome, getMediaByIds, type MediaCard } from '#lib/anilist/queries.js';
 	import { airingStatus, formatAirTime } from '#lib/airing.js';
 	import { inkOn } from '#lib/color.js';
@@ -21,6 +23,10 @@
 
 	let { data }: PageProps = $props();
 
+	// svelte's JS animations ignore the CSS reduced-motion rule
+	const still =
+		typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 	// one query per bucket: saving a title refetches its bucket, not the whole list
 	const buckets = $derived(bucketIds(watchlist.items.map((i) => i.id)));
 	const queries = createQueries(() => ({
@@ -32,6 +38,7 @@
 	const query = $derived({
 		data: queries.flatMap((q) => q.data ?? []),
 		isError: queries.some((q) => q.isError),
+		rateLimited: queries.some((q) => q.isError && isRateLimited(q.error)),
 		isPending: queries.some((q) => q.isPending),
 		refetch: () => queries.forEach((q) => q.isError && q.refetch())
 	});
@@ -97,10 +104,10 @@
 				>{m.list_empty_action()}</a
 			>
 		</div>
-		{#if trending.length}
+		{#if trending.length || home.isPending}
 			<section class="start" aria-labelledby="start-title">
 				<h2 id="start-title">{m.list_empty_trending()}</h2>
-				<MediaGrid items={trending} />
+				<MediaGrid items={home.isPending ? undefined : trending} />
 			</section>
 		{/if}
 	{:else}
@@ -140,16 +147,21 @@
 			</section>
 		{/if}
 		{#if query.isError}
-			<p class="error" role="alert">
-				{m.error_title()}
-				<button type="button" class="link" onclick={() => query.refetch()}>{m.retry()}</button>
-			</p>
+			<div class="error" role="alert">
+				<p>{query.rateLimited ? m.error_rate() : m.error_title()}</p>
+				<button type="button" class="btn btn-ink" onclick={() => query.refetch()}
+					>{m.retry()}</button
+				>
+			</div>
 		{/if}
 		<ul class="rows">
 			{#each rows as { item, media } (item.id)}
 				{@const title = media ? displayTitle(media.title ?? {}) : item.title}
-				{@const cover = media?.coverImage?.large ?? item.cover}
-				<li animate:flip={{ duration: 300 }} out:fade={{ duration: 160 }}>
+				{@const cover = media?.coverImage?.extraLarge ?? media?.coverImage?.large ?? item.cover}
+				<li
+					animate:flip={{ duration: still ? 0 : 400, easing: expoOut }}
+					out:fade={{ duration: still ? 0 : 200 }}
+				>
 					<a
 						href={animePath(item.id)}
 						class="thumb"
@@ -160,8 +172,8 @@
 						{#if cover}<img
 								src={cover}
 								alt=""
-								width="230"
-								height="345"
+								width="460"
+								height="690"
 								loading="lazy"
 								data-cover
 							/>{/if}
@@ -169,7 +181,9 @@
 					<div class="text">
 						<a href={animePath(item.id)} class="link name">{title}</a>
 						<span class="status">
-							{#if media}<AiringBadge {media} showTime />{:else if query.isPending}…{/if}
+							{#if media}<AiringBadge {media} showTime />{:else if query.isPending}<span
+									class="ghost ghost-line wait"
+								></span>{/if}
 						</span>
 					</div>
 					<button
@@ -196,7 +210,7 @@
 		padding-top: 24px;
 	}
 	h1 {
-		font-size: clamp(3rem, 1.8rem + 4vw, 6rem);
+		font-size: var(--text-head);
 	}
 	.lead {
 		font-size: var(--text-lead);
@@ -259,8 +273,16 @@
 		font-weight: 600;
 	}
 	.error {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 12px 16px;
 		margin-top: 24px;
-		color: var(--color-muted);
+		color: var(--color-ink);
+	}
+	/* the cover colour can swallow the teal ring */
+	.next :focus-visible {
+		outline-color: currentColor;
 	}
 	.rows {
 		margin-top: 40px;
@@ -274,12 +296,15 @@
 		gap: 20px;
 		padding: 10px 16px 10px 10px;
 		background: var(--color-raised);
-		transition: background-color var(--t-hover) ease;
+		transition: background-color var(--t-ui) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		li:hover {
-			background: #f2f0ec;
+			background: color-mix(in srgb, var(--color-raised) 85%, white);
 		}
+	}
+	.wait {
+		width: 10em;
 	}
 	.thumb {
 		aspect-ratio: 2 / 3;
@@ -309,9 +334,12 @@
 		padding: 0 16px;
 		font-size: var(--text-small);
 		font-weight: 600;
-		color: var(--color-muted);
+		color: var(--color-ink);
+		text-decoration: underline;
+		text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+		text-underline-offset: 4px;
 		transition:
-			color var(--t-hover) ease,
+			text-decoration-color var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
 	.remove:active {
@@ -319,7 +347,7 @@
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.remove:hover {
-			color: var(--color-ink);
+			text-decoration-color: currentColor;
 		}
 	}
 	.sr-only {
@@ -330,9 +358,6 @@
 		clip-path: inset(50%);
 	}
 	@media (max-width: 900px) {
-		h1 {
-			font-size: 13vw;
-		}
 		.next {
 			grid-template-columns: 96px 1fr;
 			align-items: start;

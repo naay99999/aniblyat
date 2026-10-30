@@ -37,7 +37,8 @@
 		<ul class="places">
 			{#each links as link, i (link.href)}
 				<li use:reveal={i}>
-					<a href={link.href} class="place"><span>{link.label}</span><span class="arrow">→</span></a
+					<a href={link.href} class="place"
+						><span>{link.label}</span><span class="arrow" aria-hidden="true">→</span></a
 					>
 				</li>
 			{/each}
@@ -47,7 +48,7 @@
 				{m.footer_note()} ·
 				<a href="https://anilist.co" class="link" rel="external noopener">anilist.co</a>
 			</p>
-			<a href="#main" class="link">{m.footer_top()} ↑</a>
+			<a href="#main" class="link">{m.footer_top()} <span aria-hidden="true">↑</span></a>
 		</div>
 	</div>
 	<p class="name display" class:risen bind:this={name} aria-hidden="true">
@@ -85,7 +86,7 @@
 		letter-spacing: -0.04em;
 		line-height: 1.05;
 		color: var(--color-bg);
-		transition: color var(--t-hover) ease;
+		transition: color var(--t-ui) var(--ease-out);
 	}
 	/* the arrow slides out of the word on hover and focus */
 	.arrow {
@@ -93,7 +94,7 @@
 		opacity: 0;
 		transform: translateX(-0.4em);
 		transition:
-			opacity var(--t-ui) ease,
+			opacity var(--t-ui) var(--ease-out),
 			transform var(--t-ui) var(--ease-out);
 	}
 	.place:focus-visible .arrow {
@@ -137,7 +138,7 @@
 	@media (prefers-reduced-motion: no-preference) {
 		.name span {
 			transform: translateY(100%);
-			transition: transform 1100ms var(--ease-expo);
+			transition: transform 1100ms var(--ease-out);
 			transition-delay: calc(var(--i) * 60ms);
 		}
 		.name.risen span {

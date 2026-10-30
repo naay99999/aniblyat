@@ -79,7 +79,7 @@
 		pointer-events: none;
 		opacity: 0;
 		transform: translate(-50%, -50%) scale(1.02);
-		transition: opacity 900ms var(--ease-out);
+		transition: opacity var(--t-scene) var(--ease-out);
 	}
 	iframe.ready {
 		opacity: 1;

@@ -28,6 +28,7 @@
 					.slice(0, 5)
 			: (data.faces ?? [])
 	);
+	// season names stay in English in both languages, on purpose: they are the names AniList and fans use
 	const names = { WINTER: 'Winter', SPRING: 'Spring', SUMMER: 'Summer', FALL: 'Fall' } as const;
 	// the months each season covers, in the UI's language: Winter is January to March
 	const firstMonth = { WINTER: 0, SPRING: 3, SUMMER: 6, FALL: 9 } as const;
@@ -52,8 +53,17 @@
 			{#if faces.length}
 				<span class="faces" aria-hidden="true">
 					{#each faces as media (media.id)}
-						<img src={media.coverImage?.large} alt="" width="230" height="345" />
+						<img
+							src={media.coverImage?.extraLarge ?? media.coverImage?.large}
+							alt=""
+							width="460"
+							height="690"
+						/>
 					{/each}
+				</span>
+			{:else if onAir.isPending}
+				<span class="faces" aria-hidden="true">
+					{#each { length: 5 }, i (i)}<span class="ghost face"></span>{/each}
 				</span>
 			{/if}
 			<span class="now-name display">{seasonLabel(current)}</span>
@@ -106,7 +116,7 @@
 		gap: 24px;
 	}
 	h1 {
-		font-size: clamp(3rem, 1.8rem + 4vw, 6rem);
+		font-size: var(--text-head);
 	}
 	.lead {
 		max-width: 34ch;
@@ -127,7 +137,7 @@
 		background: var(--color-accent);
 		color: var(--color-accent-ink);
 		transition:
-			background-color var(--t-hover) ease,
+			background-color var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
 	.now:active {
@@ -148,7 +158,8 @@
 		gap: 6px;
 		margin-block: 8px 16px;
 	}
-	.faces img {
+	.faces img,
+	.face {
 		width: 100%;
 		aspect-ratio: 2 / 3;
 		object-fit: cover;
@@ -210,7 +221,7 @@
 		background: var(--color-raised);
 		font-weight: 600;
 		transition:
-			background-color var(--t-hover) ease,
+			background-color var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
 	.season:active {
@@ -236,9 +247,6 @@
 		.words,
 		.now {
 			grid-column: 1;
-		}
-		h1 {
-			font-size: 15vw;
 		}
 		.now {
 			min-height: 180px;

@@ -7,13 +7,16 @@
 	import { seasonLabel, type Season } from '../season';
 	import { displayTitle } from '../text';
 
-	let { season, items }: { season: Season; items: MediaCard[] } = $props();
+	// no items yet: the trio and the grid hold their shape with blanks
+	let { season, items }: { season: Season; items: MediaCard[] | undefined } = $props();
 
-	const withArt = $derived(items.filter((i) => i.coverImage?.extraLarge ?? i.coverImage?.large));
+	const withArt = $derived(
+		(items ?? []).filter((i) => i.coverImage?.extraLarge ?? i.coverImage?.large)
+	);
 	const trio = $derived(
 		withArt.length >= 3 ? [withArt[1], withArt[0], withArt[2]] : withArt.slice(0, 3)
 	);
-	const rest = $derived(items.filter((i) => !trio.includes(i)));
+	const rest = $derived((items ?? []).filter((i) => !trio.includes(i)));
 </script>
 
 <section class="next" aria-labelledby="next-title">
@@ -25,6 +28,11 @@
 			<p use:reveal={1}>{m.home_next_lead()}</p>
 		</div>
 		<div class="trio">
+			{#if !items}
+				{#each [false, true, false] as centre, i (i)}
+					<span class="pic ghost" class:centre aria-hidden="true"></span>
+				{/each}
+			{/if}
 			{#each trio as media, i (media.id)}
 				<a
 					href={animePath(media.id)}
@@ -32,20 +40,25 @@
 					class:centre={i === 1}
 					use:reveal={i === 1 ? 0 : 2}
 				>
-					<img
-						src={media.coverImage?.extraLarge ?? media.coverImage?.large}
-						alt={displayTitle(media.title ?? {})}
-						loading="lazy"
-						width="460"
-						height="690"
-					/>
+					<span class="frame">
+						<img
+							src={media.coverImage?.extraLarge ?? media.coverImage?.large}
+							alt=""
+							loading="lazy"
+							width="460"
+							height="690"
+						/>
+					</span>
+					<span class="caption">{displayTitle(media.title ?? {})}</span>
 				</a>
 			{/each}
 		</div>
 	</div>
 
 	<div class="more page">
-		{#if rest.length}<MediaGrid items={rest} />{/if}
+		{#if !items}<MediaGrid items={undefined} ghosts={6} />{:else if rest.length}<MediaGrid
+				items={rest}
+			/>{/if}
 		<p class="action">
 			<a href={seasonHref(season)} class="btn"
 				>{m.home_next_action({ season: seasonLabel(season) })}</a
@@ -81,21 +94,41 @@
 	}
 	.pic {
 		flex: 0 0 auto;
+		display: grid;
+		gap: var(--space-1);
+		align-content: start;
 		width: min(260px, 20vw);
-		aspect-ratio: 2 / 3;
 		margin-top: 48px;
-		overflow: hidden;
 	}
 	.pic.centre {
 		width: min(380px, 28vw);
-		aspect-ratio: 4 / 5;
 		margin-top: 0;
+	}
+	.frame,
+	.pic.ghost {
+		display: block;
+		aspect-ratio: 2 / 3;
+		overflow: hidden;
+	}
+	.pic.centre .frame,
+	.pic.centre.ghost {
+		aspect-ratio: 4 / 5;
+	}
+	.caption {
+		font-size: var(--text-small);
+		font-weight: 600;
+		line-height: 1.45;
+		display: -webkit-box;
+		-webkit-line-clamp: 1;
+		line-clamp: 1;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 	.pic img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		transition: transform 600ms var(--ease-soft);
+		transition: transform var(--t-move) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.pic:hover img {

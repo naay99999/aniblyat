@@ -25,10 +25,10 @@
 </script>
 
 {#if left > 0}
-	<p class="countdown tabular" role="img" aria-label={spoken}>
+	<p class="countdown" role="img" aria-label={spoken}>
 		{#each cells as cell (cell.unit)}
 			<span class="cell" aria-hidden="true">
-				<span class="value">{cell.value}</span>
+				<span class="value tabular">{cell.value}</span>
 				<span class="unit">{cell.unit}</span>
 			</span>
 		{/each}

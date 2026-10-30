@@ -8,6 +8,7 @@
 	--color-bg: #dedad3;
 	--color-surface: #d3cec6;
 	--color-raised: #ebe8e3;
+	--color-ink-raised: #1f1f1f;
 	--color-ink: #0a0a0a;
 	--color-muted: #5c5852;
 	--color-accent: #256f82;
@@ -25,8 +26,6 @@
 	--text-section: clamp(1.5rem, 1.25rem + 1vw, 2.25rem);
 	--text-display: clamp(90px, 10vw, 160px);
 	--text-title: clamp(1.75rem, 1.45rem + 1vw, 2.5rem);
-
-	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @layer base {
@@ -53,6 +52,11 @@
 	li {
 		text-wrap: pretty;
 	}
+	/* the forms plugin rings fields in Tailwind blue; fields use the site's teal instead */
+	:is(input, select, textarea):focus {
+		--tw-ring-color: var(--color-accent);
+		border-color: var(--color-accent);
+	}
 	::selection {
 		background: var(--color-accent-100);
 	}
@@ -70,13 +74,16 @@
 
 /* motion tokens */
 :root {
-	--ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
-	--ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
-	--ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
-	--ease-exit: cubic-bezier(0.55, 0.055, 0.675, 0.19);
-	--t-press: 140ms;
-	--t-hover: 180ms;
-	--t-ui: 240ms;
+	/* one curve for every arrival, one for every exit */
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+	/* four steps of time: a press, a state, a move, a scene; anything that changes together shares one */
+	--t-press: 120ms;
+	--t-ui: 200ms;
+	--t-move: 400ms;
+	--t-scene: 600ms;
+	/* how far anything travels when it rises into place */
+	--rise: 12px;
 	--gutter: clamp(16px, 2.2vw, 32px);
 	/* one spacing scale for the whole site */
 	--space-1: 8px;
@@ -105,7 +112,7 @@
 		font-weight: 600;
 		transition:
 			transform var(--t-press) var(--ease-out),
-			background-color var(--t-hover) ease;
+			background-color var(--t-ui) var(--ease-out);
 	}
 	.btn:active {
 		transform: scale(0.97);
@@ -119,14 +126,14 @@
 		text-decoration-color: transparent;
 		text-underline-offset: 0.2em;
 		text-decoration-thickness: 0.07em;
-		transition: text-decoration-color var(--t-hover) ease;
+		transition: text-decoration-color var(--t-ui) var(--ease-out);
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.btn:hover {
-			background: #1b5666;
+			background: var(--color-accent-text);
 		}
 		.btn-ink:hover {
-			background: #2a2a2a;
+			background: var(--color-ink-raised);
 		}
 		.link:hover {
 			text-decoration-color: currentColor;
@@ -140,49 +147,66 @@
 	.tabular {
 		font-variant-numeric: tabular-nums;
 	}
+	/* a block holding the place of something AniList hasn't sent yet; --ghost sets its tone on a tinted ground */
+	.ghost {
+		display: block;
+		background: var(--ghost, var(--color-surface));
+	}
+	.ghost-line {
+		height: 0.8em;
+		margin-block: 0.25em;
+	}
 }
 
-/* entrance: set by the reveal action; finished state is the default without motion */
 @media (prefers-reduced-motion: no-preference) {
-	[data-reveal] {
+	.ghost {
+		animation: ghost-wait 1.4s ease-in-out infinite alternate;
+	}
+}
+@keyframes ghost-wait {
+	to {
+		opacity: 0.5;
+	}
+}
+
+/*
+ * entrance: set by the reveal action; finished state is the default without motion. It runs as an
+ * animation on `translate`, so it never fights an element's own transitions or transforms.
+ */
+@media (prefers-reduced-motion: no-preference) {
+	[data-reveal]:not(.is-in) {
 		opacity: 0;
-		transform: translateY(24px);
-		transition:
-			opacity 700ms var(--ease-out),
-			transform 900ms var(--ease-expo);
-		transition-delay: calc(var(--i, 0) * 80ms);
 	}
 	[data-reveal].is-in {
-		opacity: 1;
-		transform: none;
+		/* siblings follow one another, but the last never waits more than a quarter second */
+		animation: reveal var(--t-scene) var(--ease-out) calc(min(var(--i, 0), 4) * 60ms) both;
+	}
+}
+@keyframes reveal {
+	from {
+		opacity: 0;
+		translate: 0 var(--rise);
 	}
 }
 
-/* page to page */
+/*
+ * page to page: the two pages cross-fade on one clock, so their opacities always add up to a full
+ * page and the wall never shows through. The page itself does not move; what rises on arrival is
+ * the new page's own content, once.
+ */
 @view-transition {
 	navigation: auto;
 }
 @media (prefers-reduced-motion: no-preference) {
-	::view-transition-old(root) {
-		animation: vt-leave 200ms var(--ease-exit) both;
-	}
+	::view-transition-old(root),
 	::view-transition-new(root) {
-		animation: vt-arrive 380ms var(--ease-out) 60ms both;
+		animation-duration: var(--t-ui);
+		animation-timing-function: linear;
 	}
+	/* the picked cover lands with the title's words, which rise on the same scene clock */
 	::view-transition-group(*) {
-		animation-duration: 480ms;
-		animation-timing-function: var(--ease-in-out);
-	}
-}
-@keyframes vt-leave {
-	to {
-		opacity: 0;
-	}
-}
-@keyframes vt-arrive {
-	from {
-		opacity: 0;
-		transform: translateY(16px);
+		animation-duration: var(--t-scene);
+		animation-timing-function: var(--ease-out);
 	}
 }
 
