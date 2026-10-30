@@ -134,8 +134,8 @@
 
 {#snippet relatedList(kind: 'rows' | 'wall')}
 	<ul class={kind}>
-		{#each related as rel, i (rel.node.id)}
-			<li use:reveal={i % 6}>
+		{#each related as rel (rel.node.id)}
+			<li>
 				<a href={animePath(rel.node.id)} class="rel">
 					<span class="thumb">
 						{#if rel.node.coverImage?.large}
@@ -268,8 +268,8 @@
 				<section class="info" class:alone={!synopsis && !fewRelated} aria-labelledby="facts-title">
 					<h2 id="facts-title" use:reveal>{m.detail_facts()}</h2>
 					<dl class="facts">
-						{#each facts as [label, value], i (label)}
-							<div use:reveal={i + 2}>
+						{#each facts as [label, value] (label)}
+							<div>
 								<dt>{label}</dt>
 								<dd class="tabular">{value}</dd>
 							</div>
@@ -341,7 +341,7 @@
 		line-height: 0.98;
 	}
 	.t-xl {
-		font-size: clamp(3.5rem, 1.6rem + 6vw, 8rem);
+		font-size: clamp(3rem, 1.6rem + 4.5vw, 6rem);
 		letter-spacing: -0.05em;
 		line-height: 0.9;
 	}
@@ -534,20 +534,20 @@
 		display: grid;
 		grid-template-columns: repeat(12, minmax(0, 1fr));
 		column-gap: var(--gutter);
-		row-gap: 72px;
-		padding-block: 120px 160px;
+		row-gap: var(--space-5);
+		padding-block: var(--section);
 	}
 	h2 {
-		margin-bottom: 24px;
-		font-size: var(--text-head);
+		margin-bottom: var(--space-3);
+		font-size: var(--text-section);
 		font-weight: 800;
-		letter-spacing: -0.04em;
-		line-height: 1;
+		letter-spacing: -0.03em;
+		line-height: 1.1;
 	}
 	.lead-col {
 		grid-column: 1 / 8;
 		display: grid;
-		gap: 96px;
+		gap: var(--space-5);
 		align-content: start;
 	}
 	.synopsis p {
@@ -573,13 +573,13 @@
 		grid-column: 1 / 9;
 	}
 	.score {
-		font-size: clamp(4.5rem, 2.5rem + 6vw, 8rem);
+		font-size: clamp(3.5rem, 2.4rem + 3.4vw, 6rem);
 		font-weight: 800;
 		letter-spacing: -0.05em;
 		line-height: 0.85;
 	}
 	.score.opening {
-		font-size: clamp(3.5rem, 1.6rem + 6vw, 8rem);
+		font-size: clamp(2.75rem, 1.8rem + 3vw, 5rem);
 		margin-top: 8px;
 	}
 	.score span {
@@ -614,7 +614,7 @@
 	}
 
 	.trailer {
-		padding-block: 120px;
+		padding-block: var(--section);
 		background: var(--color-ink);
 		color: var(--color-bg);
 	}
@@ -630,7 +630,7 @@
 	}
 
 	.related {
-		padding-block: 120px 160px;
+		padding-block: var(--section);
 	}
 	.wall {
 		display: grid;
@@ -660,8 +660,7 @@
 		transition: background-color var(--t-hover) ease;
 	}
 	.rows .rel-title {
-		font-size: var(--text-lead);
-		letter-spacing: -0.02em;
+		letter-spacing: -0.01em;
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.rows .rel:hover {
@@ -741,23 +740,14 @@
 		}
 		.body {
 			grid-template-columns: minmax(0, 1fr);
-			row-gap: 72px;
-			padding-block: 72px 96px;
 		}
 		.lead-col,
 		.info,
 		.info.alone {
 			grid-column: 1;
 		}
-		.lead-col {
-			gap: 72px;
-		}
 		.info.alone {
 			display: block;
-		}
-		.trailer,
-		.related {
-			padding-block: 72px 96px;
 		}
 		.rows .rel {
 			grid-template-columns: 72px 1fr;

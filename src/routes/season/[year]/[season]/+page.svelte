@@ -45,7 +45,7 @@
 	const faces = $derived(
 		sortMedia(query.data ?? [], 'popularity', clock.now)
 			.filter((md) => md.coverImage?.large)
-			.slice(0, 8)
+			.slice(0, 6)
 	);
 </script>
 
@@ -84,7 +84,7 @@
 					</a>
 				</li>
 			{:else}
-				{#each { length: 8 }, i (i)}<li class="blank"></li>{/each}
+				{#each { length: 6 }, i (i)}<li class="blank"></li>{/each}
 			{/each}
 		</ul>
 	</header>
@@ -138,7 +138,7 @@
 
 <style>
 	.screen {
-		padding-block: 32px 120px;
+		padding-block: var(--space-4) var(--section);
 	}
 	.head {
 		display: grid;
@@ -155,7 +155,7 @@
 		padding-bottom: 8px;
 	}
 	h1 {
-		font-size: clamp(4rem, 2rem + 6vw, 9rem);
+		font-size: clamp(3rem, 1.8rem + 4vw, 6rem);
 		text-transform: uppercase;
 		white-space: nowrap;
 	}
@@ -178,7 +178,7 @@
 	.faces {
 		grid-column: 7 / -1;
 		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
+		grid-template-columns: repeat(6, minmax(0, 1fr));
 		gap: 6px;
 		list-style: none;
 	}
@@ -246,7 +246,7 @@
 		justify-content: space-between;
 		align-items: center;
 		gap: 12px 24px;
-		margin-block: 24px 40px;
+		margin-block: var(--space-4) var(--space-4);
 		padding-block: 12px;
 		background: var(--color-bg);
 	}
@@ -296,11 +296,11 @@
 		scroll-margin-top: 80px;
 	}
 	.group + .group {
-		margin-top: 96px;
+		margin-top: var(--space-6);
 	}
 	h2 {
-		margin-bottom: 24px;
-		font-size: var(--text-lead);
+		margin-bottom: var(--space-3);
+		font-size: var(--text-section);
 		font-weight: 800;
 		letter-spacing: -0.02em;
 	}

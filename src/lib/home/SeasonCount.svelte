@@ -54,7 +54,7 @@
 		grid-template-columns: repeat(12, minmax(0, 1fr));
 		column-gap: var(--gutter);
 		align-items: end;
-		padding-block: 160px;
+		padding-block: calc(var(--section) * 1.25);
 		background: var(--color-ink);
 		color: var(--color-bg);
 	}
@@ -152,7 +152,6 @@
 		.count {
 			grid-template-columns: minmax(0, 1fr);
 			row-gap: 48px;
-			padding-block: 96px;
 		}
 		.words,
 		.wall {

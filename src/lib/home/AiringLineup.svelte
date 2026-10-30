@@ -36,7 +36,7 @@
 						</th>
 					</tr>
 					{#each day.items as entry (entry.media.id + ':' + entry.episode)}
-						<tr use:reveal>
+						<tr>
 							<td class="name">
 								<a href={animePath(entry.media.id)} class="show">
 									{#if entry.media.coverImage?.large}
@@ -69,15 +69,15 @@
 
 <style>
 	.lineup {
-		padding-block: 160px 120px;
+		padding-block: var(--section);
 		background: var(--color-surface);
 	}
 	.head {
-		font-size: var(--text-head);
+		font-size: var(--text-section);
 		font-weight: 800;
-		letter-spacing: -0.04em;
-		line-height: 1;
-		margin-bottom: 48px;
+		letter-spacing: -0.03em;
+		line-height: 1.1;
+		margin-bottom: var(--space-4);
 	}
 	.empty {
 		font-size: var(--text-lead);
@@ -85,13 +85,14 @@
 	table {
 		width: 100%;
 		border-collapse: collapse;
-		font-size: var(--text-lead);
-		line-height: 1.5;
-		letter-spacing: -0.02em;
+		line-height: 1.4;
 	}
 	td {
 		vertical-align: middle;
-		padding: 6px 0;
+		padding: 10px 0;
+	}
+	.name {
+		font-weight: 600;
 	}
 	.show {
 		display: flex;
@@ -148,10 +149,12 @@
 		top: var(--bar-shown, 0px);
 		transition: top 360ms var(--ease-out);
 		z-index: 1;
-		padding: 72px 0 20px;
+		padding: var(--space-5) 0 var(--space-2);
 		background: var(--color-surface);
 		color: var(--color-accent-text);
-		font-weight: 400;
+		font-size: var(--text-lead);
+		font-weight: 700;
+		letter-spacing: -0.02em;
 		text-align: left;
 	}
 	tbody:first-of-type .day th {
@@ -165,9 +168,6 @@
 		clip-path: inset(50%);
 	}
 	@media (max-width: 720px) {
-		.lineup {
-			padding-block: 96px 80px;
-		}
 		table,
 		tbody,
 		tr,
@@ -178,12 +178,11 @@
 			display: grid;
 			grid-template-columns: auto auto 1fr;
 			column-gap: 12px;
-			margin-bottom: 18px;
+			margin-bottom: var(--space-3);
 		}
 		.name {
 			grid-column: 1 / -1;
 			width: auto;
-			font-size: var(--text-lead);
 			line-height: 1.3;
 			padding: 0;
 		}
@@ -206,8 +205,7 @@
 		}
 		.day th {
 			display: block;
-			font-size: var(--text-lead);
-			padding-top: 40px;
+			padding-top: var(--space-4);
 		}
 	}
 </style>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '#lib/paraglide/messages.js';
 	import type { MediaCard } from '../anilist/queries';
-	import { pinProgressAction } from '../actions/pin-progress';
+	import { reveal } from '../actions/reveal';
 	import MediaGrid from '../components/MediaGrid.svelte';
 	import { animePath, seasonHref } from '../paths';
 	import { seasonLabel, type Season } from '../season';
@@ -14,37 +14,33 @@
 		withArt.length >= 3 ? [withArt[1], withArt[0], withArt[2]] : withArt.slice(0, 3)
 	);
 	const rest = $derived(items.filter((i) => !trio.includes(i)));
-	let progress = $state(0);
-	// each picture rises at its own speed: centre fastest
-	const speeds = [0.75, 1, 0.65];
 </script>
 
 <section class="next" aria-labelledby="next-title">
-	<div class="wrap" use:pinProgressAction={(p) => (progress = p)}>
-		<div class="stage">
-			<div class="intro page">
-				<h2 id="next-title" class="head">{m.home_next_title({ season: seasonLabel(season) })}</h2>
-				<p>{m.home_next_lead()}</p>
-			</div>
-			<div class="trio" style:--p={progress}>
-				{#each trio as media, i (media.id)}
-					<a
-						href={animePath(media.id)}
-						class="pic"
-						class:centre={i === 1}
-						style:transform="translateY({(1 - Math.min(1, progress * 1.6 * speeds[i])) * 28}%)
-						scale({i === 1 ? 0.82 + 0.18 * Math.min(1, progress * 1.6) : 1})"
-					>
-						<img
-							src={media.coverImage?.extraLarge ?? media.coverImage?.large}
-							alt={displayTitle(media.title ?? {})}
-							fetchpriority="low"
-							width="460"
-							height="690"
-						/>
-					</a>
-				{/each}
-			</div>
+	<div class="stage">
+		<div class="intro page">
+			<h2 id="next-title" class="head" use:reveal>
+				{m.home_next_title({ season: seasonLabel(season) })}
+			</h2>
+			<p use:reveal={1}>{m.home_next_lead()}</p>
+		</div>
+		<div class="trio">
+			{#each trio as media, i (media.id)}
+				<a
+					href={animePath(media.id)}
+					class="pic"
+					class:centre={i === 1}
+					use:reveal={i === 1 ? 0 : 2}
+				>
+					<img
+						src={media.coverImage?.extraLarge ?? media.coverImage?.large}
+						alt={displayTitle(media.title ?? {})}
+						loading="lazy"
+						width="460"
+						height="690"
+					/>
+				</a>
+			{/each}
 		</div>
 	</div>
 
@@ -59,23 +55,15 @@
 </section>
 
 <style>
-	.wrap {
-		height: 130svh;
-	}
 	.stage {
-		position: sticky;
-		top: 0;
-		height: 100svh;
-		overflow: hidden;
 		display: grid;
-		grid-template-columns: minmax(0, 1fr);
-		grid-template-rows: auto 1fr;
+		gap: var(--space-5);
+		padding-top: var(--section);
 	}
 	.intro {
-		padding-top: 10svh;
 		text-align: center;
 		display: grid;
-		gap: 12px;
+		gap: var(--space-2);
 		justify-items: center;
 	}
 	.head {
@@ -86,24 +74,20 @@
 		max-width: 20ch;
 	}
 	.trio {
-		position: relative;
 		display: flex;
 		justify-content: center;
 		align-items: flex-start;
 		gap: 10px;
-		padding-top: 40px;
 	}
 	.pic {
 		flex: 0 0 auto;
-		width: min(360px, 25vw);
+		width: min(260px, 20vw);
 		aspect-ratio: 2 / 3;
-		margin-top: 55px;
+		margin-top: 48px;
 		overflow: hidden;
-		transform-origin: top center;
-		will-change: transform;
 	}
 	.pic.centre {
-		width: min(520px, 36vw);
+		width: min(380px, 28vw);
 		aspect-ratio: 4 / 5;
 		margin-top: 0;
 	}
@@ -111,52 +95,46 @@
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		transition: transform 600ms var(--ease-soft);
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.pic:hover img {
+			transform: scale(1.04);
+		}
 	}
 	.more {
 		display: grid;
-		gap: 48px;
-		padding-block: 48px 160px;
+		gap: var(--space-5);
+		padding-block: var(--space-6) var(--section);
 	}
-	@media (prefers-reduced-motion: reduce) {
-		.wrap {
-			height: auto;
-		}
-		.stage {
-			position: static;
-			height: auto;
-		}
-		.pic {
-			transform: none !important;
-		}
-	}
+	/* on a phone the rest is a row to swipe through, not a long column */
 	@media (max-width: 720px) {
-		.more {
-			padding-block: 64px 72px;
+		.more :global(.grid) {
+			grid-template-columns: none;
+			grid-auto-flow: column;
+			grid-auto-columns: 42vw;
+			overflow-x: auto;
+			overscroll-behavior-x: contain;
+			scroll-snap-type: x mandatory;
+			scroll-padding-inline: var(--gutter);
+			margin-inline: calc(-1 * var(--gutter));
+			padding-inline: var(--gutter);
+			scrollbar-width: none;
+		}
+		.more :global(.grid > li) {
+			scroll-snap-align: start;
 		}
 	}
 	@media (max-width: 900px) {
-		.wrap {
-			height: auto;
-		}
-		.stage {
-			position: static;
-			height: auto;
-			padding-top: 96px;
-		}
-		.intro {
-			padding-top: 0;
-		}
 		.trio {
 			gap: 8px;
-			padding-top: 32px;
 		}
 		.pic {
-			width: 15vw;
+			width: 18vw;
 			margin-top: 32px;
-			transform: none !important;
 		}
 		.pic.centre {
-			width: 56vw;
+			width: 52vw;
 		}
 	}
 </style>

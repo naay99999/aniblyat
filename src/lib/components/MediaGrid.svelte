@@ -1,14 +1,13 @@
 <script lang="ts">
 	import type { MediaCard } from '../anilist/queries';
-	import { reveal } from '../actions/reveal';
 	import AnimeCard from './AnimeCard.svelte';
 
 	let { items }: { items: MediaCard[] } = $props();
 </script>
 
 <ul class="grid">
-	{#each items as media, i (media.id)}
-		<li use:reveal={i % 6}><AnimeCard {media} /></li>
+	{#each items as media (media.id)}
+		<li><AnimeCard {media} /></li>
 	{/each}
 </ul>
 

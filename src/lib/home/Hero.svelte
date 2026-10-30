@@ -1,15 +1,16 @@
 <script lang="ts">
+	import type { EmblaCarouselType } from 'embla-carousel';
+	import Autoplay from 'embla-carousel-autoplay';
+	import emblaCarousel from 'embla-carousel-svelte';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { MediaCard } from '../anilist/queries';
 	import { barTint } from '../actions/bar-tint';
-	import { pinProgressAction } from '../actions/pin-progress';
 	import { airingStatus, formatAirTime } from '../airing';
 	import AiringBadge from '../components/AiringBadge.svelte';
 	import Countdown from '../components/Countdown.svelte';
 	import { clock } from '../clock.svelte';
 	import { inkOn } from '../color';
 	import { animePath, seasonHref } from '../paths';
-	import { activeIndex } from '../scroll';
 	import { seasonLabel, type Season } from '../season';
 	import { displayTitle } from '../text';
 
@@ -18,41 +19,85 @@
 	const panels = $derived(
 		(items ?? []).filter((m) => m.coverImage?.extraLarge ?? m.coverImage?.large).slice(0, 3)
 	);
-	let progress = $state(0);
-	const index = $derived(activeIndex(progress, panels.length));
-	const active = $derived(panels[index]);
+	let index = $state(0);
+	const active = $derived(panels[Math.min(index, panels.length - 1)]);
 	const ground = $derived(active?.coverImage?.color ?? null);
 	const ink = $derived(inkOn(ground));
 	const status = $derived(active ? airingStatus(active, clock.now) : null);
 
-	let section: HTMLElement;
+	const DELAY = 6000;
+	const reduce =
+		typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+	let embla: EmblaCarouselType | undefined;
+	// the step's fill runs only while the slides move on by themselves
+	let running = $state(false);
 
-	// jump the pinned stage to one title; the scroll position stays the single source of truth
-	function jump(i: number) {
-		const rect = section.getBoundingClientRect();
-		const travel = rect.height - window.innerHeight;
-		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-		window.scrollTo({
-			top: window.scrollY + rect.top + (travel * (i + 0.5)) / panels.length,
-			behavior: reduce ? 'auto' : 'smooth'
-		});
+	function init(event: CustomEvent<EmblaCarouselType>) {
+		embla = event.detail;
+		embla.on('select', () => (index = embla!.selectedScrollSnap()));
+		embla.on('autoplay:play', () => (running = true));
+		embla.on('autoplay:stop', () => (running = false));
+		running = embla.plugins().autoplay?.isPlaying() ?? false;
 	}
+
+	// a refetch can reorder or replace the titles under the carousel
+	$effect(() => {
+		void panels.map((p) => p.id).join();
+		embla?.reInit();
+	});
+
+	function jump(i: number) {
+		embla?.scrollTo(i, reduce);
+	}
+
+	// pause while the pointer rests on the slides or a focus is inside the hero, and off screen
+	let section: HTMLElement;
+	let visible = true;
+	let holding = false;
+	const sync = () => {
+		const autoplay = embla?.plugins().autoplay;
+		if (!autoplay) return;
+		if (visible && !holding) autoplay.play();
+		else autoplay.stop();
+	};
+	$effect(() => {
+		const io = new IntersectionObserver(([e]) => {
+			visible = e.isIntersecting;
+			sync();
+		});
+		io.observe(section);
+		return () => io.disconnect();
+	});
+	const hold = (on: boolean) => () => {
+		holding = on;
+		sync();
+	};
 </script>
 
 <section
 	class="hero"
 	bind:this={section}
-	style:--panels={Math.max(panels.length, 1)}
-	use:pinProgressAction={(p) => (progress = p)}
 	use:barTint={{ bg: ground ?? 'var(--color-bg)', ink }}
 	aria-labelledby="hero-title"
+	onfocusin={(e) => {
+		// a click leaves focus on the step; only keyboard focus holds the slides
+		if ((e.target as Element).matches(':focus-visible')) hold(true)();
+	}}
+	onfocusout={hold(false)}
 >
 	<div class="stage" style:background-color={ground ?? 'var(--color-bg)'} style:color={ink}>
 		<div class="words">
 			<h1 id="hero-title" class="title display">{seasonLabel(season)}</h1>
 			<p class="lead">{m.home_title({ season: seasonLabel(season) })}</p>
 			{#if panels.length > 1}
-				<ul class="steps" aria-label={m.home_trending_caption()}>
+				<ul
+					class="steps"
+					onpointerenter={hold(true)}
+					onpointerleave={hold(false)}
+					class:running
+					style:--delay="{DELAY}ms"
+					aria-label={m.home_trending_caption()}
+				>
 					{#each panels as media, i (media.id)}
 						<li>
 							<button
@@ -60,6 +105,7 @@
 								class="step"
 								class:on={i === index}
 								aria-current={i === index ? 'true' : undefined}
+								aria-label={displayTitle(media.title ?? {})}
 								onclick={() => jump(i)}
 							>
 								<img src={media.coverImage?.large} alt="" width="36" height="54" />
@@ -110,40 +156,61 @@
 			{/if}
 		</div>
 
-		<div class="covers">
-			{#each panels as media, i (media.id)}
-				<a
-					href={animePath(media.id)}
-					class="cover"
-					class:shown={i <= index}
-					style:z-index={i}
-					tabindex={i === index ? 0 : -1}
-					aria-hidden={i !== index}
+		<div
+			class="covers"
+			role="group"
+			aria-roledescription="carousel"
+			aria-label={m.home_trending_caption()}
+			onpointerenter={hold(true)}
+			onpointerleave={hold(false)}
+		>
+			{#if panels.length}
+				<div
+					class="viewport"
+					use:emblaCarousel={{
+						options: { loop: true, duration: 32 },
+						plugins: reduce
+							? []
+							: [Autoplay({ delay: DELAY, stopOnInteraction: false, stopOnFocusIn: false })]
+					}}
+					onemblaInit={init}
 				>
-					<img
-						src={media.coverImage?.extraLarge ?? media.coverImage?.large}
-						alt={displayTitle(media.title ?? {})}
-						width="460"
-						height="690"
-						fetchpriority={i === 0 ? 'high' : undefined}
-					/>
-				</a>
+					<div class="track">
+						{#each panels as media, i (media.id)}
+							<a
+								href={animePath(media.id)}
+								class="cover"
+								class:on={i === index}
+								tabindex={i === index ? 0 : -1}
+								aria-hidden={i !== index}
+							>
+								<img
+									src={media.coverImage?.extraLarge ?? media.coverImage?.large}
+									alt={displayTitle(media.title ?? {})}
+									width="460"
+									height="690"
+									draggable="false"
+									fetchpriority={i === 0 ? 'high' : undefined}
+								/>
+							</a>
+						{/each}
+					</div>
+				</div>
 			{:else}
-				<div class="cover placeholder shown"></div>
-			{/each}
+				<div class="cover placeholder"></div>
+			{/if}
 		</div>
 	</div>
 </section>
 
 <style>
 	.hero {
-		height: calc(var(--panels) * 100svh);
 		margin-top: calc(-1 * var(--nav-h));
 	}
 	.stage {
-		position: sticky;
-		top: 0;
 		height: 100svh;
+		min-height: 640px;
+		max-height: 1000px;
 		overflow: hidden;
 		display: grid;
 		grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -179,6 +246,7 @@
 		list-style: none;
 	}
 	.step {
+		position: relative;
 		display: grid;
 		grid-template-columns: 36px 1fr;
 		align-items: center;
@@ -194,9 +262,35 @@
 			background-color var(--t-ui) ease,
 			transform var(--t-press) var(--ease-out);
 	}
+	/* the active step fills with its tint; while the slides move on by themselves the fill
+	   runs across the step in the time left before the next one */
+	.step::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		background: color-mix(in srgb, currentColor 10%, transparent);
+		transform: scaleX(0);
+		transform-origin: left;
+	}
 	.step.on {
 		opacity: 1;
-		background: color-mix(in srgb, currentColor 10%, transparent);
+	}
+	.step.on::before {
+		transform: none;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.running .step.on::before {
+			animation: fill var(--delay) linear both;
+		}
+	}
+	@keyframes fill {
+		from {
+			transform: scaleX(0.04);
+		}
+	}
+	.steps li {
+		isolation: isolate;
 	}
 	.step:active {
 		transform: scale(0.98);
@@ -223,6 +317,8 @@
 		display: grid;
 		gap: 28px;
 		max-width: 680px;
+		/* the home page's one big clock */
+		--countdown-size: clamp(2.5rem, 1.6rem + 3.6vw, 5.5rem);
 	}
 	.panel {
 		display: grid;
@@ -281,23 +377,37 @@
 		max-width: 100%;
 		aspect-ratio: 2 / 3;
 	}
-	.cover {
-		position: absolute;
-		inset: 0;
-		clip-path: inset(100% 0 0 0);
-		transition: clip-path 900ms var(--ease-in-out);
+	.viewport,
+	.placeholder {
+		height: 100%;
+		overflow: hidden;
 	}
-	.cover.shown {
-		clip-path: inset(0);
+	.viewport {
+		cursor: grab;
+		touch-action: pan-y pinch-zoom;
+	}
+	.viewport:active {
+		cursor: grabbing;
+	}
+	.track {
+		display: flex;
+		height: 100%;
+	}
+	.cover {
+		flex: 0 0 100%;
+		min-width: 0;
+		height: 100%;
+		overflow: hidden;
 	}
 	.cover img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		transform: scale(1.08);
+		user-select: none;
+		transform: scale(1.06);
 		transition: transform 1400ms var(--ease-soft);
 	}
-	.cover.shown img {
+	.cover.on img {
 		transform: none;
 	}
 	.placeholder {
@@ -315,7 +425,6 @@
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.cover,
 		.cover img,
 		.stage {
 			transition: none;
@@ -336,6 +445,15 @@
 			font-size: 15vw;
 		}
 		.steps {
+			display: flex;
+			gap: 6px;
+			margin-top: 16px;
+		}
+		.step {
+			grid-template-columns: 36px;
+			padding: 4px;
+		}
+		.step span {
 			display: none;
 		}
 		.lead {

@@ -48,7 +48,7 @@
 		display: block;
 		padding: 0.3em 0.4em;
 		background: color-mix(in srgb, currentColor 10%, transparent);
-		font-size: var(--countdown-size, clamp(2.5rem, 1.6rem + 3.6vw, 5.5rem));
+		font-size: var(--countdown-size, clamp(2rem, 1.5rem + 2vw, 3.5rem));
 		font-weight: 800;
 		letter-spacing: -0.04em;
 		line-height: 1;
@@ -61,7 +61,7 @@
 		background: color-mix(in srgb, currentColor 10%, transparent);
 	}
 	.value {
-		font-size: var(--countdown-size, clamp(2.5rem, 1.6rem + 3.6vw, 5.5rem));
+		font-size: var(--countdown-size, clamp(2rem, 1.5rem + 2vw, 3.5rem));
 		font-weight: 800;
 		letter-spacing: -0.04em;
 		line-height: 1;

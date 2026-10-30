@@ -21,6 +21,8 @@
 	--text-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
 	--text-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
 	--text-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
+	/* headings of the sections people use rather than look at */
+	--text-section: clamp(1.5rem, 1.25rem + 1vw, 2.25rem);
 	--text-display: clamp(90px, 10vw, 160px);
 	--text-title: clamp(1.75rem, 1.45rem + 1vw, 2.5rem);
 
@@ -76,6 +78,14 @@
 	--t-hover: 180ms;
 	--t-ui: 240ms;
 	--gutter: clamp(16px, 2.2vw, 32px);
+	/* one spacing scale for the whole site */
+	--space-1: 8px;
+	--space-2: 16px;
+	--space-3: 24px;
+	--space-4: 40px;
+	--space-5: 64px;
+	--space-6: 96px;
+	--section: clamp(72px, 4rem + 4vw, 128px);
 }
 
 @layer components {

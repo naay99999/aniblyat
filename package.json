@@ -55,6 +55,8 @@
 		"@tanstack/query-sync-storage-persister": "^5.105.0",
 		"@tanstack/svelte-query": "^6.3.6",
 		"@tanstack/svelte-query-persist-client": "^6.3.6",
+		"embla-carousel-autoplay": "^8.6.0",
+		"embla-carousel-svelte": "^8.6.0",
 		"graphql": "^17.0.2"
 	}
 }

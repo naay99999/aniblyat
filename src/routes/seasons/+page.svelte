@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { m } from '#lib/paraglide/messages.js';
-	import { reveal } from '#lib/actions/reveal.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { intlLocale } from '#lib/airing.js';
 	import { getSeason } from '#lib/anilist/queries.js';
@@ -58,8 +57,8 @@
 	</header>
 
 	<ol class="years">
-		{#each grid as row, i (row.year)}
-			<li class="year" use:reveal={Math.min(i, 6)}>
+		{#each grid as row (row.year)}
+			<li class="year">
 				<h2 class="tabular">{row.year}</h2>
 				<ul>
 					{#each row.seasons as s (s.season)}
@@ -87,7 +86,7 @@
 
 <style>
 	.screen {
-		padding-block: 32px 120px;
+		padding-block: var(--space-4) var(--section);
 	}
 	.head {
 		display: grid;
@@ -102,7 +101,7 @@
 		gap: 24px;
 	}
 	h1 {
-		font-size: clamp(4rem, 2rem + 6vw, 9rem);
+		font-size: clamp(3rem, 1.8rem + 4vw, 6rem);
 	}
 	.lead {
 		max-width: 34ch;
@@ -156,7 +155,7 @@
 		font-weight: 600;
 	}
 	.now-name {
-		font-size: clamp(3rem, 1.6rem + 3.6vw, 5.5rem);
+		font-size: clamp(2.5rem, 1.6rem + 2.6vw, 4.25rem);
 		text-transform: uppercase;
 		white-space: nowrap;
 	}

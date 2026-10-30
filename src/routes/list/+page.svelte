@@ -170,7 +170,7 @@
 
 <style>
 	.screen {
-		padding-block: 32px 120px;
+		padding-block: var(--space-4) var(--section);
 		min-height: 70svh;
 	}
 	.head {
@@ -179,7 +179,7 @@
 		padding-top: 24px;
 	}
 	h1 {
-		font-size: clamp(4rem, 2rem + 6vw, 9rem);
+		font-size: clamp(3rem, 1.8rem + 4vw, 6rem);
 	}
 	.lead {
 		font-size: var(--text-lead);
@@ -199,14 +199,14 @@
 		line-height: 1.05;
 	}
 	.start {
-		margin-top: 120px;
+		margin-top: var(--space-6);
 	}
 	h2 {
-		margin-bottom: 32px;
-		font-size: var(--text-head);
+		margin-bottom: var(--space-3);
+		font-size: var(--text-section);
 		font-weight: 800;
-		letter-spacing: -0.04em;
-		line-height: 1;
+		letter-spacing: -0.03em;
+		line-height: 1.1;
 	}
 	/* the next episode, in its own cover colour, as the list's headline */
 	.next {
