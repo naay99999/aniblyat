@@ -10,7 +10,7 @@
 	import AiringBadge from '../components/AiringBadge.svelte';
 	import Countdown from '../components/Countdown.svelte';
 	import { clock } from '../clock.svelte';
-	import { inkOn } from '../color';
+	import { heroGround, inkOn } from '../color';
 	import type { HeroReason } from '../hero-pick';
 	import { animePath, seasonHref } from '../paths';
 	import { seasonLabel, type Season } from '../season';
@@ -28,7 +28,7 @@
 	);
 	let index = $state(0);
 	const active = $derived(panels[Math.min(index, panels.length - 1)]);
-	const ground = $derived(active?.coverImage?.color ?? null);
+	const ground = $derived(heroGround(active?.coverImage?.color));
 	const ink = $derived(inkOn(ground));
 	const status = $derived(active ? airingStatus(active, clock.now) : null);
 	const why = $derived(reason === 'list' ? m.home_hero_why_list() : m.home_hero_why_soon());
@@ -69,12 +69,8 @@
 	}
 </script>
 
-<section
-	class="hero"
-	use:barTint={{ bg: ground ?? 'var(--color-bg)', ink }}
-	aria-labelledby="hero-title"
->
-	<div class="stage" style:background-color={ground ?? 'var(--color-bg)'} style:color={ink}>
+<section class="hero" use:barTint={{ bg: ground, ink }} aria-labelledby="hero-title">
+	<div class="stage" style:background-color={ground} style:color={ink}>
 		<h1 id="hero-title" class="sr-only">{m.home_title({ season: seasonLabel(season) })}</h1>
 		<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{announced}</p>
 
@@ -106,7 +102,7 @@
 						href={animePath(active.id)}
 						class="btn open"
 						style:background-color={ink}
-						style:color={ground ?? 'var(--color-bg)'}>{m.home_hero_open()}</a
+						style:color={ground}>{m.home_hero_open()}</a
 					>
 					<a href={seasonHref(season)} class="link season">{m.home_hero_action()}</a>
 				</p>
@@ -151,18 +147,20 @@
 				>
 					<div class="track">
 						{#each panels as media, i (media.id)}
+							<!-- the banner fills the field; a title without one shows its whole cover instead -->
 							<a
 								href={animePath(media.id)}
 								class="cover"
 								class:on={i === index}
+								class:portrait={!media.bannerImage}
 								tabindex={i === index ? 0 : -1}
 								aria-hidden={i !== index}
 							>
 								<img
-									src={media.coverImage?.extraLarge ?? media.coverImage?.large}
+									src={media.bannerImage ?? media.coverImage?.extraLarge ?? media.coverImage?.large}
 									alt={displayTitle(media.title ?? {})}
-									width="460"
-									height="690"
+									width={media.bannerImage ? 1900 : 460}
+									height={media.bannerImage ? 400 : 690}
 									draggable="false"
 									data-cover={i === index ? '' : undefined}
 									fetchpriority={i === 0 ? 'high' : undefined}
@@ -188,6 +186,7 @@
 		height: calc(100svh - var(--section) - 4rem);
 		min-height: 520px;
 		max-height: 960px;
+		position: relative;
 		overflow: hidden;
 		display: grid;
 		grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -207,7 +206,9 @@
 	}
 	/* the clock is the hero: what is next, how long until it airs, and the way in */
 	.now {
-		grid-column: 1 / 8;
+		grid-column: 1 / 7;
+		position: relative;
+		z-index: 1;
 		align-self: center;
 		display: grid;
 		gap: var(--space-4);
@@ -308,13 +309,13 @@
 			opacity: 1;
 		}
 	}
+	/* the picture runs from under the words to the right edge and fades into the ground on its left */
 	.covers {
-		grid-column: 8 / -1;
-		position: relative;
-		justify-self: end;
-		height: 100%;
-		max-width: 100%;
-		aspect-ratio: 2 / 3;
+		position: absolute;
+		inset: var(--nav-h) 0 0 30%;
+		--ghost: color-mix(in srgb, currentColor 8%, transparent);
+		-webkit-mask-image: linear-gradient(90deg, transparent, #000 45%);
+		mask-image: linear-gradient(90deg, transparent, #000 45%);
 	}
 	.viewport,
 	.placeholder {
@@ -349,8 +350,12 @@
 	.cover.on img {
 		transform: none;
 	}
-	.placeholder {
-		background: var(--color-surface);
+	/* a cover in place of a banner stays whole, standing at the right edge */
+	.cover.portrait img {
+		width: auto;
+		max-width: 100%;
+		margin-left: auto;
+		aspect-ratio: 2 / 3;
 	}
 	@media (prefers-reduced-motion: no-preference) {
 		/* the words rise on the scene clock the ground and cover already change on, a beat behind the fade */
@@ -377,7 +382,7 @@
 		}
 	}
 	@media (max-width: 900px) {
-		/* title, clock and buttons stay in the first screen; the cover leads but takes ~42svh */
+		/* title, clock and buttons stay in the first screen; the picture leads, edge to edge, and fades down */
 		.stage {
 			height: auto;
 			min-height: 0;
@@ -388,10 +393,18 @@
 			padding-bottom: var(--space-4);
 		}
 		.covers {
+			position: relative;
+			inset: auto;
 			grid-column: 1;
 			grid-row: 1;
-			justify-self: center;
-			height: clamp(240px, 42svh, 400px);
+			margin-inline: calc(-1 * var(--gutter));
+			margin-top: calc(-1 * var(--space-3));
+			height: min(56.25vw, 42svh);
+			-webkit-mask-image: linear-gradient(#000 65%, transparent);
+			mask-image: linear-gradient(#000 65%, transparent);
+		}
+		.cover.portrait img {
+			margin-inline: auto;
 		}
 		.now {
 			grid-column: 1;

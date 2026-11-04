@@ -11,7 +11,7 @@
 	import QueryState from '#lib/components/QueryState.svelte';
 	import TrailerLoop from '#lib/components/TrailerLoop.svelte';
 	import SaveButton from '#lib/components/SaveButton.svelte';
-	import { inkOn } from '#lib/color.js';
+	import { heroGround, inkOn } from '#lib/color.js';
 	import { animePath, homePath, seasonHref } from '#lib/paths.js';
 	import { seasonLabel } from '#lib/season.js';
 	import { displayTitle, formatLabel, stripHtml } from '#lib/text.js';
@@ -32,8 +32,10 @@
 
 	const media = $derived(query.data);
 	const title = $derived(media ? displayTitle(media.title ?? {}) : '');
-	const ground = $derived(media?.coverImage?.color ?? null);
+	const ground = $derived(heroGround(media?.coverImage?.color));
 	const ink = $derived(inkOn(ground));
+	// the hero's picture: the wide banner, or the whole cover for a title without one
+	const art = $derived(media?.bannerImage ?? media?.coverImage?.extraLarge ?? null);
 	const status = $derived(media ? airingStatus(media, clock.now) : null);
 	// the headline steps down as the title grows, so it holds to two lines
 	const titleSize = $derived(
@@ -141,7 +143,7 @@
 			<span class="line-block short block"></span>
 		</div>
 		<div class="now"><span class="action-block block"></span></div>
-		<div class="poster"><span class="poster-block block"></span></div>
+		<div class="art"><span class="art-block block"></span></div>
 	</section>
 {/snippet}
 
@@ -181,12 +183,13 @@
 		<article>
 			<section
 				class="hero page"
-				class:no-poster={!media.coverImage?.extraLarge}
-				style:background-color={ground ?? 'var(--color-surface)'}
+				class:no-art={!art}
+				class:portrait={!media.bannerImage}
+				style:background-color={ground}
 				style:color={ink}
 				style:--hero-ink={ink}
-				style:--hero-ground={ground ?? 'var(--color-surface)'}
-				use:barTint={{ bg: ground ?? 'var(--color-surface)', ink }}
+				style:--hero-ground={ground}
+				use:barTint={{ bg: ground, ink }}
 				aria-labelledby="anime-title"
 			>
 				<header class="words">
@@ -245,13 +248,13 @@
 					</div>
 				</div>
 
-				{#if media.coverImage?.extraLarge}
-					<div class="poster">
+				{#if art}
+					<div class="art">
 						<img
-							src={media.coverImage.extraLarge}
-							alt={title}
-							width="460"
-							height="690"
+							src={art}
+							alt={media.bannerImage ? '' : title}
+							width={media.bannerImage ? 1900 : 460}
+							height={media.bannerImage ? 400 : 690}
 							fetchpriority="high"
 							style:view-transition-name="cover"
 						/>
@@ -259,12 +262,9 @@
 				{/if}
 			</section>
 
-			{#if media.bannerImage || trailerId}
-				<div
-					class="band"
-					class:moving={trailerId}
-					style:background-color={ground ?? 'var(--color-surface)'}
-				>
+			<!-- the banner now leads the hero; the band stays for the trailer, with the banner as its still -->
+			{#if trailerId}
+				<div class="band moving" style:background-color={ground}>
 					{#if media.bannerImage}
 						<img src={media.bannerImage} alt="" width="1900" height="400" />
 					{/if}
@@ -351,8 +351,10 @@
 		letter-spacing: -0.04em;
 	}
 
-	/* the hero: the cover's own colour as the field, the poster as the picture */
+	/* the hero: a deep ground in the cover's hue, the banner filling the right and fading into it */
 	.hero {
+		position: relative;
+		overflow: hidden;
 		display: grid;
 		grid-template-columns: repeat(12, minmax(0, 1fr));
 		grid-template-rows: auto minmax(0, 1fr) auto;
@@ -363,8 +365,14 @@
 		padding-top: calc(var(--nav-h) + 16px);
 		padding-bottom: 32px;
 	}
+	.words,
+	.rating,
+	.now {
+		position: relative;
+		z-index: 1;
+	}
 	.words {
-		grid-column: 1 / 9;
+		grid-column: 1 / 7;
 		display: grid;
 		gap: 10px;
 		align-content: start;
@@ -403,12 +411,12 @@
 		font-weight: 600;
 	}
 	.rating {
-		grid-column: 1 / 9;
+		grid-column: 1 / 7;
 		grid-row: 2;
 		align-self: center;
 	}
 	.now {
-		grid-column: 1 / 9;
+		grid-column: 1 / 7;
 		grid-row: 3;
 		align-self: end;
 		display: grid;
@@ -448,31 +456,38 @@
 		font-weight: 600;
 		text-decoration-color: currentColor;
 	}
-	.poster {
-		grid-column: 9 / -1;
-		grid-row: 1 / -1;
-		align-self: stretch;
-		min-height: 0;
+	/* the picture runs from under the words to the right edge and fades into the ground on its left */
+	.art {
+		position: absolute;
+		inset: var(--nav-h) 0 0 30%;
 	}
-	/* cropped a little wider than the poster so it can hold the full height */
-	.poster img {
+	.art img {
+		display: block;
 		width: 100%;
 		height: 100%;
-		max-height: calc(min(100svh, 920px) - var(--nav-h) - 48px);
-		aspect-ratio: 3 / 4;
 		object-fit: cover;
-		object-position: center top;
+		-webkit-mask-image: linear-gradient(90deg, transparent, #000 45%);
+		mask-image: linear-gradient(90deg, transparent, #000 45%);
 	}
-	.no-poster .words,
-	.no-poster .rating,
-	.no-poster .now {
+	/* a cover in place of a banner stays whole, standing at the right edge */
+	.portrait .art img {
+		width: auto;
+		max-width: 100%;
+		margin-left: auto;
+		aspect-ratio: 2 / 3;
+		-webkit-mask-image: linear-gradient(90deg, transparent, #000 35%);
+		mask-image: linear-gradient(90deg, transparent, #000 35%);
+	}
+	.no-art .words,
+	.no-art .rating,
+	.no-art .now {
 		grid-column: 1 / -1;
 	}
 	@media (prefers-reduced-motion: no-preference) {
 		.words,
 		.rating,
 		.now,
-		.poster img {
+		.art img {
 			animation: arrive var(--t-scene) var(--ease-out) both;
 		}
 		.rating {
@@ -481,12 +496,12 @@
 		.now {
 			animation-delay: 120ms;
 		}
-		.poster img {
+		.art img {
 			animation-name: unveil;
 			animation-duration: var(--t-scene);
 		}
 		/* the picked cover is already flying into place */
-		:global(html.vt-cover) .poster img {
+		:global(html.vt-cover) .art img {
 			animation: none;
 		}
 	}
@@ -529,16 +544,9 @@
 		width: 140px;
 		height: 44px;
 	}
-	.poster-block {
+	.art-block {
 		height: 100%;
-		min-height: 320px;
-	}
-	@media (max-width: 900px) {
-		.poster-block {
-			height: auto;
-			min-height: 0;
-			aspect-ratio: 2 / 3;
-		}
+		opacity: 0.6;
 	}
 	@media (prefers-reduced-motion: no-preference) {
 		.waiting .block {
@@ -766,37 +774,47 @@
 
 	@media (max-width: 900px) {
 		.hero {
-			/* clock first: title, then the airs line and Save, then rating beside a small cover */
-			grid-template-columns: minmax(0, 1fr) 112px;
-			grid-template-rows: auto auto auto;
+			/* the picture leads edge to edge and fades down; then the title, the clock and Save, the rating */
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: auto auto auto auto;
 			row-gap: 28px;
 			min-height: 0;
-			padding-top: calc(var(--nav-h) + 24px);
+			padding-top: var(--nav-h);
 			padding-bottom: 32px;
 		}
 		.words,
+		.rating,
 		.now {
 			grid-column: 1 / -1;
 		}
-		.words {
+		.art {
+			position: relative;
+			inset: auto;
+			grid-column: 1;
 			grid-row: 1;
+			margin-inline: calc(-1 * var(--gutter));
+			margin-bottom: -28px;
+			height: min(56.25vw, 42svh);
+		}
+		.art img,
+		.portrait .art img {
+			-webkit-mask-image: linear-gradient(#000 65%, transparent);
+			mask-image: linear-gradient(#000 65%, transparent);
+		}
+		.portrait .art img {
+			margin-inline: auto;
+		}
+		.no-art {
+			padding-top: calc(var(--nav-h) + 24px);
+		}
+		.words {
+			grid-row: 2;
 		}
 		.rating {
-			grid-column: 1;
-			grid-row: 3;
-		}
-		.poster {
-			grid-column: 2;
-			grid-row: 3;
-			align-self: end;
-		}
-		.poster img {
-			height: auto;
-			max-height: none;
-			aspect-ratio: 2 / 3;
+			grid-row: 4;
 		}
 		.now {
-			grid-row: 2;
+			grid-row: 3;
 			max-width: none;
 			--countdown-size: clamp(1.75rem, 8vw, 2.75rem);
 		}

@@ -219,6 +219,13 @@
 	}
 }
 
+/* a picked poster can land on a wide banner: both pictures fill the moving box instead of stretching */
+::view-transition-old(cover),
+::view-transition-new(cover) {
+	height: 100%;
+	object-fit: cover;
+}
+
 :root {
 	--nav-h: 64px;
 }
