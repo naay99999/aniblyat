@@ -55,7 +55,7 @@
 		</div>
 	</div>
 
-	<div class="more page">
+	<div class="more page capped">
 		{#if !items}<MediaGrid items={undefined} ghosts={6} />{:else if rest.length}<MediaGrid
 				items={rest}
 			/>{/if}

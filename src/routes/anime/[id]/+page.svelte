@@ -173,7 +173,7 @@
 
 <QueryState {query} inset pending={waiting}>
 	{#if !media}
-		<section class="page missing">
+		<section class="page capped missing">
 			<h1>{m.not_found_anime()}</h1>
 			<a href={homePath()} class="btn">{m.back_home()}</a>
 		</section>
@@ -272,7 +272,7 @@
 				</div>
 			{/if}
 
-			<div class="page body">
+			<div class="page capped body">
 				{#if synopsis || fewRelated}
 					<div class="lead-col">
 						{#if synopsis}
@@ -304,7 +304,7 @@
 			</div>
 
 			{#if trailerId}
-				<section id="trailer" class="trailer page" aria-labelledby="trailer-title">
+				<section id="trailer" class="trailer page capped" aria-labelledby="trailer-title">
 					<h2 id="trailer-title" use:reveal>{m.detail_trailer()}</h2>
 					<div class="frame" use:reveal={1}>
 						<iframe
@@ -318,7 +318,7 @@
 			{/if}
 
 			{#if related.length && !fewRelated}
-				<section class="page related" aria-labelledby="related-title">
+				<section class="page capped related" aria-labelledby="related-title">
 					<h2 id="related-title" use:reveal>{m.detail_related()}</h2>
 					{@render relatedList('wall', showAllRelated ? related : related.slice(0, WALL_LIMIT))}
 					{#if related.length > WALL_LIMIT && !showAllRelated}

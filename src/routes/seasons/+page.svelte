@@ -42,7 +42,7 @@
 
 <svelte:head><title>{m.seasons_title()} · aniblyat</title></svelte:head>
 
-<div class="page screen">
+<div class="page capped screen">
 	<header class="head">
 		<div class="words">
 			<h1 class="display">{m.seasons_title()}</h1>

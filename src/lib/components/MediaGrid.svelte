@@ -32,14 +32,24 @@
 {/if}
 
 <style>
+	/*
+	 * posters fill the row down to --min wide, but never more than --cols to a row: past that the
+	 * posters grow instead, so a wide screen gets bigger posters rather than a denser wall
+	 */
 	.grid {
+		--min: 150px;
+		--cols: 6;
+		--gap-x: clamp(16px, 1.6vw, 32px);
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-		gap: 32px 20px;
+		grid-template-columns: repeat(
+			auto-fill,
+			minmax(max(var(--min), (100% - (var(--cols) - 1) * var(--gap-x)) / var(--cols)), 1fr)
+		);
+		gap: clamp(32px, 3vw, 48px) var(--gap-x);
 	}
 	@media (min-width: 1200px) {
 		.grid {
-			grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+			--min: 190px;
 		}
 	}
 	.blank {

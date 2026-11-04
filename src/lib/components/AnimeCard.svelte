@@ -58,7 +58,7 @@
 		right: 8px;
 	}
 	h3 {
-		margin-top: 4px;
+		margin-top: 6px;
 		font-weight: 600;
 		font-size: var(--text-body);
 		line-height: 1.45;
