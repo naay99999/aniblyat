@@ -85,6 +85,8 @@
 	/* how far anything travels when it rises into place */
 	--rise: 12px;
 	--gutter: clamp(16px, 2.2vw, 32px);
+	/* how wide a working section (grids, tables, text) may grow; showpieces stay full width */
+	--content-max: 1440px;
 	/* one spacing scale for the whole site */
 	--space-1: 8px;
 	--space-2: 16px;
@@ -98,6 +100,13 @@
 @layer components {
 	.page {
 		padding-inline: var(--gutter);
+	}
+	/*
+	 * a working section: its content stops at --content-max and centres, while its own background
+	 * still runs edge to edge, because the extra room goes into the padding
+	 */
+	.page.capped {
+		padding-inline: max(var(--gutter), (100% - var(--content-max)) / 2);
 	}
 	.btn {
 		display: inline-flex;

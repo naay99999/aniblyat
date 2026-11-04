@@ -66,7 +66,7 @@
 	<MediaGrid items={undefined} />
 {/snippet}
 
-<div class="page screen" style:--toolbar-h="{toolbarH}px">
+<div class="page capped screen" style:--toolbar-h="{toolbarH}px">
 	<header class="head">
 		<div class="words">
 			<h1 class="display">{seasonLabel(season)}</h1>
@@ -288,7 +288,7 @@
 		}
 	}
 	.group + .group {
-		margin-top: var(--space-6);
+		margin-top: var(--section);
 	}
 	h2 {
 		margin-bottom: var(--space-3);

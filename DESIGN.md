@@ -64,6 +64,7 @@ spacing:
   space-5: '64px'
   space-6: '96px'
   gutter: 'clamp(16px, 2.2vw, 32px)'
+  content-max: '1440px'
   section: 'clamp(72px, 4rem + 4vw, 128px)'
 components:
   button-primary:
@@ -181,7 +182,7 @@ A warm uncoated-paper neutral set, near-black ink, and one teal spot colour. Sat
 
 ## Layout
 
-A 12-column grid with a fluid gutter (`spacing.gutter`, 16–32px) and page padding equal to the gutter. The spacing scale is fixed at 8 / 16 / 24 / 40 / 64 / 96, and sections are separated by `spacing.section` (72–128px). The home hero fills the viewport (100svh, 640–960px) and slides up under the sticky bar. On desktop it splits into 7 columns of clock and 5 of cover, and below 900px it stacks with the cover first. The bar is 64px tall, shrinks to 48px once the page scrolls, and holds its slot so the content doesn't jump. Below 720px it is two rows (100px), and the link row folds away while scrolling down. Covers are always 2:3.
+A 12-column grid with a fluid gutter (`spacing.gutter`, 16–32px) and page padding equal to the gutter. The wall runs edge to edge: the bar, the home hero, the showcases, cover-coloured bands and the footer fill the screen. Working sections (the poster grids, the season table, the list, a title's body and related titles) stop at `spacing.content-max` and centre, through `.page.capped`, which puts the extra room into the padding so a section's own ground still reaches both edges. Poster grids hold at most six to a row, so a wide screen gets bigger posters, not a denser wall. The spacing scale is fixed at 8 / 16 / 24 / 40 / 64 / 96, and sections are separated by `spacing.section` (72–128px). The home hero fills the viewport (100svh, 640–960px) and slides up under the sticky bar. On desktop it splits into 7 columns of clock and 5 of cover, and below 900px it stacks with the cover first. The bar is 64px tall, shrinks to 48px once the page scrolls, and holds its slot so the content doesn't jump. Below 720px it is two rows (100px), and the link row folds away while scrolling down. Covers are always 2:3.
 
 ## Elevation & Depth
 

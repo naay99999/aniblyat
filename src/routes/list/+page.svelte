@@ -87,7 +87,7 @@
 
 <svelte:head><title>{m.list_title()} · aniblyat</title></svelte:head>
 
-<div class="page screen">
+<div class="page capped screen">
 	<header class="head">
 		<h1 class="display">{m.list_title()}</h1>
 		<p class="lead">
