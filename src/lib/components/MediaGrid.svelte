@@ -39,13 +39,13 @@
 	.grid {
 		--min: 150px;
 		--cols: 6;
-		--gap-x: clamp(16px, 1.6vw, 32px);
+		--gap-x: clamp(20px, 2.4vw, 48px);
 		display: grid;
 		grid-template-columns: repeat(
 			auto-fill,
 			minmax(max(var(--min), (100% - (var(--cols) - 1) * var(--gap-x)) / var(--cols)), 1fr)
 		);
-		gap: clamp(32px, 3vw, 48px) var(--gap-x);
+		gap: clamp(40px, 4vw, 64px) var(--gap-x);
 	}
 	@media (min-width: 1200px) {
 		.grid {
