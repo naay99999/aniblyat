@@ -35,7 +35,7 @@
 	const ground = $derived(heroGround(media?.coverImage?.color));
 	const ink = $derived(inkOn(ground));
 	// the hero's picture: the wide banner, or the whole cover for a title without one
-	const art = $derived(media?.bannerImage ?? media?.coverImage?.extraLarge ?? null);
+	const art = $derived(media?.coverImage?.extraLarge ?? null);
 	const status = $derived(media ? airingStatus(media, clock.now) : null);
 	// the headline steps down as the title grows, so it holds to two lines
 	const titleSize = $derived(
@@ -184,7 +184,6 @@
 			<section
 				class="hero page"
 				class:no-art={!art}
-				class:portrait={!media.bannerImage}
 				style:background-color={ground}
 				style:color={ink}
 				style:--hero-ink={ink}
@@ -252,9 +251,9 @@
 					<div class="art">
 						<img
 							src={art}
-							alt={media.bannerImage ? '' : title}
-							width={media.bannerImage ? 1900 : 460}
-							height={media.bannerImage ? 400 : 690}
+							alt={title}
+							width="460"
+							height="690"
 							fetchpriority="high"
 							style:view-transition-name="cover"
 						/>
@@ -262,9 +261,9 @@
 				{/if}
 			</section>
 
-			<!-- the banner now leads the hero; the band stays for the trailer, with the banner as its still -->
-			{#if trailerId}
-				<div class="band moving" style:background-color={ground}>
+			<!-- the banner keeps its own wide band under the hero, where it shows whole -->
+			{#if media.bannerImage || trailerId}
+				<div class="band" class:moving={trailerId} style:background-color={ground}>
 					{#if media.bannerImage}
 						<img src={media.bannerImage} alt="" width="1900" height="400" />
 					{/if}
@@ -456,25 +455,22 @@
 		font-weight: 600;
 		text-decoration-color: currentColor;
 	}
-	/* the picture runs from under the words to the right edge and fades into the ground on its left */
+	/*
+	 * the whole cover, full height at the right edge, fading into the ground on its left: a banner
+	 * is too wide for this box and would show only its middle third
+	 */
 	.art {
 		position: absolute;
 		inset: var(--nav-h) 0 0 30%;
 	}
 	.art img {
 		display: block;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		-webkit-mask-image: linear-gradient(90deg, transparent, #000 45%);
-		mask-image: linear-gradient(90deg, transparent, #000 45%);
-	}
-	/* a cover in place of a banner stays whole, standing at the right edge */
-	.portrait .art img {
 		width: auto;
 		max-width: 100%;
+		height: 100%;
 		margin-left: auto;
 		aspect-ratio: 2 / 3;
+		object-fit: cover;
 		-webkit-mask-image: linear-gradient(90deg, transparent, #000 35%);
 		mask-image: linear-gradient(90deg, transparent, #000 35%);
 	}
@@ -796,13 +792,10 @@
 			margin-bottom: -28px;
 			height: min(56.25vw, 42svh);
 		}
-		.art img,
-		.portrait .art img {
+		.art img {
+			margin-inline: auto;
 			-webkit-mask-image: linear-gradient(#000 65%, transparent);
 			mask-image: linear-gradient(#000 65%, transparent);
-		}
-		.portrait .art img {
-			margin-inline: auto;
 		}
 		.no-art {
 			padding-top: calc(var(--nav-h) + 24px);

@@ -188,20 +188,19 @@
 				>
 					<div class="track">
 						{#each panels as media, i (media.id)}
-							<!-- the banner fills the field; a title without one shows its whole cover instead -->
+							<!-- the whole cover, standing at the right edge: a banner is too wide for the hero's box -->
 							<a
 								href={animePath(media.id)}
 								class="cover"
 								class:on={i === index}
-								class:portrait={!media.bannerImage}
 								tabindex={i === index ? 0 : -1}
 								aria-hidden={i !== index}
 							>
 								<img
-									src={media.bannerImage ?? media.coverImage?.extraLarge ?? media.coverImage?.large}
+									src={media.coverImage?.extraLarge ?? media.coverImage?.large}
 									alt={displayTitle(media.title ?? {})}
-									width={media.bannerImage ? 1900 : 460}
-									height={media.bannerImage ? 400 : 690}
+									width="460"
+									height="690"
 									draggable="false"
 									data-cover={i === index ? '' : undefined}
 									fetchpriority={i === 0 ? 'high' : undefined}
@@ -428,7 +427,10 @@
 			opacity: 1;
 		}
 	}
-	/* the picture runs from under the words to the right edge and fades into the ground on its left */
+	/*
+	 * the field the cover stands in, from under the words to the right edge; its own fade lets a
+	 * cover leaving to the left melt away rather than hit an edge
+	 */
 	.covers {
 		position: absolute;
 		inset: var(--nav-h) 0 0 30%;
@@ -458,35 +460,26 @@
 		height: 100%;
 		overflow: hidden;
 	}
+	/*
+	 * the cover whole, full height at the right edge, fading into the ground on its left. The fade is
+	 * the picture's own, as on a title's page, so the hand-off going in carries it along
+	 */
 	.cover img {
-		width: 100%;
+		display: block;
+		width: auto;
+		max-width: 100%;
 		height: 100%;
+		margin-left: auto;
+		aspect-ratio: 2 / 3;
 		object-fit: cover;
 		user-select: none;
+		-webkit-mask-image: linear-gradient(90deg, transparent, #000 35%);
+		mask-image: linear-gradient(90deg, transparent, #000 35%);
 		transform: scale(1.06);
 		transition: transform var(--t-scene) var(--ease-out);
 	}
 	.cover.on img {
 		transform: none;
-	}
-	/* a cover in place of a banner stays whole, standing at the right edge */
-	.cover.portrait img {
-		width: auto;
-		max-width: 100%;
-		margin-left: auto;
-		aspect-ratio: 2 / 3;
-	}
-	/*
-	 * going in, the picked picture carries the fade itself, the way a title's banner does: a view
-	 * transition captures the picture without its ancestors' mask, so the two would not match
-	 */
-	:global(html.vt-cover) .cover.on img {
-		-webkit-mask-image: linear-gradient(90deg, transparent, #000 45%);
-		mask-image: linear-gradient(90deg, transparent, #000 45%);
-	}
-	:global(html.vt-cover) .cover.portrait.on img {
-		-webkit-mask-image: linear-gradient(90deg, transparent, #000 35%);
-		mask-image: linear-gradient(90deg, transparent, #000 35%);
 	}
 	@media (prefers-reduced-motion: no-preference) {
 		/* the words rise on the scene clock the ground and cover already change on, a beat behind the fade */
@@ -524,11 +517,6 @@
 		.pager {
 			grid-row: 3;
 		}
-		:global(html.vt-cover) .cover.on img,
-		:global(html.vt-cover) .cover.portrait.on img {
-			-webkit-mask-image: linear-gradient(#000 65%, transparent);
-			mask-image: linear-gradient(#000 65%, transparent);
-		}
 		.covers {
 			position: relative;
 			inset: auto;
@@ -537,11 +525,13 @@
 			margin-inline: calc(-1 * var(--gutter));
 			margin-top: calc(-1 * var(--space-3));
 			height: min(56.25vw, 42svh);
+			-webkit-mask-image: none;
+			mask-image: none;
+		}
+		.cover img {
+			margin-inline: auto;
 			-webkit-mask-image: linear-gradient(#000 65%, transparent);
 			mask-image: linear-gradient(#000 65%, transparent);
-		}
-		.cover.portrait img {
-			margin-inline: auto;
 		}
 		.now {
 			grid-column: 1;
