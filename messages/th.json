@@ -112,6 +112,8 @@
 	"home_hero_why_list": "ตอนถัดไปในลิสต์ของคุณ",
 	"home_hero_why_soon": "เรื่องมาแรงที่ใกล้ฉาย",
 	"home_hero_queue": "ตอนถัดไป",
+	"home_hero_pause": "หยุดเลื่อนอัตโนมัติ",
+	"home_hero_play": "เลื่อนอัตโนมัติต่อ",
 	"home_hero_announce": "{title} EP {episode} ฉาย {time}",
 	"home_count_more": "ดูทั้ง {count} เรื่อง",
 	"home_top_open": "ดูรายละเอียด",
