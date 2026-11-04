@@ -112,6 +112,8 @@
 	"home_hero_why_list": "Next on your list",
 	"home_hero_why_soon": "Trending, airing next",
 	"home_hero_queue": "Up next",
+	"home_hero_pause": "Pause rotation",
+	"home_hero_play": "Resume rotation",
 	"home_hero_announce": "{title}, EP {episode} airs {time}",
 	"home_count_more": "See all {count}",
 	"home_top_open": "Details",

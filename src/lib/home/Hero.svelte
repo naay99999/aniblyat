@@ -10,7 +10,7 @@
 	import AiringBadge from '../components/AiringBadge.svelte';
 	import Countdown from '../components/Countdown.svelte';
 	import { clock } from '../clock.svelte';
-	import { inkOn } from '../color';
+	import { heroGround, inkOn } from '../color';
 	import type { HeroReason } from '../hero-pick';
 	import { animePath, seasonHref } from '../paths';
 	import { seasonLabel, type Season } from '../season';
@@ -28,7 +28,7 @@
 	);
 	let index = $state(0);
 	const active = $derived(panels[Math.min(index, panels.length - 1)]);
-	const ground = $derived(active?.coverImage?.color ?? null);
+	const ground = $derived(heroGround(active?.coverImage?.color));
 	const ink = $derived(inkOn(ground));
 	const status = $derived(active ? airingStatus(active, clock.now) : null);
 	const why = $derived(reason === 'list' ? m.home_hero_why_list() : m.home_hero_why_soon());
@@ -39,10 +39,63 @@
 	// read out by the stable live region, and only when the visitor picks a step or swipes
 	let announced = $state('');
 
+	// the queue turns on its own: the active bar fills over DWELL and its end moves to the next title.
+	// It holds while the visitor points at or works in the hero, while it is off screen or the tab is
+	// hidden, and once they pause it; with reduced motion it never turns on its own.
+	const DWELL = 8000;
+	let stopped = $state(false);
+	let hovering = $state(false);
+	let focused = $state(false);
+	let offscreen = $state(false);
+	let hidden = $state(false);
+	let turning = false;
+	const holding = $derived(stopped || hovering || focused || offscreen || hidden);
+	const rotating = $derived(!reduce && panels.length > 1);
+
+	function advance() {
+		// the reduced-motion rule shortens every animation to nothing; it must not spin the queue
+		if (!rotating || holding || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		turning = true;
+		embla?.scrollNext();
+	}
+
+	// a mouse resting on the words or the queue holds it; the rest of the hero is just picture
+	function hold(node: HTMLElement) {
+		const enter = (e: PointerEvent) => (hovering = e.pointerType === 'mouse');
+		const leave = () => (hovering = false);
+		node.addEventListener('pointerenter', enter);
+		node.addEventListener('pointerleave', leave);
+		return {
+			destroy() {
+				node.removeEventListener('pointerenter', enter);
+				node.removeEventListener('pointerleave', leave);
+				hovering = false;
+			}
+		};
+	}
+
+	function watch(node: HTMLElement) {
+		const io = new IntersectionObserver(([e]) => (offscreen = !e.isIntersecting));
+		io.observe(node);
+		const onVisibility = () => (hidden = document.hidden);
+		document.addEventListener('visibilitychange', onVisibility);
+		return {
+			destroy() {
+				io.disconnect();
+				document.removeEventListener('visibilitychange', onVisibility);
+			}
+		};
+	}
+
 	function init(event: CustomEvent<EmblaCarouselType>) {
 		embla = event.detail;
 		embla.on('select', () => {
 			index = embla!.selectedScrollSnap();
+			// a turn of the queue on its own is not announced; only the visitor's own picks are
+			if (turning) {
+				turning = false;
+				return;
+			}
 			const media = panels[index];
 			const next = media && airingStatus(media, clock.now);
 			announced =
@@ -69,16 +122,19 @@
 	}
 </script>
 
-<section
-	class="hero"
-	use:barTint={{ bg: ground ?? 'var(--color-bg)', ink }}
-	aria-labelledby="hero-title"
->
-	<div class="stage" style:background-color={ground ?? 'var(--color-bg)'} style:color={ink}>
+<section class="hero" use:barTint={{ bg: ground, ink }} use:watch aria-labelledby="hero-title">
+	<div
+		class="stage"
+		style:background-color={ground}
+		style:color={ink}
+		onfocusin={(e) => (focused = (e.target as Element).matches(':focus-visible'))}
+		onfocusout={(e) =>
+			(focused = e.currentTarget.contains(e.relatedTarget as Node | null) && focused)}
+	>
 		<h1 id="hero-title" class="sr-only">{m.home_title({ season: seasonLabel(season) })}</h1>
 		<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{announced}</p>
 
-		<div class="now">
+		<div class="now" use:hold>
 			{#if active}
 				<!-- the outgoing title fades where it stands while the next one rises into the same place -->
 				<div class="slot">
@@ -106,29 +162,10 @@
 						href={animePath(active.id)}
 						class="btn open"
 						style:background-color={ink}
-						style:color={ground ?? 'var(--color-bg)'}>{m.home_hero_open()}</a
+						style:color={ground}>{m.home_hero_open()}</a
 					>
 					<a href={seasonHref(season)} class="link season">{m.home_hero_action()}</a>
 				</p>
-				{#if panels.length > 1}
-					<ul class="steps" aria-label={m.home_hero_queue()}>
-						{#each panels as media, i (media.id)}
-							<li>
-								<button
-									type="button"
-									class="step"
-									class:on={i === index}
-									aria-current={i === index ? 'true' : undefined}
-									aria-label={displayTitle(media.title ?? {})}
-									title={displayTitle(media.title ?? {})}
-									onclick={() => jump(i)}
-								>
-									<img src={media.coverImage?.large} alt="" width="44" height="66" />
-								</button>
-							</li>
-						{/each}
-					</ul>
-				{/if}
 			{:else}
 				<p class="airs">{m.home_hero_lead()}</p>
 				<p class="actions">
@@ -151,18 +188,20 @@
 				>
 					<div class="track">
 						{#each panels as media, i (media.id)}
+							<!-- the banner fills the field; a title without one shows its whole cover instead -->
 							<a
 								href={animePath(media.id)}
 								class="cover"
 								class:on={i === index}
+								class:portrait={!media.bannerImage}
 								tabindex={i === index ? 0 : -1}
 								aria-hidden={i !== index}
 							>
 								<img
-									src={media.coverImage?.extraLarge ?? media.coverImage?.large}
+									src={media.bannerImage ?? media.coverImage?.extraLarge ?? media.coverImage?.large}
 									alt={displayTitle(media.title ?? {})}
-									width="460"
-									height="690"
+									width={media.bannerImage ? 1900 : 460}
+									height={media.bannerImage ? 400 : 690}
 									draggable="false"
 									data-cover={i === index ? '' : undefined}
 									fetchpriority={i === 0 ? 'high' : undefined}
@@ -175,6 +214,57 @@
 				<div class="cover placeholder ghost"></div>
 			{/if}
 		</div>
+
+		<!-- the queue along the foot of the hero: the title on screen is the long bar, filling until the next -->
+		{#if panels.length > 1}
+			<div class="pager" use:hold>
+				<ul class="bars" aria-label={m.home_hero_queue()}>
+					{#each panels as media, i (media.id)}
+						<li>
+							<button
+								type="button"
+								class="bar"
+								class:on={i === index}
+								aria-current={i === index ? 'true' : undefined}
+								aria-label={displayTitle(media.title ?? {})}
+								title={displayTitle(media.title ?? {})}
+								onclick={() => jump(i)}
+							>
+								<span class="rail">
+									{#if i === index}
+										<span
+											class="fill"
+											class:run={rotating}
+											class:held={holding}
+											style:--dwell="{DWELL}ms"
+											onanimationend={advance}
+										></span>
+									{/if}
+								</span>
+							</button>
+						</li>
+					{/each}
+				</ul>
+				{#if rotating}
+					<button
+						type="button"
+						class="hold"
+						aria-label={stopped ? m.home_hero_play() : m.home_hero_pause()}
+						title={stopped ? m.home_hero_play() : m.home_hero_pause()}
+						onclick={() => (stopped = !stopped)}
+					>
+						<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" fill="currentColor">
+							{#if stopped}
+								<path d="M2.5 1.2v9.6L10.5 6z" />
+							{:else}
+								<rect x="2" y="1.5" width="2.8" height="9" />
+								<rect x="7.2" y="1.5" width="2.8" height="9" />
+							{/if}
+						</svg>
+					</button>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </section>
 
@@ -183,17 +273,15 @@
 		margin-top: calc(-1 * var(--nav-h));
 	}
 	.stage {
-		/* ends above the strip's top padding (--section) with room for its heading, so the
-		   next 24 hours start in the first screen: at 1440x900 the stage is 714px and the heading sits at ~836px */
-		height: calc(100svh - var(--section) - 4rem);
-		min-height: 520px;
-		max-height: 960px;
+		/* the same height as a title's hero, so its banner lands in the same box when the visitor goes in */
+		min-height: min(100svh, 920px);
+		position: relative;
 		overflow: hidden;
 		display: grid;
 		grid-template-columns: repeat(12, minmax(0, 1fr));
-		grid-template-rows: minmax(0, 1fr);
+		grid-template-rows: minmax(0, 1fr) auto;
 		column-gap: var(--gutter);
-		padding: calc(var(--nav-h) + var(--space-3)) var(--gutter) var(--space-4);
+		padding: calc(var(--nav-h) + var(--space-3)) var(--gutter) var(--space-3);
 		transition:
 			background-color var(--t-scene) var(--ease-out),
 			color var(--t-scene) var(--ease-out);
@@ -207,7 +295,10 @@
 	}
 	/* the clock is the hero: what is next, how long until it airs, and the way in */
 	.now {
-		grid-column: 1 / 8;
+		grid-column: 1 / 7;
+		grid-row: 1;
+		position: relative;
+		z-index: 1;
 		align-self: center;
 		display: grid;
 		gap: var(--space-4);
@@ -266,55 +357,84 @@
 		font-weight: 600;
 		text-decoration-color: currentColor;
 	}
-	.steps {
+	.pager {
+		grid-column: 1 / -1;
+		grid-row: 2;
+		position: relative;
+		z-index: 1;
 		display: flex;
+		align-items: center;
 		gap: var(--space-1);
+		/* the bars' own padding makes their targets; the first bar still lines up with the words */
+		margin-left: -6px;
+	}
+	.bars {
+		display: flex;
 		list-style: none;
 	}
-	.step {
+	.bar {
 		display: grid;
-		gap: 6px;
-		min-width: 44px;
-		opacity: 0.5;
-		transition:
-			opacity var(--t-ui) var(--ease-out),
-			transform var(--t-press) var(--ease-out);
+		place-items: center;
+		min-height: 32px;
+		padding-inline: 6px;
 	}
-	.step img {
-		width: 44px;
-		height: 66px;
-		object-fit: cover;
-	}
-	/* a block under the title on screen marks the step the visitor is on */
-	.step::after {
-		content: '';
+	/* short for the titles waiting, long for the one on screen */
+	.rail {
+		position: relative;
+		display: block;
+		width: 20px;
 		height: 4px;
-		background: currentColor;
-		transform: scaleX(0);
-		transform-origin: left;
-		transition: transform var(--t-ui) var(--ease-out);
+		overflow: hidden;
+		background: color-mix(in srgb, currentColor 30%, transparent);
+		transition:
+			width var(--t-move) var(--ease-out),
+			background-color var(--t-ui) var(--ease-out);
 	}
-	.step.on {
-		opacity: 1;
-	}
-	.step.on::after {
-		transform: none;
-	}
-	.step:active {
-		transform: scale(0.96);
+	.bar.on .rail {
+		width: 72px;
 	}
 	@media (hover: hover) and (pointer: fine) {
-		.step:hover {
+		.bar:not(.on):hover .rail {
+			background: color-mix(in srgb, currentColor 60%, transparent);
+		}
+	}
+	.fill {
+		position: absolute;
+		inset: 0;
+		background: currentColor;
+		transform-origin: left;
+	}
+	.fill.run {
+		animation: fill var(--dwell) linear both;
+	}
+	.fill.held {
+		animation-play-state: paused;
+	}
+	@keyframes fill {
+		from {
+			transform: scaleX(0);
+		}
+	}
+	.hold {
+		display: grid;
+		place-items: center;
+		width: 32px;
+		height: 32px;
+		opacity: 0.7;
+		transition: opacity var(--t-ui) var(--ease-out);
+	}
+	@media (hover: hover) and (pointer: fine) {
+		.hold:hover {
 			opacity: 1;
 		}
 	}
+	/* the picture runs from under the words to the right edge and fades into the ground on its left */
 	.covers {
-		grid-column: 8 / -1;
-		position: relative;
-		justify-self: end;
-		height: 100%;
-		max-width: 100%;
-		aspect-ratio: 2 / 3;
+		position: absolute;
+		inset: var(--nav-h) 0 0 30%;
+		--ghost: color-mix(in srgb, currentColor 8%, transparent);
+		-webkit-mask-image: linear-gradient(90deg, transparent, #000 45%);
+		mask-image: linear-gradient(90deg, transparent, #000 45%);
 	}
 	.viewport,
 	.placeholder {
@@ -349,8 +469,24 @@
 	.cover.on img {
 		transform: none;
 	}
-	.placeholder {
-		background: var(--color-surface);
+	/* a cover in place of a banner stays whole, standing at the right edge */
+	.cover.portrait img {
+		width: auto;
+		max-width: 100%;
+		margin-left: auto;
+		aspect-ratio: 2 / 3;
+	}
+	/*
+	 * going in, the picked picture carries the fade itself, the way a title's banner does: a view
+	 * transition captures the picture without its ancestors' mask, so the two would not match
+	 */
+	:global(html.vt-cover) .cover.on img {
+		-webkit-mask-image: linear-gradient(90deg, transparent, #000 45%);
+		mask-image: linear-gradient(90deg, transparent, #000 45%);
+	}
+	:global(html.vt-cover) .cover.portrait.on img {
+		-webkit-mask-image: linear-gradient(90deg, transparent, #000 35%);
+		mask-image: linear-gradient(90deg, transparent, #000 35%);
 	}
 	@media (prefers-reduced-motion: no-preference) {
 		/* the words rise on the scene clock the ground and cover already change on, a beat behind the fade */
@@ -377,21 +513,35 @@
 		}
 	}
 	@media (max-width: 900px) {
-		/* title, clock and buttons stay in the first screen; the cover leads but takes ~42svh */
+		/* the picture leads, edge to edge, and fades down; then the title, clock and buttons, then the queue */
 		.stage {
-			height: auto;
 			min-height: 0;
-			max-height: none;
 			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: auto auto;
+			grid-template-rows: auto auto auto;
 			row-gap: var(--space-3);
-			padding-bottom: var(--space-4);
+			padding-bottom: var(--space-3);
+		}
+		.pager {
+			grid-row: 3;
+		}
+		:global(html.vt-cover) .cover.on img,
+		:global(html.vt-cover) .cover.portrait.on img {
+			-webkit-mask-image: linear-gradient(#000 65%, transparent);
+			mask-image: linear-gradient(#000 65%, transparent);
 		}
 		.covers {
+			position: relative;
+			inset: auto;
 			grid-column: 1;
 			grid-row: 1;
-			justify-self: center;
-			height: clamp(240px, 42svh, 400px);
+			margin-inline: calc(-1 * var(--gutter));
+			margin-top: calc(-1 * var(--space-3));
+			height: min(56.25vw, 42svh);
+			-webkit-mask-image: linear-gradient(#000 65%, transparent);
+			mask-image: linear-gradient(#000 65%, transparent);
+		}
+		.cover.portrait img {
+			margin-inline: auto;
 		}
 		.now {
 			grid-column: 1;
