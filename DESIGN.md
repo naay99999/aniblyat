@@ -1,10 +1,10 @@
 ---
 name: aniblyat
-description: Seasonal anime and next-episode countdowns, set as a Swiss editorial poster.
+description: Seasonal anime and next-episode countdowns, set as a quiet Swiss editorial poster.
 colors:
-  wall-grey: '#dedad3'
-  shelf-grey: '#d3cec6'
-  card-white: '#ebe8e3'
+  wall-grey: '#e7e4de'
+  shelf-grey: '#dbd7d0'
+  card-white: '#f3f1ed'
   ink: '#0a0a0a'
   pencil-grey: '#5c5852'
   pin-teal: '#256f82'
@@ -69,8 +69,8 @@ typography:
 rounded:
   none: '0px'
 rules:
-  rule: '3px solid currentColor'
-  hairline: '1px solid color-mix(in srgb, currentColor 20%, transparent)'
+  rule: '2px solid currentColor'
+  hairline: '1px solid color-mix(in srgb, currentColor 12%, transparent)'
 spacing:
   space-1: '8px'
   space-2: '16px'
@@ -102,8 +102,8 @@ components:
     padding: '0 1.25em'
     height: '44px'
   save-mark:
-    backgroundColor: '{colors.wall-grey}'
-    textColor: '{colors.ink}'
+    backgroundColor: 'none (white glyph with its own drop shadow)'
+    textColor: '#ffffff'
     rounded: '{rounded.none}'
     size: '44px'
   save-mark-saved:
@@ -135,9 +135,9 @@ components:
 
 ## Overview
 
-**Creative North Star: "The Swiss Editorial Poster"**
+**Creative North Star: "The Quiet Swiss Poster"**
 
-Every screen of aniblyat is set like a well-made poster from the Swiss school: one head in a heavy grotesk at poster scale that takes the eye first, small type arranged around it on a strict grid, a lot of white space, and colour used for a reason. The head pulls the eye; the grid and the white space make the small type agree with it. The result should read as a poster that was thought through, not a page of boxes.
+Every screen of aniblyat is set like a well-made poster from the Swiss school: one head in a heavy grotesk at poster scale that takes the eye first, small type arranged around it on a strict grid, a lot of white space, and colour used for a reason. The head pulls the eye; the grid and the white space make the small type agree with it. The result should read as a poster that was thought through, not a page of boxes. It is quiet on purpose: the covers are loud enough, so the UI around them keeps to type, pictures, lines and space.
 
 Two kinds of matter share the wall:
 
@@ -150,7 +150,8 @@ Thai and English share one sans stack, Schibsted Grotesk with Noto Sans Thai, so
 
 - One heavy head per section, at poster scale; everything else small. The contrast between them carries the hierarchy.
 - Flush left, always. Heads, leads and grids start on the first column; nothing is centred.
-- Lines instead of boxes: a heavy rule opens every chapter, hairlines divide rows. No raised panels, no card backgrounds.
+- Space and lines instead of boxes: a rule opens every chapter, hairlines divide rows. No raised panels, no card backgrounds, no filled chips or boxed controls.
+- One accent per screen: besides the covers, a screen holds at most one cover-coloured stage (the hero) and teal only where the visitor saves or takes the page's main action.
 - Flat and square: zero radius everywhere, no shadows on resting surfaces, no gradients, no fades on pictures.
 - The cover's own colour is the only big colour. The UI keeps to paper, ink and one teal.
 - Tabular numerals wherever time or counts are shown.
@@ -164,22 +165,22 @@ A warm uncoated-paper neutral, near-black ink, and one teal spot colour. Saturat
 A section sits on one of three grounds, each with one meaning:
 
 - **Paper** (`wall-grey`): the working ground. The default for every section.
-- **Cover** (`coverImage.color`, deepened by `heroGround()` for a hero): the stage of one title, and only of that title: a hero, the Top 10 card, the next-up block on the list. Never a section that holds many titles.
-- **Ink** (`ink`): a summary or an ending. The season's count and the footer.
+- **Cover** (`coverImage.color`, deepened by `heroGround()`): the stage of one title, and only in a hero (home and a title's page). Everywhere else a title's colour comes from its own pictures.
+- **Ink** (`ink`): the ending. The footer only.
 
 ### Primary
 
-- **Pin Teal** (`pin-teal`): the single UI accent. It marks the solid action button, a saved bookmark, the list count in the nav, the current season, the focus outline and the footer arrows (in its light step). It appears where the visitor has acted or can act.
-- **Pin Teal Deep** (`pin-teal-deep`): hover fill of the teal button, and teal used as text on paper (rank numbers, relation labels, a day label in the airing strip).
-- **Pin Teal Wash / Tint / Light** (`pin-teal-wash`, `pin-teal-tint`, `pin-teal-light`): a selected search option, a season cell on hover and the jump chips (wash); text selection and search marks (tint); accents on ink (light).
+- **Pin Teal** (`pin-teal`): the single UI accent, kept rare. It marks what the visitor has saved (the saved mark, the Save button, the list count in the nav), the current season in the years table, the page's one main action where it has one (the empty list's way in), and the focus outline. Secondary actions are ink buttons.
+- **Pin Teal Deep** (`pin-teal-deep`): hover of the teal button, and a hover tint for text arrows and links on paper.
+- **Pin Teal Wash / Tint / Light** (`pin-teal-wash`, `pin-teal-tint`, `pin-teal-light`): a selected search option and a season cell on hover (wash); text selection and search marks (tint); accents on ink (light).
 
 ### Neutral
 
 - **Wall Grey** (`wall-grey`): the paper ground, and the text colour on ink.
-- **Shelf Grey** (`shelf-grey`): ghost placeholders, cover backgrounds before an image loads, and the fill that marks the picked rank.
+- **Shelf Grey** (`shelf-grey`): ghost placeholders, blank tiles, cover backgrounds before an image loads, and the fill that marks the picked rank.
 - **Card White** (`card-white`): the one raised surface, the search results panel floating over the page. Nothing that rests on the page uses it.
-- **Ink** (`ink`): text, rules, the ink button, toasts and ink sections.
-- **Pencil Grey** (`pencil-grey`): secondary text: leads under a head, captions, counts beside a head, labels in a facts table.
+- **Ink** (`ink`): text, rules, the ink button, toasts and the footer.
+- **Pencil Grey** (`pencil-grey`): secondary text: leads under a head, captions, counts beside a head, labels in a facts table, tabs that are not on show, relation labels.
 
 ### Named Rules
 
@@ -187,7 +188,9 @@ A section sits on one of three grounds, each with one meaning:
 
 **The Ink Flips Rule.** On a cover-coloured ground, text, rules and buttons take ink or white, whichever has the better WCAG contrast (`inkOn()` in `src/lib/color.ts`). The button inverts the pair: ink fill, ground-coloured label.
 
-**The One Stage Rule.** A cover-coloured ground belongs to one title. A section that lists many titles stays on paper or ink and lets the covers themselves carry the colour.
+**The One Stage Rule.** A cover-coloured ground belongs to the hero alone. The Top 10 card, the list's next-up block and every section that lists titles stay on paper and let the pictures carry the colour.
+
+**The One Accent Rule.** Count the colours on a screen before adding one: the covers, at most one cover-coloured hero, and teal only on what is saved or the one main action. A second action is an ink button; a label or a number is ink or pencil, never teal.
 
 ## Typography
 
@@ -243,9 +246,9 @@ The bar is 64px tall, shrinks to 48px once the page scrolls, and holds its slot.
 
 Flat. Structure comes from lines and tonal steps, not from boxes or shadows.
 
-- **Rule** (`--rule`, 3px `currentColor`): opens a chapter, closes the foot of a poster, opens a timetable (the list, the years).
-- **Hairline** (`.hairline` / `--hairline`, 1px `currentColor` at 20%): divides the rows of a table: facts, ranks, saved titles, years, related titles.
-- **Fill** (`currentColor` at 8–10%): a control's resting state (day buttons, arrows, the sort select, countdown cells). It deepens on hover and turns ink or teal when pressed or current.
+- **Rule** (`--rule`, 2px `currentColor`): opens a chapter, closes the foot of a poster, opens a timetable (the list, the years, the "this season" way in).
+- **Hairline** (`.hairline` / `--hairline`, 1px `currentColor` at 12%): divides the rows of a table (facts, ranks, saved titles, years, related titles) and the cells of the countdown.
+- **No resting fills on controls.** Tabs and filters are text (pencil at rest, ink and a 2px underline when on show), arrows are bare glyphs, the sort select sits on a hairline. A fill means state: the picked rank (Shelf Grey), the current season and a saved mark (teal).
 
 Exactly two things carry a shadow, because they float over the page:
 
@@ -254,7 +257,7 @@ Exactly two things carry a shadow, because they float over the page:
 
 ### Named Rules
 
-**The Lines Not Boxes Rule.** Rows are divided by hairlines and sections by rules. Never put a resting card, row or table on a raised or tinted panel.
+**The Lines Not Boxes Rule.** Rows are divided by hairlines and sections by rules. Never put a resting card, row, control or table on a raised or tinted panel; if a thing needs to look pressable, give it a press, a hover and an underline, not a box.
 
 **The Only-What-Floats Rule.** A shadow means the thing is over the page, not on it.
 
@@ -270,7 +273,7 @@ Exactly two things carry a shadow, because they float over the page:
 
 ### Save Mark
 
-A 44px square bookmark in the top-right corner of every poster card. Unsaved: a paper square with an ink outline glyph. Saved: Pin Teal with a white glyph. A press squeezes it and springs it back (Svelte `Spring`). It also comes as a labelled button, which turns ink when saved.
+A 44px bookmark target in the top-right corner of every poster card (in a `.save-slot`). Unsaved: a white outline glyph lifted off the picture by its own drop shadow, with no square behind it; with a mouse it waits hidden until the card is pointed at or focused, so a wall of posters is not a wall of buttons. Saved: a Pin Teal square with a white glyph, always shown. A press squeezes it and springs it back (Svelte `Spring`). It also comes as a labelled button, which turns ink when saved.
 
 ### Poster Card
 
@@ -278,11 +281,11 @@ A 2:3 cover with no border, no background and no padding, sitting on its `coverI
 
 ### Tables (facts, ranks, list, years)
 
-Rows on paper with a hairline under each. A label column in pencil grey at label size, a value column at body size, 600. The picked or current row takes a fill (Shelf Grey for a rank, teal for the current season); nothing else does.
+Rows on paper with a hairline under each. A label column in pencil grey at label size, a value column at body size, 600. Rank numbers are ink, not teal. The picked or current row takes a fill (Shelf Grey for a rank, teal for the current season); nothing else does.
 
 ### Countdown (signature)
 
-Four equal square cells (days, hours, minutes, seconds), each a `currentColor` 10% field holding a poster-weight number over a label-type unit. The digits change in place with no animation. Screen readers hear a minute-level phrase, not every tick. On a poster it sits under the foot's rule, first.
+A departure board, not four buttons: four equal columns (days, hours, minutes, seconds) with no fill, each a poster-weight number set flush left over a label-type unit, divided by hairlines. The digits change in place with no animation. Screen readers hear a minute-level phrase, not every tick. On a poster it sits under the foot's rule, first.
 
 ### Navigation
 
@@ -305,7 +308,8 @@ A Shelf Grey block in the exact shape of the content AniList hasn't sent yet, pu
 - **Do** set a hero's title with `.poster-head` and `headSize()`, and a page's own name with `.page-head`.
 - **Do** keep everything flush left on the 12-column grid.
 - **Do** divide rows with hairlines and use fills only for state.
-- **Do** let `coverImage.color` tint the stage of one title, and pick the ink with `inkOn()`.
+- **Do** set tabs and filters as text, and keep secondary actions as ink buttons.
+- **Do** let `coverImage.color` tint the hero, and pick the ink with `inkOn()`.
 - **Do** use the spacing scale and `--section` between chapters, and let the white space stay empty.
 - **Do** use tabular numerals for all times and counts.
 - **Do** give every entrance a finished state that holds under `prefers-reduced-motion`.
@@ -316,5 +320,8 @@ A Shelf Grey block in the exact shape of the content AniList hasn't sent yet, pu
 - **Don't** put resting content on raised or tinted panels (`--color-raised` is for the search panel only), and don't use drop shadows on resting surfaces, gradients, glass, or fades on pictures.
 - **Don't** add a fourth type tier or a second big head in a section.
 - **Don't** add a second brand hue next to Pin Teal.
-- **Don't** give a cover-coloured ground to a section that holds many titles.
+- **Don't** give a cover-coloured ground to anything but the hero, and don't add ink sections between the hero and the footer.
+- **Don't** use filled chips, boxed tabs, boxed arrows or countdown cells with a fill.
+- **Don't** put teal on labels, rank numbers or secondary buttons.
+- **Don't** build walls of many covers: a dozen or so is enough to say "a lot".
 - **Don't** animate the countdown digits or add new scroll-pinned scenes.

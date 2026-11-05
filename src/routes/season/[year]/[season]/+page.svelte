@@ -239,26 +239,32 @@
 		padding-block: 12px;
 		background: var(--color-bg);
 	}
+	/* the formats as a line of text links, each with its count in pencil */
 	.jump {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 8px;
+		gap: 4px var(--space-3);
 	}
 	.chip {
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-		min-height: 36px;
-		padding: 0 14px;
-		background: var(--color-accent-50);
-		color: var(--color-accent-text);
+		min-height: 44px;
 		font-size: var(--text-small);
 		font-weight: 600;
-		transition: background-color var(--t-ui) var(--ease-out);
+		text-decoration: underline;
+		text-decoration-color: transparent;
+		text-underline-offset: 0.3em;
+		text-decoration-thickness: 2px;
+		transition: text-decoration-color var(--t-ui) var(--ease-out);
+	}
+	.chip .tabular {
+		color: var(--color-muted);
+		font-weight: 400;
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.chip:hover {
-			background: var(--color-accent-100);
+			text-decoration-color: currentColor;
 		}
 	}
 	.sort label {
@@ -268,12 +274,16 @@
 		font-size: var(--text-small);
 		font-weight: 600;
 	}
+	/* the sort sits on a hairline, not in a box */
 	select {
-		min-height: 36px;
+		min-height: 44px;
 		padding-block: 0;
+		padding-left: 0;
 		border: 0;
-		background-color: color-mix(in srgb, currentColor 8%, transparent);
+		border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+		background-color: transparent;
 		font-size: var(--text-small);
+		font-weight: 600;
 	}
 	/* on a phone the chips wrap to two rows: too much to keep pinned over the grid */
 	@media (max-width: 720px) {

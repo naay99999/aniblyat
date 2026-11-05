@@ -143,7 +143,9 @@
 						entry.media.coverImage?.extraLarge ?? entry.media.coverImage?.large ?? null}
 					<li class="slide" class:opens>
 						<!-- the mark is a sibling of the link, over the cover's corner: a button can't sit inside an anchor -->
-						<div class="save"><SaveButton item={{ id: entry.media.id, title, cover }} /></div>
+						<div class="save save-slot">
+							<SaveButton item={{ id: entry.media.id, title, cover }} />
+						</div>
 						<a href={animePath(entry.media.id)} class="show">
 							<span
 								class="cover"
@@ -205,33 +207,37 @@
 		gap: var(--space-1);
 		list-style: none;
 	}
+	/* the days as text tabs: the one on show is ink and underlined, the other waits in pencil */
 	.day {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
-		min-height: 36px;
-		padding: 0 14px;
-		background: color-mix(in srgb, currentColor 8%, transparent);
+		min-height: 44px;
+		padding: 0 4px;
+		color: var(--color-muted);
 		font-size: var(--text-small);
 		font-weight: 600;
+		box-shadow: inset 0 -2px 0 transparent;
 		transition:
-			background-color var(--t-ui) var(--ease-out),
 			color var(--t-ui) var(--ease-out),
+			box-shadow var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
+	.days {
+		gap: var(--space-2);
+	}
 	.day[aria-pressed='true'] {
-		background: var(--color-ink);
-		color: var(--color-bg);
+		color: var(--color-ink);
+		box-shadow: inset 0 -2px 0 currentColor;
 	}
 	.arrow {
 		display: grid;
 		place-items: center;
 		width: 44px;
-		height: 36px;
-		background: color-mix(in srgb, currentColor 8%, transparent);
+		height: 44px;
+		font-size: var(--text-lead);
 		font-weight: 600;
 		transition:
-			background-color var(--t-ui) var(--ease-out),
+			color var(--t-ui) var(--ease-out),
 			opacity var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
@@ -244,9 +250,11 @@
 		transform: scale(0.95);
 	}
 	@media (hover: hover) and (pointer: fine) {
-		.day:not([aria-pressed='true']):hover,
+		.day:not([aria-pressed='true']):hover {
+			color: var(--color-ink);
+		}
 		.arrow:not(:disabled):hover {
-			background: color-mix(in srgb, currentColor 16%, transparent);
+			color: var(--color-accent-text);
 		}
 	}
 	.viewport {
@@ -314,7 +322,6 @@
 		font-size: var(--text-small);
 		font-weight: 600;
 		letter-spacing: 0;
-		color: var(--color-accent-text);
 	}
 	.left,
 	.meta {

@@ -60,7 +60,7 @@
 				items={rest}
 			/>{/if}
 		<p class="action">
-			<a href={seasonHref(season)} class="btn"
+			<a href={seasonHref(season)} class="btn btn-ink"
 				>{m.home_next_action({ season: seasonLabel(season) })}</a
 			>
 		</p>
@@ -68,9 +68,7 @@
 </section>
 
 <style>
-	.next {
-		padding-top: var(--section);
-	}
+	/* the Top 10 above already ends with a section's worth of space */
 	/* the head at the left, three of the season's covers standing at the right */
 	.intro {
 		grid-column: 1 / 5;
@@ -141,6 +139,10 @@
 		display: grid;
 		gap: var(--space-5);
 		padding-block: var(--space-6) var(--section);
+	}
+	/* on the home page the posters get more room: five to a row at most */
+	.more :global(.grid) {
+		--cols: 5;
 	}
 	@media (max-width: 900px) {
 		.intro {

@@ -7,7 +7,6 @@
 	import { isRateLimited } from '#lib/anilist/client.js';
 	import { getHome, getMediaByIds, type MediaCard } from '#lib/anilist/queries.js';
 	import { airingStatus, formatAirTime } from '#lib/airing.js';
-	import { inkOn } from '#lib/color.js';
 	import Countdown from '#lib/components/Countdown.svelte';
 	import MediaGrid from '#lib/components/MediaGrid.svelte';
 	import { useAiringInvalidation } from '#lib/anilist/query-client.svelte.js';
@@ -114,13 +113,7 @@
 		{/if}
 	{:else}
 		{#if nextUp}
-			{@const ground = nextUp.media.coverImage?.color ?? null}
-			<section
-				class="next"
-				style:background-color={ground ?? 'var(--color-ink)'}
-				style:color={ground ? inkOn(ground) : 'var(--color-bg)'}
-				aria-labelledby="next-title"
-			>
+			<section class="next" aria-labelledby="next-title">
 				{#if nextUp.media.coverImage?.extraLarge ?? nextUp.media.coverImage?.large}
 					<a href={animePath(nextUp.media.id)} class="next-cover" tabindex="-1" aria-hidden="true">
 						<img
@@ -238,14 +231,13 @@
 	.start h2 {
 		margin-bottom: var(--space-4);
 	}
-	/* the next episode, in its own cover colour, as the list's headline */
+	/* the next episode as the list's headline: its cover, its name, the clock, on the paper */
 	.next {
 		display: grid;
 		grid-template-columns: minmax(160px, 240px) minmax(0, 1fr);
 		gap: calc(var(--gutter) * 1.5);
 		align-items: end;
-		margin-top: 64px;
-		padding: var(--gutter);
+		margin-top: var(--space-5);
 	}
 	.next-cover img {
 		width: 100%;
@@ -259,8 +251,10 @@
 	}
 	.next h2 {
 		margin: 0;
-		font-size: var(--text-lead);
-		letter-spacing: -0.02em;
+		font-size: var(--text-small);
+		font-weight: 600;
+		letter-spacing: 0;
+		color: var(--color-muted);
 	}
 	.next-name {
 		font-size: var(--text-head);
@@ -279,10 +273,6 @@
 		gap: 12px 16px;
 		margin-top: 24px;
 		color: var(--color-ink);
-	}
-	/* the cover colour can swallow the teal ring */
-	.next :focus-visible {
-		outline-color: currentColor;
 	}
 	/* the saved titles as a timetable: a heavy rule opens it, hairlines divide the rows */
 	.rows {

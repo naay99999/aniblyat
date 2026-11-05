@@ -340,7 +340,7 @@
 								{#if related.length > WALL_LIMIT && !showAllRelated}
 									<button
 										type="button"
-										class="btn more-rel"
+										class="btn btn-ink more-rel"
 										aria-expanded={showAllRelated}
 										onclick={() => (showAllRelated = true)}
 									>
@@ -728,7 +728,7 @@
 	}
 	.rel-type {
 		font-size: var(--text-small);
-		color: var(--color-accent-text);
+		color: var(--color-muted);
 		font-weight: 600;
 	}
 	.rel-title {

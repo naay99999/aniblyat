@@ -57,13 +57,13 @@
 </button>
 
 <style>
+	/* over a cover: a white glyph lifted off the picture by its own shadow, no square behind it */
 	.icon {
 		display: grid;
 		place-items: center;
 		width: 44px;
 		height: 44px;
-		background: var(--color-bg);
-		color: var(--color-ink);
+		color: #fff;
 		transition:
 			transform var(--t-press) var(--ease-out),
 			background-color var(--t-ui) var(--ease-out),
@@ -72,9 +72,16 @@
 	.icon:active {
 		transform: scale(0.9);
 	}
+	.icon svg {
+		filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.6));
+	}
+	/* saved is the one state that fills: the site's one accent */
 	.icon.saved {
 		background: var(--color-accent);
 		color: var(--color-accent-ink);
+	}
+	.icon.saved svg {
+		filter: none;
 	}
 	.btn.saved {
 		background: var(--color-ink);
@@ -85,7 +92,7 @@
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.icon:not(.saved):hover {
-			background: var(--color-accent-100);
+			background: rgb(10 10 10 / 0.35);
 		}
 	}
 </style>

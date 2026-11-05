@@ -132,20 +132,16 @@
 		grid-template-columns: 1fr auto;
 		align-items: end;
 		gap: 8px 16px;
-		min-height: 260px;
-		padding: 28px;
-		background: var(--color-ink);
-		color: var(--color-bg);
-		transition:
-			background-color var(--t-ui) var(--ease-out),
-			transform var(--t-press) var(--ease-out);
+		padding-top: var(--space-3);
+		border-top: var(--rule) solid currentColor;
+		transition: transform var(--t-press) var(--ease-out);
 	}
 	.now:active {
 		transform: scale(0.99);
 	}
 	@media (hover: hover) and (pointer: fine) {
-		.now:hover {
-			background: var(--color-ink-raised);
+		.now:hover .now-name {
+			color: var(--color-accent-text);
 		}
 		.now:hover .arrow {
 			transform: translateX(8px);
@@ -167,16 +163,18 @@
 	.now-label {
 		grid-column: 1 / -1;
 		align-self: start;
-		font-size: var(--text-lead);
+		font-size: var(--text-small);
 		font-weight: 600;
+		color: var(--color-muted);
 	}
 	.now-name {
+		transition: color var(--t-ui) var(--ease-out);
 		font-size: clamp(2.5rem, 1.6rem + 2.6vw, 4.25rem);
 		text-transform: uppercase;
 		white-space: nowrap;
 	}
 	.arrow {
-		color: var(--color-accent-200);
+		color: var(--color-accent-text);
 		font-size: var(--text-head);
 		font-weight: 600;
 		line-height: 1;
@@ -249,10 +247,6 @@
 		.words,
 		.now {
 			grid-column: 1;
-		}
-		.now {
-			min-height: 180px;
-			padding: 20px;
 		}
 	}
 	@media (max-width: 720px) {

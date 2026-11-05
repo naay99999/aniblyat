@@ -6,7 +6,6 @@
 	import { reveal } from '../actions/reveal';
 	import AiringBadge from '../components/AiringBadge.svelte';
 	import SaveButton from '../components/SaveButton.svelte';
-	import { inkOn } from '../color';
 	import { animePath } from '../paths';
 	import { displayTitle, formatLabel } from '../text';
 
@@ -267,18 +266,11 @@
 			</ol>
 
 			{#if current}
-				{@const ground = current.coverImage?.color ?? null}
 				<!-- a small stable live region: only the pick is announced, not the whole card -->
 				<p class="sr-only" aria-live="polite" aria-atomic="true">
 					{displayTitle(current.title ?? {})}, {m.home_top_rank({ rank: String(picked + 1) })}
 				</p>
-				<article
-					id="top-feature"
-					class="feature"
-					bind:this={feature}
-					style:background-color={ground ?? 'var(--color-ink)'}
-					style:color={ground ? inkOn(ground) : 'var(--color-bg)'}
-				>
+				<article id="top-feature" class="feature" bind:this={feature}>
 					<!-- the card stays; the title on it fades out where it stands while the next one settles in -->
 					{#key current.id}
 						<div class="feature-body" out:fade={{ duration: 150, easing: cubicOut }}>
@@ -414,7 +406,6 @@
 		white-space: nowrap;
 	}
 	.rank {
-		color: var(--color-accent-text);
 		font-weight: 600;
 	}
 	@media (hover: hover) and (pointer: fine) {
@@ -428,14 +419,12 @@
 	.inline {
 		display: none;
 	}
+	/* the picked title on the paper: its banner and cover carry the colour, the card itself has none */
 	.feature {
-		grid-column: 6 / -1;
+		grid-column: 7 / -1;
 		grid-row: 1 / span 2;
 		display: grid;
 		overflow: hidden;
-		transition:
-			background-color var(--t-scene) var(--ease-out),
-			color var(--t-scene) var(--ease-out);
 	}
 	.feature-body {
 		grid-area: 1 / 1;
@@ -470,7 +459,7 @@
 		display: grid;
 		grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
 		gap: var(--space-4);
-		padding: var(--space-4);
+		padding-top: var(--space-4);
 	}
 	.poster img {
 		width: 100%;
@@ -562,9 +551,6 @@
 		.row.on {
 			background: var(--color-ink);
 			color: var(--color-bg);
-		}
-		.row.on .rank {
-			color: var(--color-accent-200);
 		}
 		.inline {
 			display: grid;
