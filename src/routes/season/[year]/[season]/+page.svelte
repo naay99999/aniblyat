@@ -69,7 +69,7 @@
 <div class="page capped screen" style:--toolbar-h="{toolbarH}px">
 	<header class="head">
 		<div class="words">
-			<h1 class="display">{seasonLabel(season)}</h1>
+			<h1 class="page-head">{seasonLabel(season)}</h1>
 			<p class="lead">
 				{query.data
 					? m.season_lead({ count: String(query.data.length), season: seasonLabel(season) })
@@ -138,11 +138,11 @@
 			<p class="empty">{m.season_empty()}</p>
 		{:else}
 			{#each groups as group (group.group)}
-				<section id={group.group} class="group" aria-labelledby="{group.group}-title">
-					<h2 id="{group.group}-title">
+				<section id={group.group} class="group chapter wide" aria-labelledby="{group.group}-title">
+					<h2 id="{group.group}-title" class="chapter-head">
 						{group.label} <span class="count tabular">{group.items.length}</span>
 					</h2>
-					<MediaGrid items={group.items} />
+					<div class="chapter-matter"><MediaGrid items={group.items} /></div>
 				</section>
 			{/each}
 		{/if}
@@ -161,14 +161,13 @@
 		padding-top: 24px;
 	}
 	.words {
-		grid-column: 1 / 7;
+		grid-column: 1 / 8;
 		display: grid;
 		gap: 24px;
 		align-content: end;
 		padding-bottom: 8px;
 	}
 	h1 {
-		font-size: var(--text-head);
 		text-transform: uppercase;
 		white-space: nowrap;
 	}
@@ -189,11 +188,15 @@
 		text-decoration-color: currentColor;
 	}
 	.faces {
-		grid-column: 7 / -1;
+		grid-column: 8 / -1;
 		display: grid;
-		grid-template-columns: repeat(6, minmax(0, 1fr));
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: 6px;
 		list-style: none;
+	}
+	/* three of the season's most followed covers stand beside the name, the height of the head */
+	.faces li:nth-child(n + 4) {
+		display: none;
 	}
 	.faces a,
 	.faces .blank {
@@ -236,26 +239,32 @@
 		padding-block: 12px;
 		background: var(--color-bg);
 	}
+	/* the formats as a line of text links, each with its count in pencil */
 	.jump {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 8px;
+		gap: 4px var(--space-3);
 	}
 	.chip {
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-		min-height: 36px;
-		padding: 0 14px;
-		background: var(--color-accent-50);
-		color: var(--color-accent-text);
+		min-height: 44px;
 		font-size: var(--text-small);
 		font-weight: 600;
-		transition: background-color var(--t-ui) var(--ease-out);
+		text-decoration: underline;
+		text-decoration-color: transparent;
+		text-underline-offset: 0.3em;
+		text-decoration-thickness: 2px;
+		transition: text-decoration-color var(--t-ui) var(--ease-out);
+	}
+	.chip .tabular {
+		color: var(--color-muted);
+		font-weight: 400;
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.chip:hover {
-			background: var(--color-accent-100);
+			text-decoration-color: currentColor;
 		}
 	}
 	.sort label {
@@ -265,12 +274,16 @@
 		font-size: var(--text-small);
 		font-weight: 600;
 	}
+	/* the sort sits on a hairline, not in a box */
 	select {
-		min-height: 36px;
+		min-height: 44px;
 		padding-block: 0;
+		padding-left: 0;
 		border: 0;
-		background-color: var(--color-raised);
+		border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+		background-color: transparent;
 		font-size: var(--text-small);
+		font-weight: 600;
 	}
 	/* on a phone the chips wrap to two rows: too much to keep pinned over the grid */
 	@media (max-width: 720px) {
@@ -290,15 +303,10 @@
 	.group + .group {
 		margin-top: var(--section);
 	}
-	h2 {
-		margin-bottom: var(--space-3);
-		font-size: var(--text-section);
-		font-weight: 800;
-		letter-spacing: -0.02em;
-	}
 	.count {
 		color: var(--color-muted);
 		font-weight: 400;
+		letter-spacing: -0.03em;
 	}
 	.empty {
 		padding-block: 48px;

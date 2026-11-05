@@ -5,9 +5,9 @@
 @theme {
 	--font-sans: 'Schibsted Grotesk', 'Noto Sans Thai', system-ui, sans-serif;
 
-	--color-bg: #dedad3;
-	--color-surface: #d3cec6;
-	--color-raised: #ebe8e3;
+	--color-bg: #e7e4de;
+	--color-surface: #dbd7d0;
+	--color-raised: #f3f1ed;
 	--color-ink-raised: #1f1f1f;
 	--color-ink: #0a0a0a;
 	--color-muted: #5c5852;
@@ -95,6 +95,9 @@
 	--space-5: 64px;
 	--space-6: 96px;
 	--section: clamp(72px, 4rem + 4vw, 128px);
+	/* the two weights of line: a heavy rule opens a chapter, a hairline divides the rows in it */
+	--rule: 2px;
+	--hairline: color-mix(in srgb, currentColor 12%, transparent);
 }
 
 @layer components {
@@ -156,6 +159,146 @@
 	.tabular {
 		font-variant-numeric: tabular-nums;
 	}
+	/*
+	 * the poster head: one heavy cut at poster scale, for the title a hero or page is about. It steps
+	 * down with the length of the title (headSize() in text.ts), so a long name holds to three lines.
+	 */
+	.poster-head {
+		font-weight: 800;
+		letter-spacing: -0.05em;
+		line-height: 0.9;
+		text-wrap: balance;
+		overflow-wrap: anywhere;
+	}
+	.poster-head.t-xl {
+		font-size: clamp(3rem, 1rem + 7.5vw, 9rem);
+		letter-spacing: -0.055em;
+	}
+	.poster-head.t-l {
+		font-size: clamp(2.75rem, 1rem + 5.4vw, 6.5rem);
+	}
+	.poster-head.t-m {
+		font-size: clamp(2.25rem, 1rem + 3.8vw, 4.75rem);
+		letter-spacing: -0.045em;
+	}
+	.poster-head.t-s {
+		font-size: clamp(2rem, 1rem + 2.8vw, 3.5rem);
+		letter-spacing: -0.04em;
+	}
+	/* a page's own name (a season, the list) at poster scale; it never wraps */
+	.page-head {
+		font-size: clamp(3rem, 0.5rem + 7.4vw, 9rem);
+		font-weight: 800;
+		letter-spacing: -0.05em;
+		line-height: 0.92;
+	}
+	@media (max-width: 900px) {
+		.poster-head.t-xl {
+			font-size: clamp(2.75rem, 13vw, 6rem);
+		}
+		.poster-head.t-l {
+			font-size: clamp(2.25rem, 10vw, 5rem);
+		}
+		.poster-head.t-m {
+			font-size: clamp(2rem, 8vw, 4rem);
+		}
+		.poster-head.t-s {
+			font-size: clamp(1.75rem, 6.5vw, 3rem);
+		}
+		.page-head {
+			font-size: clamp(2.75rem, 12.5vw, 6rem);
+		}
+	}
+
+	/*
+	 * a chapter: how every section opens. A heavy rule across the content width, the head at the
+	 * left, and the matter beside it (split) or under it (wide, for grids and strips that need the
+	 * full width, with an aside such as controls at the right of the head).
+	 */
+	.chapter {
+		display: grid;
+		grid-template-columns: repeat(12, minmax(0, 1fr));
+		column-gap: var(--gutter);
+		row-gap: var(--space-3);
+		padding-top: var(--space-3);
+		border-top: var(--rule) solid currentColor;
+	}
+	.chapter-head {
+		grid-column: 1 / 5;
+		align-self: start;
+		font-size: var(--text-head);
+		font-weight: 800;
+		letter-spacing: -0.045em;
+		line-height: 1;
+		text-wrap: balance;
+	}
+	/* beside matter that runs long, the head holds its place */
+	.chapter-head.holds {
+		position: sticky;
+		top: calc(var(--bar-shown, var(--nav-h)) + var(--space-3));
+	}
+	.chapter-matter {
+		grid-column: 5 / -1;
+		min-width: 0;
+	}
+	.chapter.wide .chapter-head {
+		grid-column: 1 / 9;
+	}
+	.chapter-aside {
+		grid-column: 9 / -1;
+		align-self: end;
+		justify-self: end;
+	}
+	.chapter.wide .chapter-matter {
+		grid-column: 1 / -1;
+		margin-top: var(--space-2);
+	}
+	/* a quiet line under the head: what the section holds, at reading size */
+	.chapter-lead {
+		grid-column: 1 / 5;
+		max-width: 40ch;
+		color: var(--color-muted);
+	}
+	@media (max-width: 900px) {
+		.chapter {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.chapter-head,
+		.chapter.wide .chapter-head,
+		.chapter-matter,
+		.chapter.wide .chapter-matter,
+		.chapter-lead,
+		.chapter-aside {
+			grid-column: 1;
+		}
+		.chapter-head.holds {
+			position: static;
+		}
+		.chapter-aside {
+			justify-self: start;
+		}
+	}
+	/*
+	 * the save mark over a cover: with a mouse, an unsaved mark waits until the card is pointed at or
+	 * focused, so a wall of posters is not a wall of buttons. A saved mark always shows.
+	 */
+	@media (hover: hover) and (pointer: fine) {
+		.save-slot {
+			transition: opacity var(--t-ui) var(--ease-out);
+		}
+		.save-slot:has(.icon:not(.saved)) {
+			opacity: var(--reveal, 0);
+		}
+		:hover > .save-slot,
+		.save-slot:focus-within {
+			--reveal: 1;
+		}
+	}
+	/* the rule between rows of a table: no boxes, only the lines a timetable needs */
+	.hairline {
+		border-bottom: 1px solid var(--hairline);
+	}
+
 	/* a block holding the place of something AniList hasn't sent yet; --ghost sets its tone on a tinted ground */
 	.ghost {
 		display: block;

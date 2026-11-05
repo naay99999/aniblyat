@@ -45,7 +45,7 @@
 <div class="page capped screen">
 	<header class="head">
 		<div class="words">
-			<h1 class="display">{m.seasons_title()}</h1>
+			<h1 class="page-head">{m.seasons_title()}</h1>
 			<p class="lead">{m.seasons_lead()}</p>
 		</div>
 		<a href={seasonHref(current)} class="now">
@@ -116,7 +116,7 @@
 		gap: 24px;
 	}
 	h1 {
-		font-size: var(--text-head);
+		line-height: 1.02;
 	}
 	.lead {
 		max-width: 34ch;
@@ -132,20 +132,16 @@
 		grid-template-columns: 1fr auto;
 		align-items: end;
 		gap: 8px 16px;
-		min-height: 260px;
-		padding: 28px;
-		background: var(--color-accent);
-		color: var(--color-accent-ink);
-		transition:
-			background-color var(--t-ui) var(--ease-out),
-			transform var(--t-press) var(--ease-out);
+		padding-top: var(--space-3);
+		border-top: var(--rule) solid currentColor;
+		transition: transform var(--t-press) var(--ease-out);
 	}
 	.now:active {
 		transform: scale(0.99);
 	}
 	@media (hover: hover) and (pointer: fine) {
-		.now:hover {
-			background: var(--color-accent-text);
+		.now:hover .now-name {
+			color: var(--color-accent-text);
 		}
 		.now:hover .arrow {
 			transform: translateX(8px);
@@ -167,15 +163,18 @@
 	.now-label {
 		grid-column: 1 / -1;
 		align-self: start;
-		font-size: var(--text-lead);
+		font-size: var(--text-small);
 		font-weight: 600;
+		color: var(--color-muted);
 	}
 	.now-name {
+		transition: color var(--t-ui) var(--ease-out);
 		font-size: clamp(2.5rem, 1.6rem + 2.6vw, 4.25rem);
 		text-transform: uppercase;
 		white-space: nowrap;
 	}
 	.arrow {
+		color: var(--color-accent-text);
 		font-size: var(--text-head);
 		font-weight: 600;
 		line-height: 1;
@@ -188,11 +187,12 @@
 		overflow: hidden;
 		clip-path: inset(50%);
 	}
+	/* the years as a timetable: a heavy rule opens it, hairlines divide the years */
 	.years {
 		list-style: none;
-		margin-top: 120px;
+		margin-top: var(--section);
 		display: grid;
-		gap: 4px;
+		border-top: var(--rule) solid currentColor;
 	}
 	.year {
 		display: grid;
@@ -200,6 +200,7 @@
 		align-items: center;
 		gap: 16px;
 		padding-block: 10px;
+		border-bottom: 1px solid var(--hairline);
 	}
 	h2 {
 		font-size: clamp(28px, 3vw, 48px);
@@ -218,7 +219,6 @@
 		gap: 8px;
 		min-height: 56px;
 		padding: 0 14px;
-		background: var(--color-raised);
 		font-weight: 600;
 		transition:
 			background-color var(--t-ui) var(--ease-out),
@@ -236,7 +236,7 @@
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.season:not(.current):hover {
-			background: var(--color-accent-100);
+			background: var(--color-accent-50);
 		}
 	}
 	@media (max-width: 900px) {
@@ -247,13 +247,6 @@
 		.words,
 		.now {
 			grid-column: 1;
-		}
-		.now {
-			min-height: 180px;
-			padding: 20px;
-		}
-		.years {
-			margin-top: 72px;
 		}
 	}
 	@media (max-width: 720px) {

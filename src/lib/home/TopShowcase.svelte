@@ -6,7 +6,6 @@
 	import { reveal } from '../actions/reveal';
 	import AiringBadge from '../components/AiringBadge.svelte';
 	import SaveButton from '../components/SaveButton.svelte';
-	import { inkOn } from '../color';
 	import { animePath } from '../paths';
 	import { displayTitle, formatLabel } from '../text';
 
@@ -191,9 +190,9 @@
 {/snippet}
 
 <section class="top" aria-labelledby="top-title">
-	<div class="stage page" bind:this={stage}>
+	<div class="stage page capped" bind:this={stage}>
 		<header class="intro" bind:this={intro}>
-			<h2 id="top-title" use:reveal>{m.home_top_title()}</h2>
+			<h2 id="top-title" class="chapter-head" use:reveal>{m.home_top_title()}</h2>
 			<p use:reveal={1}>{m.home_top_lead()}</p>
 		</header>
 
@@ -267,18 +266,11 @@
 			</ol>
 
 			{#if current}
-				{@const ground = current.coverImage?.color ?? null}
 				<!-- a small stable live region: only the pick is announced, not the whole card -->
 				<p class="sr-only" aria-live="polite" aria-atomic="true">
 					{displayTitle(current.title ?? {})}, {m.home_top_rank({ rank: String(picked + 1) })}
 				</p>
-				<article
-					id="top-feature"
-					class="feature"
-					bind:this={feature}
-					style:background-color={ground ?? 'var(--color-ink)'}
-					style:color={ground ? inkOn(ground) : 'var(--color-bg)'}
-				>
+				<article id="top-feature" class="feature" bind:this={feature}>
 					<!-- the card stays; the title on it fades out where it stands while the next one settles in -->
 					{#key current.id}
 						<div class="feature-body" out:fade={{ duration: 150, easing: cubicOut }}>
@@ -337,21 +329,19 @@
 		overflow: hidden;
 		clip-path: inset(50%);
 	}
+	/* the chapter's rule runs over the ranks only: the card at the right is its own cover-coloured block */
 	.intro {
 		grid-column: 1 / 6;
 		grid-row: 1;
 		display: grid;
-		gap: var(--space-1);
+		gap: var(--space-2);
 		margin-bottom: var(--space-4);
-	}
-	.intro h2 {
-		font-size: var(--text-section);
-		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.1;
+		padding-top: var(--space-3);
+		border-top: var(--rule) solid currentColor;
 	}
 	.intro p {
 		max-width: 52ch;
+		color: var(--color-muted);
 	}
 	.stage {
 		display: grid;
@@ -367,9 +357,12 @@
 		grid-row: 2;
 		position: relative;
 		display: grid;
-		gap: 2px;
 		list-style: none;
 		letter-spacing: -0.01em;
+	}
+	/* a timetable of ranks: hairlines between the rows, the picked one filled */
+	.ranks > li {
+		border-bottom: 1px solid var(--hairline);
 	}
 	.row {
 		position: relative;
@@ -378,6 +371,7 @@
 		align-items: baseline;
 		gap: var(--space-2);
 		width: 100%;
+		min-height: 48px;
 		padding: 10px 12px;
 		text-align: left;
 		color: var(--color-muted);
@@ -412,7 +406,6 @@
 		white-space: nowrap;
 	}
 	.rank {
-		color: var(--color-accent-text);
 		font-weight: 600;
 	}
 	@media (hover: hover) and (pointer: fine) {
@@ -426,14 +419,12 @@
 	.inline {
 		display: none;
 	}
+	/* the picked title on the paper: its banner and cover carry the colour, the card itself has none */
 	.feature {
-		grid-column: 6 / -1;
+		grid-column: 7 / -1;
 		grid-row: 1 / span 2;
 		display: grid;
 		overflow: hidden;
-		transition:
-			background-color var(--t-scene) var(--ease-out),
-			color var(--t-scene) var(--ease-out);
 	}
 	.feature-body {
 		grid-area: 1 / 1;
@@ -468,7 +459,7 @@
 		display: grid;
 		grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
 		gap: var(--space-4);
-		padding: var(--space-4);
+		padding-top: var(--space-4);
 	}
 	.poster img {
 		width: 100%;
@@ -490,15 +481,16 @@
 	.name {
 		font-size: var(--text-title);
 		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.05;
+		letter-spacing: -0.04em;
+		line-height: 1;
+		text-wrap: balance;
 	}
 	.big-score {
 		margin-block: var(--space-2) var(--space-1);
-		font-size: clamp(2.5rem, 1.8rem + 2vw, 3.75rem);
+		font-size: clamp(3rem, 1.8rem + 3vw, 5.5rem);
 		font-weight: 800;
-		letter-spacing: -0.05em;
-		line-height: 0.9;
+		letter-spacing: -0.06em;
+		line-height: 0.85;
 	}
 	.big-score span {
 		font-size: 0.3em;
@@ -559,9 +551,6 @@
 		.row.on {
 			background: var(--color-ink);
 			color: var(--color-bg);
-		}
-		.row.on .rank {
-			color: var(--color-accent-200);
 		}
 		.inline {
 			display: grid;

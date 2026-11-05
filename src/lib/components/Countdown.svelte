@@ -39,15 +39,13 @@
 {/if}
 
 <style>
+	/* a departure board, not four buttons: figures on the ground, hairlines between them */
 	.countdown {
 		display: grid;
 		grid-template-columns: repeat(4, minmax(0, 1fr));
-		gap: 8px;
 	}
 	.aired {
 		display: block;
-		padding: 0.3em 0.4em;
-		background: color-mix(in srgb, currentColor 10%, transparent);
 		font-size: var(--countdown-size, clamp(2rem, 1.5rem + 2vw, 3.5rem));
 		font-weight: 800;
 		letter-spacing: -0.04em;
@@ -55,19 +53,24 @@
 	}
 	.cell {
 		display: grid;
-		justify-items: center;
-		gap: 4px;
-		padding: 0.18em 0 0.3em;
-		background: color-mix(in srgb, currentColor 10%, transparent);
+		justify-items: start;
+		gap: 6px;
+		padding-inline: var(--space-2);
+		border-left: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+	}
+	.cell:first-child {
+		padding-left: 0;
+		border-left: 0;
 	}
 	.value {
 		font-size: var(--countdown-size, clamp(2rem, 1.5rem + 2vw, 3.5rem));
 		font-weight: 800;
-		letter-spacing: -0.04em;
-		line-height: 1;
+		letter-spacing: -0.05em;
+		line-height: 0.9;
 	}
 	.unit {
 		font-size: var(--text-small);
 		font-weight: 600;
+		opacity: 0.72;
 	}
 </style>

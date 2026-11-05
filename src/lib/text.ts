@@ -61,3 +61,10 @@ export function formatLabel(format: string | null | undefined): string | null {
 	if (!format) return null;
 	return FORMATS[format] ?? format.replaceAll('_', ' ');
 }
+
+/** The poster head's size step for a title, so a long name still holds to about three lines. */
+export type HeadSize = 'xl' | 'l' | 'm' | 's';
+export function headSize(title: string): HeadSize {
+	const n = title.length;
+	return n <= 18 ? 'xl' : n <= 36 ? 'l' : n <= 60 ? 'm' : 's';
+}

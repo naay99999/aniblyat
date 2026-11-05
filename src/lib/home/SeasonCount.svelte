@@ -14,13 +14,15 @@
 	}: { season: Season; items: MediaCard[] | undefined; failed?: boolean } = $props();
 
 	const count = $derived(items?.length);
-	// the wall shows the season's most followed titles; the link carries the rest
-	const wall = $derived((items ?? []).filter((i) => i.coverImage?.large).slice(0, 40));
+	// a short wall of the season's most followed titles; the link carries the rest
+	const wall = $derived((items ?? []).filter((i) => i.coverImage?.large).slice(0, 16));
 </script>
 
-<section class="count page" aria-labelledby="count-title">
+<section class="count page capped" aria-labelledby="count-title">
+	<div class="chapter wide">
+		<h2 id="count-title" class="chapter-head" use:reveal>{m.home_count_title()}</h2>
+	</div>
 	<div class="words">
-		<h2 id="count-title" class="claim" use:reveal>{m.home_count_title()}</h2>
 		<p class="figure display tabular" use:reveal={1}>
 			{#if count == null && failed}
 				<span class="unavailable">{m.home_count_unavailable()}</span>
@@ -35,7 +37,9 @@
 		</p>
 		{#if count}
 			<p use:reveal={3}>
-				<a href={seasonHref(season)} class="btn">{m.home_count_more({ count: String(count) })}</a>
+				<a href={seasonHref(season)} class="btn btn-ink"
+					>{m.home_count_more({ count: String(count) })}</a
+				>
 			</p>
 		{/if}
 	</div>
@@ -54,7 +58,7 @@
 				</a>
 			</li>
 		{:else}
-			{#each { length: 24 }, i (i)}
+			{#each { length: 16 }, i (i)}
 				<li class="blank"></li>
 			{/each}
 		{/each}
@@ -62,35 +66,30 @@
 </section>
 
 <style>
+	/* the season's size as one figure, beside a short wall of its covers */
 	.count {
 		display: grid;
 		grid-template-columns: repeat(12, minmax(0, 1fr));
 		column-gap: var(--gutter);
+		row-gap: var(--space-5);
 		align-items: end;
-		padding-block: calc(var(--section) * 1.25);
-		background: var(--color-ink);
-		color: var(--color-bg);
-		/* the wall's blank tone: ink lifted a little toward white */
-		--tile: color-mix(in srgb, var(--color-ink) 88%, white);
+		padding-top: var(--section);
+		--tile: var(--color-surface);
 	}
 	/* mirrored against the Top 10 split that follows: pictures left, figure right */
+	.chapter {
+		grid-column: 1 / -1;
+	}
 	.words {
 		grid-column: 9 / -1;
-		grid-row: 1;
+		grid-row: 2;
 		display: grid;
 		gap: 24px;
 		justify-items: start;
 	}
-	.claim {
-		font-size: var(--text-head);
-		font-weight: 800;
-		letter-spacing: -0.04em;
-		line-height: 1;
-	}
 	.figure {
 		font-size: clamp(140px, 13vw, 220px);
-		/* the glyph box spills ~0.2em above a 0.8 line box; keep it off the heading */
-		margin-top: 0.12em;
+		letter-spacing: -0.06em;
 		line-height: 0.8;
 		min-height: 0.8em;
 	}
@@ -125,7 +124,7 @@
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.figure a:hover {
-			color: var(--color-accent-200);
+			color: var(--color-accent-text);
 		}
 	}
 	sup {
@@ -139,10 +138,11 @@
 	.caption {
 		max-width: 36ch;
 		font-size: var(--text-body);
+		color: var(--color-muted);
 	}
 	.wall {
 		grid-column: 1 / 9;
-		grid-row: 1;
+		grid-row: 2;
 		display: grid;
 		grid-template-columns: repeat(8, minmax(0, 1fr));
 		gap: 6px;
@@ -177,6 +177,7 @@
 			grid-template-columns: minmax(0, 1fr);
 			row-gap: 48px;
 		}
+		.chapter,
 		.words,
 		.wall {
 			grid-column: 1;
@@ -189,7 +190,7 @@
 			grid-template-columns: repeat(6, minmax(0, 1fr));
 			gap: 4px;
 		}
-		.wall li:nth-child(n + 25) {
+		.wall li:nth-child(n + 13) {
 			display: none;
 		}
 	}

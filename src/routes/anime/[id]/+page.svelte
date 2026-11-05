@@ -14,7 +14,7 @@
 	import { heroGround, inkOn } from '#lib/color.js';
 	import { animePath, homePath, seasonHref } from '#lib/paths.js';
 	import { seasonLabel } from '#lib/season.js';
-	import { displayTitle, formatLabel, stripHtml } from '#lib/text.js';
+	import { displayTitle, formatLabel, headSize, stripHtml } from '#lib/text.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -37,10 +37,7 @@
 	// the hero's picture: the wide banner, or the whole cover for a title without one
 	const art = $derived(media?.coverImage?.extraLarge ?? null);
 	const status = $derived(media ? airingStatus(media, clock.now) : null);
-	// the headline steps down as the title grows, so it holds to two lines
-	const titleSize = $derived(
-		title.length <= 18 ? 'xl' : title.length <= 36 ? 'l' : title.length <= 60 ? 'm' : 's'
-	);
+	const titleSize = $derived(headSize(title));
 	// a second title line is only worth showing when it says something the headline doesn't
 	const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
 	const altTitles = $derived(
@@ -128,8 +125,10 @@
 			? formatFuzzyDate(status.startDate)
 			: null
 	);
-	// a few relations read as a short list beside the facts; many get their own wall
+	// a few relations read as a short list; many get a wall of posters
 	const fewRelated = $derived(related.length > 0 && related.length <= 3);
+	// a long synopsis steps down from lead to body size so it stays a comfortable read
+	const longSynopsis = $derived((synopsis?.length ?? 0) > 700);
 </script>
 
 <svelte:head><title>{title ? `${title} · aniblyat` : 'aniblyat'}</title></svelte:head>
@@ -137,12 +136,14 @@
 {#snippet waiting()}
 	<!-- the hero's own shape while AniList answers, so the page doesn't jump when it does -->
 	<section class="hero page waiting" role="status" aria-label={m.loading()}>
-		<div class="words">
-			<span class="title-block block"></span>
-			<span class="line-block block"></span>
+		<div class="sheet">
 			<span class="line-block short block"></span>
+			<div class="words">
+				<span class="title-block block"></span>
+				<span class="title-block shorter block"></span>
+			</div>
+			<div class="foot"><span class="action-block block"></span></div>
 		</div>
-		<div class="now"><span class="action-block block"></span></div>
 		<div class="art"><span class="art-block block"></span></div>
 	</section>
 {/snippet}
@@ -181,6 +182,10 @@
 		</section>
 	{:else}
 		<article>
+			<!--
+			 the poster: a sheet of type on the cover's own deep hue, and the cover itself as a hard-edged
+			 panel at the right. The title is the head; everything else is set small around it.
+			-->
 			<section
 				class="hero page"
 				class:no-art={!art}
@@ -191,58 +196,65 @@
 				use:barTint={{ bg: ground, ink }}
 				aria-labelledby="anime-title"
 			>
-				<header class="words">
-					<h1 id="anime-title" class="title t-{titleSize}">{title}</h1>
-					{#each altTitles as alt (alt)}
-						<p class="alt" lang={alt === media.title?.native ? 'ja' : undefined}>{alt}</p>
-					{/each}
-					{#if glance.length}<p class="glance">{glance.join(' · ')}</p>{/if}
-					{#if media.genres?.length}
-						<p class="genres">
-							<span class="sr-only">{m.detail_genres()}:</span>
-							{media.genres.join(' · ')}
-						</p>
-					{/if}
-				</header>
-
-				{#if media.averageScore != null}
-					<div class="rating">
-						<p class="score tabular">{media.averageScore}<span>/100</span></p>
-						<p class="note">{m.detail_score_note()}</p>
-					</div>
-				{:else if opening}
-					<div class="rating">
-						<p class="score opening">{opening}</p>
-						<p class="note">{m.detail_start()}</p>
-					</div>
-				{/if}
-
-				<div class="now">
-					{#if status?.kind === 'next'}
-						<p class="airs">
-							{m.home_hero_airs({
-								episode: String(status.episode),
-								time: formatAirTime(status.airingAt)
-							})}
-						</p>
-						<Countdown airingAt={status.airingAt} />
-					{:else if status && !opening}
-						<p class="state">{statusLabel(status)}</p>
-					{/if}
-					<div class="actions">
-						<SaveButton
-							item={{ id: media.id, title, cover: media.coverImage?.large ?? null }}
-							variant="button"
-						/>
-						{#if trailerId}
-							<a href="#trailer" class="link more">{m.detail_watch_trailer()}</a>
-						{/if}
+				<div class="sheet">
+					<p class="kicker">
 						{#if media.season && media.seasonYear}
 							<a
-								class="link more"
+								class="link season"
 								href={seasonHref({ season: media.season, year: media.seasonYear })}
 								>{seasonLabel({ season: media.season, year: media.seasonYear })}</a
 							>
+						{/if}
+						{#each glance as item (item)}<span>{item}</span>{/each}
+					</p>
+
+					<header class="words">
+						<h1 id="anime-title" class="poster-head t-{titleSize}">{title}</h1>
+						{#each altTitles as alt (alt)}
+							<p class="alt" lang={alt === media.title?.native ? 'ja' : undefined}>{alt}</p>
+						{/each}
+						{#if media.genres?.length}
+							<p class="genres">
+								<span class="sr-only">{m.detail_genres()}:</span>
+								{media.genres.join(' · ')}
+							</p>
+						{/if}
+					</header>
+
+					<div class="foot">
+						<div class="now">
+							{#if status?.kind === 'next'}
+								<p class="airs">
+									{m.home_hero_airs({
+										episode: String(status.episode),
+										time: formatAirTime(status.airingAt)
+									})}
+								</p>
+								<Countdown airingAt={status.airingAt} />
+							{:else if status && !opening}
+								<p class="state">{statusLabel(status)}</p>
+							{/if}
+							<div class="actions">
+								<SaveButton
+									item={{ id: media.id, title, cover: media.coverImage?.large ?? null }}
+									variant="button"
+								/>
+								{#if trailerId}
+									<a href="#trailer" class="link more">{m.detail_watch_trailer()}</a>
+								{/if}
+							</div>
+						</div>
+
+						{#if media.averageScore != null}
+							<div class="rating">
+								<p class="score tabular">{media.averageScore}<span>/100</span></p>
+								<p class="note">{m.detail_score_note()}</p>
+							</div>
+						{:else if opening}
+							<div class="rating">
+								<p class="score opening">{opening}</p>
+								<p class="note">{m.detail_start()}</p>
+							</div>
 						{/if}
 					</div>
 				</div>
@@ -271,67 +283,75 @@
 				</div>
 			{/if}
 
+			<!-- the body reads as rows of an editorial page: a heavy rule, the head at left, the matter at right -->
 			<div class="page capped body">
-				{#if synopsis || fewRelated}
-					<div class="lead-col">
-						{#if synopsis}
-							<section class="synopsis" aria-labelledby="synopsis-title">
-								<h2 id="synopsis-title" use:reveal>{m.detail_synopsis()}</h2>
-								<p lang="en" use:reveal={1}>{synopsis}</p>
-							</section>
-						{/if}
-						{#if fewRelated}
-							<section aria-labelledby="related-title">
-								<h2 id="related-title" use:reveal>{m.detail_related()}</h2>
-								{@render relatedList('rows', related)}
-							</section>
-						{/if}
-					</div>
+				{#if synopsis}
+					<section class="chapter" aria-labelledby="synopsis-title">
+						<h2 id="synopsis-title" class="chapter-head holds" use:reveal>{m.detail_synopsis()}</h2>
+						<div class="chapter-matter">
+							<!-- pre-line keeps AniList's paragraph breaks, so no whitespace around the text -->
+							<!-- prettier-ignore -->
+							<p class="synopsis" class:long={longSynopsis} lang="en" use:reveal={1}>{synopsis}</p>
+						</div>
+					</section>
 				{/if}
 
-				<section class="info" class:alone={!synopsis && !fewRelated} aria-labelledby="facts-title">
-					<h2 id="facts-title" use:reveal>{m.detail_facts()}</h2>
-					<dl class="facts" use:reveal={1}>
-						{#each facts as [label, value] (label)}
-							<div>
-								<dt>{label}</dt>
-								<dd class="tabular">{value}</dd>
-							</div>
-						{/each}
-					</dl>
-				</section>
-			</div>
-
-			{#if trailerId}
-				<section id="trailer" class="trailer page capped" aria-labelledby="trailer-title">
-					<h2 id="trailer-title" use:reveal>{m.detail_trailer()}</h2>
-					<div class="frame" use:reveal={1}>
-						<iframe
-							src="https://www.youtube-nocookie.com/embed/{trailerId}"
-							title="{m.detail_trailer()} · {title}"
-							loading="lazy"
-							allow="encrypted-media; picture-in-picture; fullscreen"
-						></iframe>
+				<section class="chapter" aria-labelledby="facts-title">
+					<h2 id="facts-title" class="chapter-head holds" use:reveal>{m.detail_facts()}</h2>
+					<div class="chapter-matter">
+						<dl class="facts" use:reveal={1}>
+							{#each facts as [label, value] (label)}
+								<div class="hairline">
+									<dt>{label}</dt>
+									<dd class="tabular">{value}</dd>
+								</div>
+							{/each}
+						</dl>
 					</div>
 				</section>
-			{/if}
 
-			{#if related.length && !fewRelated}
-				<section class="page capped related" aria-labelledby="related-title">
-					<h2 id="related-title" use:reveal>{m.detail_related()}</h2>
-					{@render relatedList('wall', showAllRelated ? related : related.slice(0, WALL_LIMIT))}
-					{#if related.length > WALL_LIMIT && !showAllRelated}
-						<button
-							type="button"
-							class="btn more-rel"
-							aria-expanded={showAllRelated}
-							onclick={() => (showAllRelated = true)}
-						>
-							{m.detail_related_all({ count: String(related.length) })}
-						</button>
-					{/if}
-				</section>
-			{/if}
+				{#if trailerId}
+					<section id="trailer" class="chapter" aria-labelledby="trailer-title">
+						<h2 id="trailer-title" class="chapter-head holds" use:reveal>{m.detail_trailer()}</h2>
+						<div class="chapter-matter">
+							<div class="frame" use:reveal={1}>
+								<iframe
+									src="https://www.youtube-nocookie.com/embed/{trailerId}"
+									title="{m.detail_trailer()} · {title}"
+									loading="lazy"
+									allow="encrypted-media; picture-in-picture; fullscreen"
+								></iframe>
+							</div>
+						</div>
+					</section>
+				{/if}
+
+				{#if related.length}
+					<section class="chapter" aria-labelledby="related-title">
+						<h2 id="related-title" class="chapter-head holds" use:reveal>{m.detail_related()}</h2>
+						<div class="chapter-matter">
+							{#if fewRelated}
+								{@render relatedList('rows', related)}
+							{:else}
+								{@render relatedList(
+									'wall',
+									showAllRelated ? related : related.slice(0, WALL_LIMIT)
+								)}
+								{#if related.length > WALL_LIMIT && !showAllRelated}
+									<button
+										type="button"
+										class="btn btn-ink more-rel"
+										aria-expanded={showAllRelated}
+										onclick={() => (showAllRelated = true)}
+									>
+										{m.detail_related_all({ count: String(related.length) })}
+									</button>
+								{/if}
+							{/if}
+						</div>
+					</section>
+				{/if}
+			</div>
 		</article>
 	{/if}
 </QueryState>
@@ -350,77 +370,71 @@
 		letter-spacing: -0.04em;
 	}
 
-	/* the hero: a deep ground in the cover's hue, the banner filling the right and fading into it */
+	/* ---- the poster ---- */
 	.hero {
-		position: relative;
-		overflow: hidden;
 		display: grid;
 		grid-template-columns: repeat(12, minmax(0, 1fr));
-		grid-template-rows: auto minmax(0, 1fr) auto;
 		column-gap: var(--gutter);
-		row-gap: 40px;
 		min-height: min(100svh, 920px);
 		margin-top: calc(-1 * var(--nav-h));
-		padding-top: calc(var(--nav-h) + 16px);
-		padding-bottom: 32px;
+		padding-top: var(--nav-h);
 	}
-	.words,
-	.rating,
-	.now {
-		position: relative;
-		z-index: 1;
-	}
-	.words {
-		grid-column: 1 / 7;
+	.sheet {
+		grid-column: 1 / 8;
+		grid-row: 1;
 		display: grid;
-		gap: 10px;
-		align-content: start;
+		grid-template-rows: auto minmax(0, 1fr) auto;
+		row-gap: var(--space-4);
+		padding-block: var(--space-3) var(--space-4);
 	}
-	.title {
-		margin-bottom: 8px;
-		font-weight: 800;
-		letter-spacing: -0.04em;
-		line-height: 0.98;
+	.no-art .sheet {
+		grid-column: 1 / -1;
 	}
-	.t-xl {
-		font-size: var(--text-head);
-		letter-spacing: -0.05em;
-		line-height: 0.92;
-	}
-	.t-l {
-		font-size: calc(var(--text-head) * 0.8);
-	}
-	.t-m {
-		font-size: var(--text-title);
-	}
-	.t-s {
-		font-size: var(--text-lead);
-	}
-	.alt {
-		font-size: var(--text-body);
-		font-weight: 500;
-	}
-	.glance {
-		margin-top: 12px;
-		font-size: var(--text-lead);
-		font-weight: 700;
-		letter-spacing: -0.02em;
-	}
-	.genres {
+
+	/* small type around the head, in fixed runs rather than a dotted sentence */
+	.kicker {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px var(--space-3);
+		font-size: var(--text-small);
 		font-weight: 600;
 	}
-	.rating {
-		grid-column: 1 / 7;
-		grid-row: 2;
-		align-self: center;
+	.season {
+		text-decoration-color: currentColor;
+	}
+
+	.words {
+		display: grid;
+		gap: var(--space-2);
+		align-content: center;
+	}
+	.alt {
+		max-width: 48ch;
+		font-size: var(--text-body);
+		font-weight: 500;
+		opacity: 0.78;
+	}
+	.genres {
+		margin-top: var(--space-1);
+		font-size: var(--text-small);
+		font-weight: 600;
+	}
+
+	/* the foot of the poster: one heavy rule, the clock at left, the score as a second, smaller head */
+	.foot {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		column-gap: var(--space-4);
+		row-gap: var(--space-3);
+		align-items: end;
+		padding-top: var(--space-3);
+		border-top: 3px solid currentColor;
+		--countdown-size: clamp(1.75rem, 0.8rem + 2.2vw, 3rem);
 	}
 	.now {
-		grid-column: 1 / 7;
-		grid-row: 3;
-		align-self: end;
 		display: grid;
-		gap: 20px;
-		max-width: 680px;
+		gap: var(--space-2);
+		max-width: 560px;
 	}
 	.airs {
 		font-weight: 600;
@@ -435,7 +449,8 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 12px 24px;
+		gap: 12px var(--space-3);
+		margin-top: var(--space-1);
 	}
 	.actions :global(.btn) {
 		background: var(--hero-ink);
@@ -455,46 +470,62 @@
 		font-weight: 600;
 		text-decoration-color: currentColor;
 	}
-	/*
-	 * the whole cover, full height at the right edge, fading into the ground on its left: a banner
-	 * is too wide for this box and would show only its middle third
-	 */
+	.rating {
+		text-align: right;
+	}
+	.score {
+		font-size: clamp(4rem, 2rem + 5vw, 7.5rem);
+		font-weight: 800;
+		letter-spacing: -0.06em;
+		line-height: 0.8;
+	}
+	.score.opening {
+		font-size: clamp(2.25rem, 1.4rem + 2.6vw, 4rem);
+		letter-spacing: -0.04em;
+	}
+	.score span {
+		font-size: 0.22em;
+		letter-spacing: -0.02em;
+		margin-left: 0.1em;
+	}
+	.note {
+		margin-top: var(--space-1);
+		font-size: var(--text-small);
+		font-weight: 600;
+	}
+
+	/* the cover as a hard-edged panel, bled off the top, right and bottom edges */
 	.art {
-		position: absolute;
-		inset: var(--nav-h) 0 0 30%;
+		position: relative;
+		grid-column: 8 / -1;
+		grid-row: 1;
+		margin-right: calc(-1 * var(--gutter));
+		min-height: 0;
+		overflow: hidden;
 	}
 	.art img {
-		display: block;
-		width: auto;
-		max-width: 100%;
+		position: absolute;
+		inset: 0;
+		width: 100%;
 		height: 100%;
-		margin-left: auto;
-		aspect-ratio: 2 / 3;
 		object-fit: cover;
-		-webkit-mask-image: linear-gradient(90deg, transparent, #000 35%);
-		mask-image: linear-gradient(90deg, transparent, #000 35%);
-	}
-	.no-art .words,
-	.no-art .rating,
-	.no-art .now {
-		grid-column: 1 / -1;
+		object-position: 50% 20%;
 	}
 	@media (prefers-reduced-motion: no-preference) {
+		.kicker,
 		.words,
-		.rating,
-		.now,
+		.foot,
 		.art img {
 			animation: arrive var(--t-scene) var(--ease-out) both;
 		}
-		.rating {
+		.words {
 			animation-delay: 60ms;
 		}
-		.now {
+		.foot {
 			animation-delay: 120ms;
 		}
 		.art img {
 			animation-name: unveil;
-			animation-duration: var(--t-scene);
 		}
 		/* the picked cover is already flying into place */
 		:global(html.vt-cover) .art img {
@@ -524,24 +555,24 @@
 		background: var(--color-bg);
 	}
 	.title-block {
-		width: 80%;
-		height: 0.9em;
-		font-size: var(--text-head);
+		width: 86%;
+		height: 0.8em;
+		font-size: clamp(2.75rem, 1rem + 5.4vw, 6.5rem);
+	}
+	.title-block.shorter {
+		width: 52%;
 	}
 	.line-block {
 		width: 40%;
 		height: 1.2em;
-		margin-top: 8px;
-	}
-	.line-block.short {
-		width: 26%;
 	}
 	.action-block {
 		width: 140px;
 		height: 44px;
 	}
 	.art-block {
-		height: 100%;
+		position: absolute;
+		inset: 0;
 		opacity: 0.6;
 	}
 	@media (prefers-reduced-motion: no-preference) {
@@ -592,98 +623,50 @@
 		}
 	}
 
+	/* ---- the editorial body ---- */
 	.body {
 		display: grid;
-		grid-template-columns: repeat(12, minmax(0, 1fr));
-		column-gap: var(--gutter);
-		row-gap: var(--space-5);
+		row-gap: var(--section);
 		padding-block: var(--section);
 	}
-	h2 {
-		margin-bottom: var(--space-3);
-		font-size: var(--text-section);
-		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.1;
+	.synopsis {
+		max-width: 36em;
+		font-size: var(--text-lead);
+		line-height: 1.45;
+		letter-spacing: -0.015em;
+		white-space: pre-line;
 	}
-	.lead-col {
-		grid-column: 1 / 8;
-		display: grid;
-		gap: var(--space-5);
-		align-content: start;
-	}
-	.synopsis p {
+	.synopsis.long {
 		max-width: 64ch;
 		font-size: var(--text-body);
 		line-height: 1.6;
-		white-space: pre-line;
 	}
-	.info {
-		grid-column: 9 / -1;
-	}
-	.info.alone {
-		grid-column: 1 / -1;
-		display: grid;
-		grid-template-columns: repeat(12, minmax(0, 1fr));
-		column-gap: var(--gutter);
-		align-items: start;
-	}
-	.info.alone h2 {
-		grid-column: 1 / -1;
-	}
-	.info.alone .facts {
-		grid-column: 1 / 9;
-	}
-	.score {
-		font-size: clamp(3.5rem, 2.4rem + 3.4vw, 6rem);
-		font-weight: 800;
-		letter-spacing: -0.05em;
-		line-height: 0.85;
-	}
-	.score.opening {
-		font-size: clamp(2.75rem, 1.8rem + 3vw, 5rem);
-		margin-top: 8px;
-	}
-	.score span {
-		font-size: 0.25em;
-		letter-spacing: -0.02em;
-		margin-left: 0.1em;
-	}
-	.note {
-		margin-top: 12px;
-		font-size: var(--text-small);
-		font-weight: 600;
-	}
+
+	/* facts as a two-column table of hairlines: no boxes, only the rules a timetable needs */
 	.facts {
 		display: grid;
-		gap: 4px;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		column-gap: var(--gutter);
 	}
 	.facts div {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-		gap: 16px;
-		padding: 12px 16px;
-		background: var(--color-raised);
+		grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+		gap: var(--space-2);
+		align-items: baseline;
+		padding-block: 14px;
 	}
 	dt {
 		font-size: var(--text-small);
 		font-weight: 600;
 		color: var(--color-muted);
-		align-self: center;
 	}
 	dd {
-		font-weight: 700;
+		font-weight: 600;
 	}
 
-	.trailer {
-		padding-block: var(--section);
-		background: var(--color-ink);
-		color: var(--color-bg);
-	}
 	.frame {
 		aspect-ratio: 16 / 9;
-		max-width: 1200px;
-		background: var(--color-ink-raised);
+		background: var(--color-ink);
 	}
 	.frame iframe {
 		width: 100%;
@@ -691,12 +674,9 @@
 		border: 0;
 	}
 
-	.related {
-		padding-block: var(--section);
-	}
 	.wall {
 		display: grid;
-		grid-template-columns: repeat(6, minmax(0, 1fr));
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 32px var(--gutter);
 		list-style: none;
 	}
@@ -709,25 +689,23 @@
 		gap: 4px;
 	}
 	.rows {
-		display: grid;
-		gap: 8px;
 		list-style: none;
 	}
 	.rows .rel {
-		grid-template-columns: 96px 1fr;
+		grid-template-columns: 72px 1fr;
 		align-items: center;
-		gap: 24px;
-		padding: 12px;
-		background: var(--color-raised);
-		transition: background-color var(--t-ui) var(--ease-out);
+		gap: var(--space-3);
+		padding-block: var(--space-2);
+		border-bottom: 1px solid var(--hairline);
+	}
+	.rows li:first-child .rel {
+		padding-top: 0;
 	}
 	.rows .rel-title {
-		letter-spacing: -0.01em;
-	}
-	@media (hover: hover) and (pointer: fine) {
-		.rows .rel:hover {
-			background: var(--color-surface);
-		}
+		font-size: var(--text-lead);
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		line-height: 1.2;
 	}
 	.thumb {
 		aspect-ratio: 2 / 3;
@@ -750,7 +728,7 @@
 	}
 	.rel-type {
 		font-size: var(--text-small);
-		color: var(--color-accent-text);
+		color: var(--color-muted);
 		font-weight: 600;
 	}
 	.rel-title {
@@ -770,67 +748,42 @@
 
 	@media (max-width: 900px) {
 		.hero {
-			/* the picture leads edge to edge and fades down; then the title, the clock and Save, the rating */
+			/* the cover leads edge to edge, then the sheet of type under it */
 			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: auto auto auto auto;
-			row-gap: 28px;
 			min-height: 0;
-			padding-top: var(--nav-h);
-			padding-bottom: 32px;
 		}
-		.words,
-		.rating,
-		.now {
-			grid-column: 1 / -1;
+		.sheet,
+		.no-art .sheet {
+			grid-column: 1;
+			grid-row: 2;
+			row-gap: var(--space-3);
+			padding-block: var(--space-3) var(--space-4);
 		}
 		.art {
-			position: relative;
-			inset: auto;
 			grid-column: 1;
 			grid-row: 1;
 			margin-inline: calc(-1 * var(--gutter));
-			margin-bottom: -28px;
-			height: min(56.25vw, 42svh);
+			aspect-ratio: 4 / 5;
+			max-height: 62svh;
 		}
-		.art img {
-			margin-inline: auto;
-			-webkit-mask-image: linear-gradient(#000 65%, transparent);
-			mask-image: linear-gradient(#000 65%, transparent);
+		.no-art .sheet {
+			grid-row: 1;
 		}
-		.no-art {
-			padding-top: calc(var(--nav-h) + 24px);
-		}
-		.words {
-			grid-row: 2;
-		}
-		.rating {
-			grid-row: 4;
-		}
-		.now {
-			grid-row: 3;
-			max-width: none;
+		.foot {
+			grid-template-columns: minmax(0, 1fr);
 			--countdown-size: clamp(1.75rem, 8vw, 2.75rem);
 		}
-		.t-xl {
-			font-size: clamp(2.25rem, 10vw, var(--text-head));
+		/* the clock still comes first; the score follows under a hairline */
+		.rating {
+			text-align: left;
+			padding-top: var(--space-3);
+			border-top: 1px solid color-mix(in srgb, currentColor 30%, transparent);
 		}
-		.glance {
-			font-size: var(--text-body);
+		.now {
+			max-width: none;
 		}
-		.body {
+		.facts {
 			grid-template-columns: minmax(0, 1fr);
-		}
-		.lead-col,
-		.info,
-		.info.alone {
-			grid-column: 1;
-		}
-		.info.alone {
-			display: block;
-		}
-		.rows .rel {
-			grid-template-columns: 72px 1fr;
-			gap: 16px;
 		}
 		.wall {
 			grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -71,11 +71,11 @@
 	}
 </script>
 
-<section class="lineup page" aria-labelledby="lineup-title">
-	<div class="top">
-		<h2 id="lineup-title" class="head" use:reveal>{m.home_airing_title()}</h2>
+<section class="lineup page capped" aria-labelledby="lineup-title">
+	<div class="top chapter wide">
+		<h2 id="lineup-title" class="chapter-head" use:reveal>{m.home_airing_title()}</h2>
 		{#if strip.length}
-			<div class="controls" use:reveal={1}>
+			<div class="controls chapter-aside" use:reveal={1}>
 				{#if starts.length > 1}
 					<ul class="days">
 						{#each starts as start (start.day)}
@@ -143,7 +143,9 @@
 						entry.media.coverImage?.extraLarge ?? entry.media.coverImage?.large ?? null}
 					<li class="slide" class:opens>
 						<!-- the mark is a sibling of the link, over the cover's corner: a button can't sit inside an anchor -->
-						<div class="save"><SaveButton item={{ id: entry.media.id, title, cover }} /></div>
+						<div class="save save-slot">
+							<SaveButton item={{ id: entry.media.id, title, cover }} />
+						</div>
 						<a href={animePath(entry.media.id)} class="show">
 							<span
 								class="cover"
@@ -183,25 +185,13 @@
 </section>
 
 <style>
+	/* the next day of broadcasts as a timetable: each card leads with its time, set large */
 	.lineup {
-		padding-block: var(--section);
-		background: var(--color-surface);
+		padding-block: var(--section) 0;
 		overflow: hidden;
-		--ghost: var(--color-bg);
 	}
 	.top {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: end;
-		justify-content: space-between;
-		gap: var(--space-2) var(--space-3);
 		margin-bottom: var(--space-4);
-	}
-	.head {
-		font-size: var(--text-section);
-		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.1;
 	}
 	.empty {
 		font-size: var(--text-lead);
@@ -217,33 +207,37 @@
 		gap: var(--space-1);
 		list-style: none;
 	}
+	/* the days as text tabs: the one on show is ink and underlined, the other waits in pencil */
 	.day {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
-		min-height: 36px;
-		padding: 0 14px;
-		background: var(--color-bg);
+		min-height: 44px;
+		padding: 0 4px;
+		color: var(--color-muted);
 		font-size: var(--text-small);
 		font-weight: 600;
+		box-shadow: inset 0 -2px 0 transparent;
 		transition:
-			background-color var(--t-ui) var(--ease-out),
 			color var(--t-ui) var(--ease-out),
+			box-shadow var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
+	.days {
+		gap: var(--space-2);
+	}
 	.day[aria-pressed='true'] {
-		background: var(--color-ink);
-		color: var(--color-bg);
+		color: var(--color-ink);
+		box-shadow: inset 0 -2px 0 currentColor;
 	}
 	.arrow {
 		display: grid;
 		place-items: center;
 		width: 44px;
-		height: 36px;
-		background: var(--color-bg);
+		height: 44px;
+		font-size: var(--text-lead);
 		font-weight: 600;
 		transition:
-			background-color var(--t-ui) var(--ease-out),
+			color var(--t-ui) var(--ease-out),
 			opacity var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
 	}
@@ -256,9 +250,11 @@
 		transform: scale(0.95);
 	}
 	@media (hover: hover) and (pointer: fine) {
-		.day:not([aria-pressed='true']):hover,
+		.day:not([aria-pressed='true']):hover {
+			color: var(--color-ink);
+		}
 		.arrow:not(:disabled):hover {
-			background: var(--color-raised);
+			color: var(--color-accent-text);
 		}
 	}
 	.viewport {
@@ -308,19 +304,24 @@
 	}
 	.when-line {
 		width: 45%;
-		font-size: var(--text-lead);
+		font-size: var(--text-title);
 	}
 	.short {
 		width: 60%;
 	}
 	.when {
-		font-size: var(--text-lead);
+		font-size: var(--text-title);
 		font-weight: 800;
-		letter-spacing: -0.02em;
-		line-height: 1.1;
+		letter-spacing: -0.04em;
+		line-height: 1;
 	}
+	/* the day a run of cards opens, set small over its first time */
 	.which {
-		color: var(--color-accent-text);
+		display: block;
+		margin-bottom: 4px;
+		font-size: var(--text-small);
+		font-weight: 600;
+		letter-spacing: 0;
 	}
 	.left,
 	.meta {

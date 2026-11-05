@@ -23,7 +23,7 @@
 			<img src={cover} alt="" width="460" height="690" loading="lazy" data-cover />
 		{/if}
 	</a>
-	<div class="save"><SaveButton item={{ id: media.id, title, cover }} /></div>
+	<div class="save save-slot"><SaveButton item={{ id: media.id, title, cover }} /></div>
 	<h3><a href={animePath(media.id)} class="link">{title}</a></h3>
 	<p class="meta"><AiringBadge {media} /></p>
 	{#if note}<p class="note">{note}</p>{/if}
