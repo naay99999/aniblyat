@@ -45,7 +45,7 @@
 <div class="page capped screen">
 	<header class="head">
 		<div class="words">
-			<h1 class="display">{m.seasons_title()}</h1>
+			<h1 class="page-head">{m.seasons_title()}</h1>
 			<p class="lead">{m.seasons_lead()}</p>
 		</div>
 		<a href={seasonHref(current)} class="now">
@@ -116,7 +116,7 @@
 		gap: 24px;
 	}
 	h1 {
-		font-size: var(--text-head);
+		line-height: 1.02;
 	}
 	.lead {
 		max-width: 34ch;
@@ -134,8 +134,8 @@
 		gap: 8px 16px;
 		min-height: 260px;
 		padding: 28px;
-		background: var(--color-accent);
-		color: var(--color-accent-ink);
+		background: var(--color-ink);
+		color: var(--color-bg);
 		transition:
 			background-color var(--t-ui) var(--ease-out),
 			transform var(--t-press) var(--ease-out);
@@ -145,7 +145,7 @@
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.now:hover {
-			background: var(--color-accent-text);
+			background: var(--color-ink-raised);
 		}
 		.now:hover .arrow {
 			transform: translateX(8px);
@@ -176,6 +176,7 @@
 		white-space: nowrap;
 	}
 	.arrow {
+		color: var(--color-accent-200);
 		font-size: var(--text-head);
 		font-weight: 600;
 		line-height: 1;
@@ -188,11 +189,12 @@
 		overflow: hidden;
 		clip-path: inset(50%);
 	}
+	/* the years as a timetable: a heavy rule opens it, hairlines divide the years */
 	.years {
 		list-style: none;
-		margin-top: 120px;
+		margin-top: var(--section);
 		display: grid;
-		gap: 4px;
+		border-top: var(--rule) solid currentColor;
 	}
 	.year {
 		display: grid;
@@ -200,6 +202,7 @@
 		align-items: center;
 		gap: 16px;
 		padding-block: 10px;
+		border-bottom: 1px solid var(--hairline);
 	}
 	h2 {
 		font-size: clamp(28px, 3vw, 48px);
@@ -218,7 +221,6 @@
 		gap: 8px;
 		min-height: 56px;
 		padding: 0 14px;
-		background: var(--color-raised);
 		font-weight: 600;
 		transition:
 			background-color var(--t-ui) var(--ease-out),
@@ -236,7 +238,7 @@
 	}
 	@media (hover: hover) and (pointer: fine) {
 		.season:not(.current):hover {
-			background: var(--color-accent-100);
+			background: var(--color-accent-50);
 		}
 	}
 	@media (max-width: 900px) {
@@ -251,9 +253,6 @@
 		.now {
 			min-height: 180px;
 			padding: 20px;
-		}
-		.years {
-			margin-top: 72px;
 		}
 	}
 	@media (max-width: 720px) {

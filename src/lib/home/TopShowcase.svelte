@@ -191,9 +191,9 @@
 {/snippet}
 
 <section class="top" aria-labelledby="top-title">
-	<div class="stage page" bind:this={stage}>
+	<div class="stage page capped" bind:this={stage}>
 		<header class="intro" bind:this={intro}>
-			<h2 id="top-title" use:reveal>{m.home_top_title()}</h2>
+			<h2 id="top-title" class="chapter-head" use:reveal>{m.home_top_title()}</h2>
 			<p use:reveal={1}>{m.home_top_lead()}</p>
 		</header>
 
@@ -337,21 +337,19 @@
 		overflow: hidden;
 		clip-path: inset(50%);
 	}
+	/* the chapter's rule runs over the ranks only: the card at the right is its own cover-coloured block */
 	.intro {
 		grid-column: 1 / 6;
 		grid-row: 1;
 		display: grid;
-		gap: var(--space-1);
+		gap: var(--space-2);
 		margin-bottom: var(--space-4);
-	}
-	.intro h2 {
-		font-size: var(--text-section);
-		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.1;
+		padding-top: var(--space-3);
+		border-top: var(--rule) solid currentColor;
 	}
 	.intro p {
 		max-width: 52ch;
+		color: var(--color-muted);
 	}
 	.stage {
 		display: grid;
@@ -367,9 +365,12 @@
 		grid-row: 2;
 		position: relative;
 		display: grid;
-		gap: 2px;
 		list-style: none;
 		letter-spacing: -0.01em;
+	}
+	/* a timetable of ranks: hairlines between the rows, the picked one filled */
+	.ranks > li {
+		border-bottom: 1px solid var(--hairline);
 	}
 	.row {
 		position: relative;
@@ -378,6 +379,7 @@
 		align-items: baseline;
 		gap: var(--space-2);
 		width: 100%;
+		min-height: 48px;
 		padding: 10px 12px;
 		text-align: left;
 		color: var(--color-muted);
@@ -490,15 +492,16 @@
 	.name {
 		font-size: var(--text-title);
 		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.05;
+		letter-spacing: -0.04em;
+		line-height: 1;
+		text-wrap: balance;
 	}
 	.big-score {
 		margin-block: var(--space-2) var(--space-1);
-		font-size: clamp(2.5rem, 1.8rem + 2vw, 3.75rem);
+		font-size: clamp(3rem, 1.8rem + 3vw, 5.5rem);
 		font-weight: 800;
-		letter-spacing: -0.05em;
-		line-height: 0.9;
+		letter-spacing: -0.06em;
+		line-height: 0.85;
 	}
 	.big-score span {
 		font-size: 0.3em;

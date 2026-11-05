@@ -17,6 +17,7 @@ Use bun, not npm/pnpm/yarn. `bun.lock` is committed and the Docker build install
 - Internal hrefs go through `src/lib/paths.ts`; ESLint's `svelte/no-navigation-without-resolve` requires `resolve()`.
 - AniList allows 30 requests/min per IP. Home, `/anime/[id]`, `/season/...`, `/seasons` and `/list` render on the server through the in-memory TTL cache in `src/lib/server/cache.ts` / `anilist-cache.ts`. Their server loads return `initial: null` on data requests, so in-app navigation fetches in the browser instead.
 - UI strings live in `messages/th.json` and `messages/en.json`.
+- Visual direction is the Swiss editorial poster in `DESIGN.md`: open sections with `.chapter`, set hero titles with `.poster-head` + `headSize()`, divide rows with hairlines, no raised panels.
 
 ## Deploy
 

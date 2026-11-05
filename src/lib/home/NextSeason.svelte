@@ -19,15 +19,15 @@
 	const rest = $derived((items ?? []).filter((i) => !trio.includes(i)));
 </script>
 
-<section class="next" aria-labelledby="next-title">
-	<div class="stage">
-		<div class="intro page">
+<section class="next page capped" aria-labelledby="next-title">
+	<div class="stage chapter">
+		<div class="intro">
 			<h2 id="next-title" class="head" use:reveal>
 				{m.home_next_title({ season: seasonLabel(season) })}
 			</h2>
 			<p use:reveal={1}>{m.home_next_lead()}</p>
 		</div>
-		<div class="trio">
+		<div class="trio chapter-matter">
 			{#if !items}
 				{#each [false, true, false] as centre, i (i)}
 					<span class="pic ghost" class:centre aria-hidden="true"></span>
@@ -55,7 +55,7 @@
 		</div>
 	</div>
 
-	<div class="more page capped">
+	<div class="more">
 		{#if !items}<MediaGrid items={undefined} ghosts={6} />{:else if rest.length}<MediaGrid
 				items={rest}
 			/>{/if}
@@ -68,27 +68,29 @@
 </section>
 
 <style>
-	.stage {
-		display: grid;
-		gap: var(--space-5);
+	.next {
 		padding-top: var(--section);
 	}
+	/* the head at the left, three of the season's covers standing at the right */
 	.intro {
-		text-align: center;
+		grid-column: 1 / 5;
+		align-self: start;
 		display: grid;
 		gap: var(--space-2);
-		justify-items: center;
 	}
 	.head {
 		font-size: var(--text-head);
 		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.05;
-		max-width: 20ch;
+		letter-spacing: -0.045em;
+		line-height: 1;
+		text-wrap: balance;
+	}
+	.intro p {
+		max-width: 36ch;
+		color: var(--color-muted);
 	}
 	.trio {
 		display: flex;
-		justify-content: center;
 		align-items: flex-start;
 		gap: 10px;
 	}
@@ -97,11 +99,11 @@
 		display: grid;
 		gap: var(--space-1);
 		align-content: start;
-		width: min(260px, 20vw);
+		width: calc((100% - 20px) * 0.28);
 		margin-top: 48px;
 	}
 	.pic.centre {
-		width: min(380px, 28vw);
+		width: calc((100% - 20px) * 0.44);
 		margin-top: 0;
 	}
 	.frame,
@@ -140,6 +142,11 @@
 		gap: var(--space-5);
 		padding-block: var(--space-6) var(--section);
 	}
+	@media (max-width: 900px) {
+		.intro {
+			grid-column: 1;
+		}
+	}
 	/* on a phone the rest is a row to swipe through, not a long column */
 	@media (max-width: 720px) {
 		.more :global(.grid) {
@@ -160,11 +167,7 @@
 			gap: 8px;
 		}
 		.pic {
-			width: 18vw;
 			margin-top: 32px;
-		}
-		.pic.centre {
-			width: 52vw;
 		}
 	}
 </style>

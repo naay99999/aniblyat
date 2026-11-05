@@ -14,7 +14,7 @@
 	import type { HeroReason } from '../hero-pick';
 	import { animePath, seasonHref } from '../paths';
 	import { seasonLabel, type Season } from '../season';
-	import { displayTitle } from '../text';
+	import { displayTitle, headSize } from '../text';
 
 	// items arrive in airing order: the up-next queue, soonest first
 	let {
@@ -31,6 +31,7 @@
 	const ground = $derived(heroGround(active?.coverImage?.color));
 	const ink = $derived(inkOn(ground));
 	const status = $derived(active ? airingStatus(active, clock.now) : null);
+	const activeTitle = $derived(active ? displayTitle(active.title ?? {}) : '');
 	const why = $derived(reason === 'list' ? m.home_hero_why_list() : m.home_hero_why_soon());
 
 	const reduce =
@@ -123,6 +124,10 @@
 </script>
 
 <section class="hero" use:barTint={{ bg: ground, ink }} use:watch aria-labelledby="hero-title">
+	<!--
+	 the poster: a sheet of type on the cover's own deep hue, the cover as a hard-edged panel at the
+	 right. The title on screen is the head; the clock sits under a heavy rule at the sheet's foot.
+	-->
 	<div
 		class="stage"
 		style:background-color={ground}
@@ -134,26 +139,33 @@
 		<h1 id="hero-title" class="sr-only">{m.home_title({ season: seasonLabel(season) })}</h1>
 		<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{announced}</p>
 
-		<div class="now" use:hold>
+		<div class="sheet" use:hold>
+			<p class="kicker">
+				<a href={seasonHref(season)} class="link season-name">{seasonLabel(season)}</a>
+				{#if active}<span>{why}</span>{/if}
+			</p>
+
 			{#if active}
 				<!-- the outgoing title fades where it stands while the next one rises into the same place -->
 				<div class="slot">
 					{#key active.id}
 						<div class="panel" out:fade={{ duration: 150, easing: cubicOut }}>
-							<a href={animePath(active.id)} class="link name">{displayTitle(active.title ?? {})}</a
+							<a href={animePath(active.id)} class="link name poster-head t-{headSize(activeTitle)}"
+								>{activeTitle}</a
 							>
-							{#if status?.kind === 'next'}
-								<p class="airs">
-									{why} ·
-									{m.home_hero_airs({
-										episode: String(status.episode),
-										time: formatAirTime(status.airingAt)
-									})}
-								</p>
-								<div class="clock"><Countdown airingAt={status.airingAt} /></div>
-							{:else}
-								<p class="airs">{why} · <AiringBadge media={active} /></p>
-							{/if}
+							<div class="foot">
+								{#if status?.kind === 'next'}
+									<p class="airs">
+										{m.home_hero_airs({
+											episode: String(status.episode),
+											time: formatAirTime(status.airingAt)
+										})}
+									</p>
+									<div class="clock"><Countdown airingAt={status.airingAt} /></div>
+								{:else}
+									<p class="airs"><AiringBadge media={active} /></p>
+								{/if}
+							</div>
 						</div>
 					{/key}
 				</div>
@@ -167,10 +179,69 @@
 					<a href={seasonHref(season)} class="link season">{m.home_hero_action()}</a>
 				</p>
 			{:else}
-				<p class="airs">{m.home_hero_lead()}</p>
+				<div class="slot">
+					<p class="lead-only">{m.home_hero_lead()}</p>
+				</div>
 				<p class="actions">
 					<a href={seasonHref(season)} class="btn btn-ink">{m.home_hero_action()}</a>
 				</p>
+			{/if}
+
+			<!-- the queue along the foot of the sheet: the title on screen is the long bar, filling until the next -->
+			{#if panels.length > 1}
+				<div class="pager">
+					<ul class="bars" aria-label={m.home_hero_queue()}>
+						{#each panels as media, i (media.id)}
+							<li>
+								<button
+									type="button"
+									class="bar"
+									class:on={i === index}
+									aria-current={i === index ? 'true' : undefined}
+									aria-label={displayTitle(media.title ?? {})}
+									title={displayTitle(media.title ?? {})}
+									onclick={() => jump(i)}
+								>
+									<span class="rail">
+										{#if i === index}
+											<span
+												class="fill"
+												class:run={rotating}
+												class:held={holding}
+												style:--dwell="{DWELL}ms"
+												onanimationend={advance}
+											></span>
+										{/if}
+									</span>
+								</button>
+							</li>
+						{/each}
+					</ul>
+					{#if rotating}
+						<button
+							type="button"
+							class="hold"
+							aria-label={stopped ? m.home_hero_play() : m.home_hero_pause()}
+							title={stopped ? m.home_hero_play() : m.home_hero_pause()}
+							onclick={() => (stopped = !stopped)}
+						>
+							<svg
+								viewBox="0 0 12 12"
+								width="12"
+								height="12"
+								aria-hidden="true"
+								fill="currentColor"
+							>
+								{#if stopped}
+									<path d="M2.5 1.2v9.6L10.5 6z" />
+								{:else}
+									<rect x="2" y="1.5" width="2.8" height="9" />
+									<rect x="7.2" y="1.5" width="2.8" height="9" />
+								{/if}
+							</svg>
+						</button>
+					{/if}
+				</div>
 			{/if}
 		</div>
 
@@ -188,7 +259,6 @@
 				>
 					<div class="track">
 						{#each panels as media, i (media.id)}
-							<!-- the whole cover, standing at the right edge: a banner is too wide for the hero's box -->
 							<a
 								href={animePath(media.id)}
 								class="cover"
@@ -213,57 +283,6 @@
 				<div class="cover placeholder ghost"></div>
 			{/if}
 		</div>
-
-		<!-- the queue along the foot of the hero: the title on screen is the long bar, filling until the next -->
-		{#if panels.length > 1}
-			<div class="pager" use:hold>
-				<ul class="bars" aria-label={m.home_hero_queue()}>
-					{#each panels as media, i (media.id)}
-						<li>
-							<button
-								type="button"
-								class="bar"
-								class:on={i === index}
-								aria-current={i === index ? 'true' : undefined}
-								aria-label={displayTitle(media.title ?? {})}
-								title={displayTitle(media.title ?? {})}
-								onclick={() => jump(i)}
-							>
-								<span class="rail">
-									{#if i === index}
-										<span
-											class="fill"
-											class:run={rotating}
-											class:held={holding}
-											style:--dwell="{DWELL}ms"
-											onanimationend={advance}
-										></span>
-									{/if}
-								</span>
-							</button>
-						</li>
-					{/each}
-				</ul>
-				{#if rotating}
-					<button
-						type="button"
-						class="hold"
-						aria-label={stopped ? m.home_hero_play() : m.home_hero_pause()}
-						title={stopped ? m.home_hero_play() : m.home_hero_pause()}
-						onclick={() => (stopped = !stopped)}
-					>
-						<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" fill="currentColor">
-							{#if stopped}
-								<path d="M2.5 1.2v9.6L10.5 6z" />
-							{:else}
-								<rect x="2" y="1.5" width="2.8" height="9" />
-								<rect x="7.2" y="1.5" width="2.8" height="9" />
-							{/if}
-						</svg>
-					</button>
-				{/if}
-			</div>
-		{/if}
 	</div>
 </section>
 
@@ -272,15 +291,12 @@
 		margin-top: calc(-1 * var(--nav-h));
 	}
 	.stage {
-		/* the same height as a title's hero, so its banner lands in the same box when the visitor goes in */
+		/* the same box as a title's hero, so its cover lands in the same place when the visitor goes in */
 		min-height: min(100svh, 920px);
-		position: relative;
-		overflow: hidden;
 		display: grid;
 		grid-template-columns: repeat(12, minmax(0, 1fr));
-		grid-template-rows: minmax(0, 1fr) auto;
 		column-gap: var(--gutter);
-		padding: calc(var(--nav-h) + var(--space-3)) var(--gutter) var(--space-3);
+		padding: var(--nav-h) var(--gutter) 0;
 		transition:
 			background-color var(--t-scene) var(--ease-out),
 			color var(--t-scene) var(--ease-out);
@@ -292,16 +308,23 @@
 		overflow: hidden;
 		clip-path: inset(50%);
 	}
-	/* the clock is the hero: what is next, how long until it airs, and the way in */
-	.now {
-		grid-column: 1 / 7;
+	.sheet {
+		grid-column: 1 / 8;
 		grid-row: 1;
-		position: relative;
-		z-index: 1;
-		align-self: center;
 		display: grid;
-		gap: var(--space-4);
-		max-width: 760px;
+		grid-template-rows: auto minmax(0, 1fr) auto auto;
+		row-gap: var(--space-3);
+		padding-block: var(--space-3);
+	}
+	.kicker {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px var(--space-3);
+		font-size: var(--text-small);
+		font-weight: 600;
+	}
+	.season-name {
+		text-decoration-color: currentColor;
 	}
 	.slot {
 		display: grid;
@@ -309,29 +332,43 @@
 	.panel {
 		grid-area: 1 / 1;
 		display: grid;
-		gap: var(--space-1);
+		grid-template-rows: minmax(0, 1fr) auto;
+		row-gap: var(--space-4);
 	}
 	.name {
-		font-size: var(--text-title);
-		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.1;
+		align-self: center;
 		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
 		-webkit-box-orient: vertical;
 		overflow: hidden;
+		/* the clamp cuts at the line box; give the last line's descenders room */
+		padding-bottom: 0.06em;
+	}
+	.lead-only {
+		align-self: center;
+		max-width: 22ch;
+		font-size: var(--text-head);
+		font-weight: 800;
+		letter-spacing: -0.045em;
+		line-height: 1;
+	}
+	/* the foot of the poster: one heavy rule, then what is next and how long until it airs */
+	.foot {
+		display: grid;
+		gap: var(--space-2);
+		padding-top: var(--space-3);
+		border-top: var(--rule) solid currentColor;
 	}
 	.airs {
-		font-size: var(--text-body);
 		font-weight: 600;
 	}
 	.airs :global(span) {
 		color: inherit;
 	}
 	.clock {
-		margin-top: var(--space-3);
-		--countdown-size: clamp(3rem, 1.6rem + 4.6vw, 7rem);
+		max-width: 640px;
+		--countdown-size: clamp(2.25rem, 1rem + 3vw, 4.25rem);
 	}
 	.actions {
 		display: flex;
@@ -357,10 +394,6 @@
 		text-decoration-color: currentColor;
 	}
 	.pager {
-		grid-column: 1 / -1;
-		grid-row: 2;
-		position: relative;
-		z-index: 1;
 		display: flex;
 		align-items: center;
 		gap: var(--space-1);
@@ -427,20 +460,19 @@
 			opacity: 1;
 		}
 	}
-	/*
-	 * the field the cover stands in, from under the words to the right edge; its own fade lets a
-	 * cover leaving to the left melt away rather than hit an edge
-	 */
+	/* the cover as a hard-edged panel, bled off the top, right and bottom edges */
 	.covers {
-		position: absolute;
-		inset: var(--nav-h) 0 0 30%;
+		position: relative;
+		grid-column: 8 / -1;
+		grid-row: 1;
+		margin-right: calc(-1 * var(--gutter));
+		min-height: 0;
 		--ghost: color-mix(in srgb, currentColor 8%, transparent);
-		-webkit-mask-image: linear-gradient(90deg, transparent, #000 45%);
-		mask-image: linear-gradient(90deg, transparent, #000 45%);
 	}
 	.viewport,
 	.placeholder {
-		height: 100%;
+		position: absolute;
+		inset: 0;
 		overflow: hidden;
 	}
 	.viewport {
@@ -460,21 +492,13 @@
 		height: 100%;
 		overflow: hidden;
 	}
-	/*
-	 * the cover whole, full height at the right edge, fading into the ground on its left. The fade is
-	 * the picture's own, as on a title's page, so the hand-off going in carries it along
-	 */
 	.cover img {
 		display: block;
-		width: auto;
-		max-width: 100%;
+		width: 100%;
 		height: 100%;
-		margin-left: auto;
-		aspect-ratio: 2 / 3;
 		object-fit: cover;
+		object-position: 50% 20%;
 		user-select: none;
-		-webkit-mask-image: linear-gradient(90deg, transparent, #000 35%);
-		mask-image: linear-gradient(90deg, transparent, #000 35%);
 		transform: scale(1.06);
 		transition: transform var(--t-scene) var(--ease-out);
 	}
@@ -487,10 +511,7 @@
 			animation: rise var(--t-scene) var(--ease-out) 60ms both;
 		}
 		.panel > :nth-child(2) {
-			animation-delay: 100ms;
-		}
-		.panel > :nth-child(n + 3) {
-			animation-delay: 140ms;
+			animation-delay: 120ms;
 		}
 	}
 	@keyframes rise {
@@ -506,48 +527,29 @@
 		}
 	}
 	@media (max-width: 900px) {
-		/* the picture leads, edge to edge, and fades down; then the title, clock and buttons, then the queue */
+		/* the cover leads, edge to edge; then the sheet of type under it */
 		.stage {
 			min-height: 0;
 			grid-template-columns: minmax(0, 1fr);
-			grid-template-rows: auto auto auto;
-			row-gap: var(--space-3);
-			padding-bottom: var(--space-3);
-		}
-		.pager {
-			grid-row: 3;
 		}
 		.covers {
-			position: relative;
-			inset: auto;
 			grid-column: 1;
 			grid-row: 1;
 			margin-inline: calc(-1 * var(--gutter));
-			margin-top: calc(-1 * var(--space-3));
-			height: min(56.25vw, 42svh);
-			-webkit-mask-image: none;
-			mask-image: none;
+			aspect-ratio: 4 / 5;
+			max-height: 62svh;
 		}
-		.cover img {
-			margin-inline: auto;
-			-webkit-mask-image: linear-gradient(#000 65%, transparent);
-			mask-image: linear-gradient(#000 65%, transparent);
-		}
-		.now {
+		.sheet {
 			grid-column: 1;
 			grid-row: 2;
-			gap: var(--space-2);
-			max-width: none;
+			padding-block: var(--space-3);
+		}
+		.panel {
+			row-gap: var(--space-3);
 		}
 		.clock {
-			margin-top: var(--space-1);
+			max-width: none;
 			--countdown-size: clamp(1.75rem, 8vw, 2.75rem);
-		}
-		.name {
-			font-size: var(--text-lead);
-		}
-		.airs {
-			font-size: var(--text-small);
 		}
 	}
 </style>

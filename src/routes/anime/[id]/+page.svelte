@@ -14,7 +14,7 @@
 	import { heroGround, inkOn } from '#lib/color.js';
 	import { animePath, homePath, seasonHref } from '#lib/paths.js';
 	import { seasonLabel } from '#lib/season.js';
-	import { displayTitle, formatLabel, stripHtml } from '#lib/text.js';
+	import { displayTitle, formatLabel, headSize, stripHtml } from '#lib/text.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -37,10 +37,7 @@
 	// the hero's picture: the wide banner, or the whole cover for a title without one
 	const art = $derived(media?.coverImage?.extraLarge ?? null);
 	const status = $derived(media ? airingStatus(media, clock.now) : null);
-	// the headline steps down as the title grows, so it holds to two lines
-	const titleSize = $derived(
-		title.length <= 18 ? 'xl' : title.length <= 36 ? 'l' : title.length <= 60 ? 'm' : 's'
-	);
+	const titleSize = $derived(headSize(title));
 	// a second title line is only worth showing when it says something the headline doesn't
 	const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
 	const altTitles = $derived(
@@ -212,7 +209,7 @@
 					</p>
 
 					<header class="words">
-						<h1 id="anime-title" class="title t-{titleSize}">{title}</h1>
+						<h1 id="anime-title" class="poster-head t-{titleSize}">{title}</h1>
 						{#each altTitles as alt (alt)}
 							<p class="alt" lang={alt === media.title?.native ? 'ja' : undefined}>{alt}</p>
 						{/each}
@@ -289,9 +286,9 @@
 			<!-- the body reads as rows of an editorial page: a heavy rule, the head at left, the matter at right -->
 			<div class="page capped body">
 				{#if synopsis}
-					<section class="row" aria-labelledby="synopsis-title">
-						<h2 id="synopsis-title" use:reveal>{m.detail_synopsis()}</h2>
-						<div class="matter">
+					<section class="chapter" aria-labelledby="synopsis-title">
+						<h2 id="synopsis-title" class="chapter-head holds" use:reveal>{m.detail_synopsis()}</h2>
+						<div class="chapter-matter">
 							<!-- pre-line keeps AniList's paragraph breaks, so no whitespace around the text -->
 							<!-- prettier-ignore -->
 							<p class="synopsis" class:long={longSynopsis} lang="en" use:reveal={1}>{synopsis}</p>
@@ -299,12 +296,12 @@
 					</section>
 				{/if}
 
-				<section class="row" aria-labelledby="facts-title">
-					<h2 id="facts-title" use:reveal>{m.detail_facts()}</h2>
-					<div class="matter">
+				<section class="chapter" aria-labelledby="facts-title">
+					<h2 id="facts-title" class="chapter-head holds" use:reveal>{m.detail_facts()}</h2>
+					<div class="chapter-matter">
 						<dl class="facts" use:reveal={1}>
 							{#each facts as [label, value] (label)}
-								<div>
+								<div class="hairline">
 									<dt>{label}</dt>
 									<dd class="tabular">{value}</dd>
 								</div>
@@ -314,9 +311,9 @@
 				</section>
 
 				{#if trailerId}
-					<section id="trailer" class="row" aria-labelledby="trailer-title">
-						<h2 id="trailer-title" use:reveal>{m.detail_trailer()}</h2>
-						<div class="matter">
+					<section id="trailer" class="chapter" aria-labelledby="trailer-title">
+						<h2 id="trailer-title" class="chapter-head holds" use:reveal>{m.detail_trailer()}</h2>
+						<div class="chapter-matter">
 							<div class="frame" use:reveal={1}>
 								<iframe
 									src="https://www.youtube-nocookie.com/embed/{trailerId}"
@@ -330,9 +327,9 @@
 				{/if}
 
 				{#if related.length}
-					<section class="row" aria-labelledby="related-title">
-						<h2 id="related-title" use:reveal>{m.detail_related()}</h2>
-						<div class="matter">
+					<section class="chapter" aria-labelledby="related-title">
+						<h2 id="related-title" class="chapter-head holds" use:reveal>{m.detail_related()}</h2>
+						<div class="chapter-matter">
 							{#if fewRelated}
 								{@render relatedList('rows', related)}
 							{:else}
@@ -410,28 +407,6 @@
 		display: grid;
 		gap: var(--space-2);
 		align-content: center;
-	}
-	/* the head: one heavy cut, set tight, stepping down as the title grows so it holds to three lines */
-	.title {
-		font-weight: 800;
-		letter-spacing: -0.045em;
-		line-height: 0.9;
-		text-wrap: balance;
-		overflow-wrap: anywhere;
-	}
-	.t-xl {
-		font-size: clamp(3rem, 1rem + 7.5vw, 9rem);
-		letter-spacing: -0.055em;
-	}
-	.t-l {
-		font-size: clamp(2.75rem, 1rem + 5.4vw, 6.5rem);
-		letter-spacing: -0.05em;
-	}
-	.t-m {
-		font-size: clamp(2.25rem, 1rem + 3.8vw, 4.75rem);
-	}
-	.t-s {
-		font-size: clamp(2rem, 1rem + 2.8vw, 3.5rem);
 	}
 	.alt {
 		max-width: 48ch;
@@ -654,30 +629,6 @@
 		row-gap: var(--section);
 		padding-block: var(--section);
 	}
-	.row {
-		display: grid;
-		grid-template-columns: repeat(12, minmax(0, 1fr));
-		column-gap: var(--gutter);
-		row-gap: var(--space-3);
-		padding-top: var(--space-3);
-		border-top: 3px solid var(--color-ink);
-	}
-	/* the head holds its place beside matter that runs long */
-	.row h2 {
-		grid-column: 1 / 5;
-		align-self: start;
-		position: sticky;
-		top: calc(var(--nav-h) + var(--space-3));
-		font-size: var(--text-head);
-		font-weight: 800;
-		letter-spacing: -0.045em;
-		line-height: 0.95;
-		text-wrap: balance;
-	}
-	.matter {
-		grid-column: 5 / -1;
-		min-width: 0;
-	}
 	.synopsis {
 		max-width: 36em;
 		font-size: var(--text-lead);
@@ -703,7 +654,6 @@
 		gap: var(--space-2);
 		align-items: baseline;
 		padding-block: 14px;
-		border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 20%, transparent);
 	}
 	dt {
 		font-size: var(--text-small);
@@ -746,7 +696,7 @@
 		align-items: center;
 		gap: var(--space-3);
 		padding-block: var(--space-2);
-		border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 20%, transparent);
+		border-bottom: 1px solid var(--hairline);
 	}
 	.rows li:first-child .rel {
 		padding-top: 0;
@@ -819,18 +769,6 @@
 		.no-art .sheet {
 			grid-row: 1;
 		}
-		.t-xl {
-			font-size: clamp(2.75rem, 13vw, 6rem);
-		}
-		.t-l {
-			font-size: clamp(2.25rem, 10vw, 5rem);
-		}
-		.t-m {
-			font-size: clamp(2rem, 8vw, 4rem);
-		}
-		.t-s {
-			font-size: clamp(1.75rem, 6.5vw, 3rem);
-		}
 		.foot {
 			grid-template-columns: minmax(0, 1fr);
 			--countdown-size: clamp(1.75rem, 8vw, 2.75rem);
@@ -843,16 +781,6 @@
 		}
 		.now {
 			max-width: none;
-		}
-		.row {
-			grid-template-columns: minmax(0, 1fr);
-		}
-		.row h2,
-		.matter {
-			grid-column: 1;
-		}
-		.row h2 {
-			position: static;
 		}
 		.facts {
 			grid-template-columns: minmax(0, 1fr);

@@ -71,11 +71,11 @@
 	}
 </script>
 
-<section class="lineup page" aria-labelledby="lineup-title">
-	<div class="top">
-		<h2 id="lineup-title" class="head" use:reveal>{m.home_airing_title()}</h2>
+<section class="lineup page capped" aria-labelledby="lineup-title">
+	<div class="top chapter wide">
+		<h2 id="lineup-title" class="chapter-head" use:reveal>{m.home_airing_title()}</h2>
 		{#if strip.length}
-			<div class="controls" use:reveal={1}>
+			<div class="controls chapter-aside" use:reveal={1}>
 				{#if starts.length > 1}
 					<ul class="days">
 						{#each starts as start (start.day)}
@@ -183,25 +183,13 @@
 </section>
 
 <style>
+	/* the next day of broadcasts as a timetable: each card leads with its time, set large */
 	.lineup {
-		padding-block: var(--section);
-		background: var(--color-surface);
+		padding-block: var(--section) 0;
 		overflow: hidden;
-		--ghost: var(--color-bg);
 	}
 	.top {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: end;
-		justify-content: space-between;
-		gap: var(--space-2) var(--space-3);
 		margin-bottom: var(--space-4);
-	}
-	.head {
-		font-size: var(--text-section);
-		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.1;
 	}
 	.empty {
 		font-size: var(--text-lead);
@@ -223,7 +211,7 @@
 		gap: 6px;
 		min-height: 36px;
 		padding: 0 14px;
-		background: var(--color-bg);
+		background: color-mix(in srgb, currentColor 8%, transparent);
 		font-size: var(--text-small);
 		font-weight: 600;
 		transition:
@@ -240,7 +228,7 @@
 		place-items: center;
 		width: 44px;
 		height: 36px;
-		background: var(--color-bg);
+		background: color-mix(in srgb, currentColor 8%, transparent);
 		font-weight: 600;
 		transition:
 			background-color var(--t-ui) var(--ease-out),
@@ -258,7 +246,7 @@
 	@media (hover: hover) and (pointer: fine) {
 		.day:not([aria-pressed='true']):hover,
 		.arrow:not(:disabled):hover {
-			background: var(--color-raised);
+			background: color-mix(in srgb, currentColor 16%, transparent);
 		}
 	}
 	.viewport {
@@ -308,18 +296,24 @@
 	}
 	.when-line {
 		width: 45%;
-		font-size: var(--text-lead);
+		font-size: var(--text-title);
 	}
 	.short {
 		width: 60%;
 	}
 	.when {
-		font-size: var(--text-lead);
+		font-size: var(--text-title);
 		font-weight: 800;
-		letter-spacing: -0.02em;
-		line-height: 1.1;
+		letter-spacing: -0.04em;
+		line-height: 1;
 	}
+	/* the day a run of cards opens, set small over its first time */
 	.which {
+		display: block;
+		margin-bottom: 4px;
+		font-size: var(--text-small);
+		font-weight: 600;
+		letter-spacing: 0;
 		color: var(--color-accent-text);
 	}
 	.left,

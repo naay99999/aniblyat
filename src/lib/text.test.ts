@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { displayTitle, figures, formatLabel, stripHtml } from './text';
+import { displayTitle, figures, formatLabel, headSize, stripHtml } from './text';
 
 test('stripHtml converts breaks and decodes entities', () => {
 	expect(stripHtml('It&#x27;s<br>\n<i>fine</i>&nbsp;&amp; ok')).toBe("It's\nfine & ok");
@@ -38,4 +38,11 @@ test('formatLabel names every format the same way', () => {
 	expect(formatLabel('ONA')).toBe('ONA');
 	expect(formatLabel('SOME_NEW_KIND')).toBe('SOME NEW KIND');
 	expect(formatLabel(null)).toBeNull();
+});
+
+test('headSize steps down as a title grows', () => {
+	expect(headSize('ONE PIECE')).toBe('xl');
+	expect(headSize('The Apothecary Diaries Season 3')).toBe('l');
+	expect(headSize('Frieren: Beyond Journey’s End Season 2 — The Northern Plateau')).toBe('s');
+	expect(headSize('x'.repeat(50))).toBe('m');
 });

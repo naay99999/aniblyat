@@ -89,7 +89,7 @@
 
 <div class="page capped screen">
 	<header class="head">
-		<h1 class="display">{m.list_title()}</h1>
+		<h1 class="page-head">{m.list_title()}</h1>
 		<p class="lead">
 			{watchlist.items.length
 				? `${m.season_count({ count: String(watchlist.items.length) })} · ${m.list_lead()}`
@@ -105,9 +105,11 @@
 			>
 		</div>
 		{#if trending.length || home.isPending}
-			<section class="start" aria-labelledby="start-title">
-				<h2 id="start-title">{m.list_empty_trending()}</h2>
-				<MediaGrid items={home.isPending ? undefined : trending} />
+			<section class="start chapter wide" aria-labelledby="start-title">
+				<h2 id="start-title" class="chapter-head">{m.list_empty_trending()}</h2>
+				<div class="chapter-matter">
+					<MediaGrid items={home.isPending ? undefined : trending} />
+				</div>
 			</section>
 		{/if}
 	{:else}
@@ -210,7 +212,7 @@
 		padding-top: 24px;
 	}
 	h1 {
-		font-size: var(--text-head);
+		line-height: 1.02;
 	}
 	.lead {
 		font-size: var(--text-lead);
@@ -224,20 +226,17 @@
 		margin-top: 72px;
 	}
 	.statement {
-		font-size: var(--text-title);
+		max-width: 20ch;
+		font-size: var(--text-head);
 		font-weight: 800;
-		letter-spacing: -0.03em;
+		letter-spacing: -0.045em;
 		line-height: 1.05;
 	}
 	.start {
 		margin-top: var(--space-6);
 	}
-	h2 {
-		margin-bottom: var(--space-3);
-		font-size: var(--text-section);
-		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.1;
+	.start h2 {
+		margin-bottom: var(--space-4);
 	}
 	/* the next episode, in its own cover colour, as the list's headline */
 	.next {
@@ -264,10 +263,11 @@
 		letter-spacing: -0.02em;
 	}
 	.next-name {
-		font-size: var(--text-title);
+		font-size: var(--text-head);
 		font-weight: 800;
-		letter-spacing: -0.03em;
-		line-height: 1.1;
+		letter-spacing: -0.05em;
+		line-height: 0.95;
+		text-wrap: balance;
 	}
 	.next-airs {
 		font-weight: 600;
@@ -284,24 +284,19 @@
 	.next :focus-visible {
 		outline-color: currentColor;
 	}
+	/* the saved titles as a timetable: a heavy rule opens it, hairlines divide the rows */
 	.rows {
-		margin-top: 40px;
+		margin-top: var(--space-5);
 		display: grid;
-		gap: 8px;
+		border-top: var(--rule) solid currentColor;
 	}
 	li {
 		display: grid;
 		grid-template-columns: 64px 1fr auto;
 		align-items: center;
 		gap: 20px;
-		padding: 10px 16px 10px 10px;
-		background: var(--color-raised);
-		transition: background-color var(--t-ui) var(--ease-out);
-	}
-	@media (hover: hover) and (pointer: fine) {
-		li:hover {
-			background: color-mix(in srgb, var(--color-raised) 85%, white);
-		}
+		padding-block: 12px;
+		border-bottom: 1px solid var(--hairline);
 	}
 	.wait {
 		width: 10em;
